@@ -53,6 +53,9 @@ namespace AtomicPlayer
     extern void jsapi_init_atomicplayer(JSVM* vm);
 }
 
+// Luma
+extern void bbs_lib_init(Context* context, JSVM* vm);
+
 namespace AtomicEditor
 {
 
@@ -161,6 +164,9 @@ void AEPlayerApplication::Start()
     // Instantiate and register the Player subsystem
     context_->RegisterSubsystem(new AtomicPlayer::Player(context_));
     AtomicPlayer::jsapi_init_atomicplayer(vm_);
+
+    // Luma
+    bbs_lib_init(context_, vm_);
 
     if (!playerMode->launchedByEditor())
     {
