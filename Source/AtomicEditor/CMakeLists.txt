@@ -57,7 +57,7 @@ if (APPLE)
 elseif(LINUX)
     target_link_libraries(AtomicEditor curl nativefiledialog ${GTK3_LIBRARIES})
 else()
-    target_link_libraries(AtomicEditor libcurl Iphlpapi Wldap32 "../../../Debug/bbs")
+    target_link_libraries(AtomicEditor libcurl Iphlpapi Wldap32 "../../../Lib/bbs")
 
     # pre-Windows 8 can't count on D3DCompiler_47.dll being on system
     add_custom_command (TARGET AtomicEditor POST_BUILD
