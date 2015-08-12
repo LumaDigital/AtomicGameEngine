@@ -63,7 +63,7 @@ namespace :build  do
 
       sh "\"#{VSCOMNTOOLS}vsvars32.bat\""
 
-      sh "cmake ../../ -G \"Visual Studio 14 2015\""
+      sh "cmake ../../ -DATOMIC_DEV_BUILD=0 -G \"Visual Studio 14 2015\""
 
       # first build project specifics library
       sh "msbuild /m ../../../BBS/BBS.vcxproj /p:Configuration=Release /p:Platform=Win32"
