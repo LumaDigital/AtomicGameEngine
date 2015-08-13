@@ -65,7 +65,10 @@ namespace :build  do
 
       sh "cmake ../../ -DATOMIC_DEV_BUILD=0 -G \"Visual Studio 14 2015\""
 
-      # first build project specifics library
+      # build AtomicTool so we can bind to JS
+      sh "msbuild /m Atomic.sln /t:AtomicTool /p:Configuration=Release /p:Platform=Win32"
+
+      # build project specifics library
       sh "msbuild /m ../../../BBS/BBS.vcxproj /p:Configuration=Release /p:Platform=Win32"
 
       # specify 32 bit
