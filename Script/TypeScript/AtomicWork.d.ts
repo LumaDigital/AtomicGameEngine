@@ -4,6 +4,11 @@
 
 
 declare module Atomic {
+    // This will be removed when atomic implementation changes, 
+    //  only adding temporarily for BBS typescript to compile
+    export class UI {
+       static __init();
+    }
 
     export function print(...args: any[]);
 
