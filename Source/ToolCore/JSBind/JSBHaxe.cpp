@@ -20,19 +20,12 @@ namespace ToolCore
         if (ftype->type_->asPrimitiveType())
         {
             JSBPrimitiveType* ptype = ftype->type_->asPrimitiveType();
-            if (ptype->kind_ == JSBPrimitiveType::Bool)
-                scriptType = "Bool";
-            if (ptype->kind_ == JSBPrimitiveType::Int)
-                scriptType = "Int";
-            if (ptype->kind_ == JSBPrimitiveType::Float)
-                scriptType = "Float";
+            scriptType = GetPrimitiveType(ptype);
+            return scriptType;
         }
 
         if (ftype->type_->asStringHashType() || ftype->type_->asStringType())
             scriptType = "String";
-
-        if (ftype->type_->asEnumType())
-            scriptType = ftype->type_->asEnumType()->enum_->GetName();
 
         if (ftype->type_->asEnumType())
             scriptType = ftype->type_->asEnumType()->enum_->GetName();
@@ -60,6 +53,19 @@ namespace ToolCore
 
         return scriptType;
 
+    }
+
+    String JSBHaxe::GetPrimitiveType(JSBPrimitiveType* ptype)
+    {
+        if (ptype->kind_ == JSBPrimitiveType::Bool)
+            return "Bool";
+        if (ptype->kind_ == JSBPrimitiveType::Int && ptype->isUnsigned_)
+            return "UInt";
+        else if (ptype->kind_ == JSBPrimitiveType::Int)
+            return "Int";
+        if (ptype->kind_ == JSBPrimitiveType::Float)
+            return "Float";
+        return "Dynamic";
     }
 
     void JSBHaxe::Begin()
@@ -353,22 +359,23 @@ namespace ToolCore
 
     void JSBHaxe::ExportModuleConstants(JSBModule* module)
     {
-        Vector<String>& constants = module->GetConstants();
+        HashMap<String, JSBPrimitiveType*>& constants = module->GetConstants();
+
+        const Vector<String>& constantsName = constants.Keys();
 
         if (!constants.Size())
             return;
 
         source_ += "\n";
 
-        for (unsigned i = 0; i < constants.Size(); i++)
+        for (unsigned i = 0; i < constantsName.Size(); i++)
         {
-            const String& cname = constants.At(i);
+            const String& cname = constantsName.At(i);
 
-            source_ += "    public static var " + cname + ": Int;\n";
+            source_ += "    public static inline var " + cname + ": " + GetPrimitiveType(constants[cname]) + ";\n";
         }
 
         source_ += "\n";
-
     }
 
     void JSBHaxe::ExportEnums(JSBModule* module)

@@ -6,14 +6,14 @@
 namespace ToolCore
 {
 
-class SpriterImporter : public AssetImporter
+class PEXImporter : public AssetImporter
 {
-    OBJECT(SpriterImporter);
+    OBJECT(PEXImporter);
 
 public:
     /// Construct.
-    SpriterImporter(Context* context, Asset* asset);
-    virtual ~SpriterImporter();
+    PEXImporter(Context* context, Asset* asset);
+    virtual ~PEXImporter();
 
     virtual void SetDefaults();
 

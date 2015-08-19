@@ -101,10 +101,10 @@ bool JSComponentFile::PushModule()
     String pathName, fileName, ext;
     SplitPath(path, pathName, fileName, ext);
 
-	if (path.Contains('/') || path.Contains('\\'))
-		pathName += "/" + fileName;
-	else
-		pathName = fileName;
+    if (path.Contains('/') || path.Contains('\\'))
+        pathName += "/" + fileName;
+    else
+        pathName = fileName;
 
     duk_get_global_string(ctx, "require");
     duk_push_string(ctx, pathName.CString());
@@ -175,21 +175,23 @@ bool JSComponentFile::InitModule()
     if (!PushModule())
         return false;
 
-    if (!duk_is_function(ctx, -1))
+    if (duk_is_function(ctx, -1))
     {
-        LOGERRORF("Component file does not export a function: %s", GetName().CString());
-        duk_set_top(ctx, top);
-        return false;
-    }
-
-    // detect a script class vs a simple "flat" javascript component
-    // this means that if a script component class defines a constructor,
-    // it must take 0 arguments (which makes sense as when it is new'd from
-    // serialization, etc there will be no args to pass it
-
-    if (duk_get_length(ctx, -1) == 0)
-    {
+        // constructor export
         scriptClass_ = true;
+    }
+    else if (duk_is_object(ctx, -1))
+    {
+        duk_get_prop_string(ctx, -1, "component");
+
+        if (!duk_is_function(ctx, -1))
+        {
+            LOGERRORF("Component file export object does not export a key \"component\" function: %s", GetName().CString());
+            duk_set_top(ctx, top);
+            return false;
+        }
+
+        scriptClass_ = false;
     }
 
     duk_set_top(ctx, top);
@@ -224,9 +226,13 @@ bool JSComponentFile::BeginLoad(Deserializer& source)
 
     String eval;
     bool valid = false;
+    int leftBracketCount = 0;
+    int rightBracketCount = 0;
     for (unsigned i = 0; i < lines.Size(); i++)
     {
         String line = lines[i];
+
+        bool added = false;
 
         if (!eval.Length())
         {
@@ -234,39 +240,42 @@ bool JSComponentFile::BeginLoad(Deserializer& source)
 
             if (line.StartsWith("inspectorFields"))
             {
+                added = true;
                 eval = line + "\n";
-                if (line.Contains("}"))
-                {
-                    valid = true;
-                    break;
-                }
             }
             else if (line.StartsWith("this.inspectorFields"))
             {
+                added = true;
                 eval = line.Substring(5) + "\n";
-                if (line.Contains("}"))
-                {
-                    valid = true;
-                    break;
-                }
             }
             else if (line.StartsWith("var inspectorFields"))
             {
+                added = true;
                 eval = line.Substring(4) + "\n";
-                if (line.Contains("}"))
-                {
-                    valid = true;
-                    break;
-                }
             }
 
         }
         else
         {
+            added = true;
             eval += line + "\n";
         }
 
-        if (line.Contains("}") && eval.Length())
+        if (added) {
+
+            for (unsigned j = 0; j < line.Length(); j++)
+            {
+                if (line.At(j) == '{')
+                    leftBracketCount++;
+
+                else if (line.At(j) == '}')
+                    rightBracketCount++;
+
+            }
+
+        }
+
+        if (eval.Length() && leftBracketCount && leftBracketCount == rightBracketCount)
         {
             valid = true;
             break;
@@ -359,7 +368,42 @@ bool JSComponentFile::BeginLoad(Deserializer& source)
 
                                 duk_pop(ctx);
 
-                                if (length > 1)
+                                // detect int enum
+                                if (length > 1 && (variantType == VAR_INT || variantType == VAR_FLOAT
+                                                   || variantType == VAR_DOUBLE))
+                                {
+                                    duk_get_prop_index(ctx, -1, 1);
+
+                                    if (duk_is_number(ctx, -1))
+                                    {
+                                        js_to_variant(ctx, -1, defaultValue);
+                                    }
+                                    else if (duk_is_array(ctx, -1))
+                                    {
+                                        int enumLength = duk_get_length(ctx, -1);
+
+                                        for (unsigned i = 0; i < enumLength; i++)
+                                        {
+                                            duk_get_prop_index(ctx, -1, i);
+                                            String enumName = duk_require_string(ctx, -1);
+                                            enums_[name].Push(EnumInfo(enumName, Variant(float(i))));
+                                            duk_pop(ctx);
+                                        }
+
+                                    }
+
+                                    duk_pop(ctx);
+
+                                    if (length > 2)
+                                    {
+                                        duk_get_prop_index(ctx, -1, 2);
+                                        // default value
+                                        js_to_variant(ctx, -1, defaultValue);
+                                        duk_pop(ctx);
+                                    }
+
+                                }
+                                else if (length > 1)
                                 {
                                     duk_get_prop_index(ctx, -1, 1);
                                     // default value

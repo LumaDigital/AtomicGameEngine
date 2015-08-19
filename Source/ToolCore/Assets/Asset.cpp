@@ -17,6 +17,7 @@
 #include "JavascriptImporter.h"
 #include "SpriterImporter.h"
 #include "TMXImporter.h"
+#include "PEXImporter.h"
 
 #include "AssetEvents.h"
 #include "Asset.h"
@@ -275,6 +276,10 @@ bool Asset::CreateImporter()
         {
             importer_ = new TMXImporter(context_, this);
         }
+        else if (ext == ".pex")
+        {
+            importer_ = new PEXImporter(context_, this);
+        }
         else if (textureFormats.Contains(ext))
         {
             importer_ = new TextureImporter(context_, this);
@@ -343,10 +348,10 @@ bool Asset::SetPath(const String& path)
 
 }
 
-Resource* Asset::GetResource()
+Resource* Asset::GetResource(const String &typeName)
 {
     if (importer_)
-        return importer_->GetResource();
+        return importer_->GetResource(typeName);
 
     return 0;
 }
