@@ -30,6 +30,9 @@ namespace ToolCore
     extern void jsapi_init_toolcore(JSVM* vm);
 }
 
+// Luma
+extern void bbs_lib_init(Context* context, JSVM* vm);
+
 namespace AtomicEditor
 {
 
@@ -62,6 +65,10 @@ void AEEditorApp::Start()
 
     jsapi_init_toolcore(vm_);
     jsapi_init_editor(vm_);
+
+	// Luma
+	bbs_lib_init(context_, vm_);
+	
 
     duk_get_global_string(vm_->GetJSContext(), "require");
     duk_push_string(vm_->GetJSContext(), "main");
