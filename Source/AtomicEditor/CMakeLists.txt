@@ -63,7 +63,7 @@ if (APPLE)
 elseif(LINUX)
     target_link_libraries(AtomicEditor curl nativefiledialog ${GTK3_LIBRARIES})
 else()
-    target_link_libraries(AtomicEditor libcurl Iphlpapi Wldap32 "../../../Lib/bbs")
+    target_link_libraries(AtomicEditor libcurl Iphlpapi Wldap32 "../../../Lib/bbs" "../../../Lib/vse")
 
     # compile the editor scripts
     add_custom_command (TARGET AtomicEditor POST_BUILD
