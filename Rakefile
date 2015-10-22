@@ -68,7 +68,8 @@ namespace :build  do
       # build AtomicTool so we can bind to JS
       sh "msbuild /m Atomic.sln /t:AtomicTool /p:Configuration=Release /p:Platform=Win32"
 
-      # build project specifics library
+      # build project specifics libraries
+      sh "msbuild /m ../../../VSE/VSE.vcxproj /p:Configuration=Release /p:Platform=Win32"
       sh "msbuild /m ../../../BBS/BBS.vcxproj /p:Configuration=Release /p:Platform=Win32"
 
       # specify 32 bit
