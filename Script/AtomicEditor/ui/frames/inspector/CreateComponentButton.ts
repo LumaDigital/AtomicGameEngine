@@ -70,6 +70,9 @@ subsystemCreateSource.addItem(new Atomic.UIMenuItem("PhysicsWorld", "create comp
 
 var componentCreateSource = new Atomic.UIMenuItemSource();
 
+var lumaCreateSource = new Atomic.UIMenuItemSource();
+lumaCreateSource.addItem(new Atomic.UIMenuItem("GridPositioner", "GridPositioner"));
+
 var sources = {
     Audio: audioCreateSource,
     "2D": _2DCreateSource,
@@ -80,6 +83,7 @@ var sources = {
     Physics: physicsCreateSource,
     Scene: sceneCreateSource,
     SubSystem: subsystemCreateSource,
+	Luma: lumaCreateSource
 }
 
 for (var sub in sources) {
