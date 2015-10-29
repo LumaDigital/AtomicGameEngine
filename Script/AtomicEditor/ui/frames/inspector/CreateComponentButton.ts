@@ -71,7 +71,7 @@ subsystemCreateSource.addItem(new Atomic.UIMenuItem("PhysicsWorld", "create comp
 var componentCreateSource = new Atomic.UIMenuItemSource();
 
 var lumaCreateSource = new Atomic.UIMenuItemSource();
-lumaCreateSource.addItem(new Atomic.UIMenuItem("GridPositioner", "GridPositioner"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("GridPositioner", "ComponentGridPositioner"));
 
 var sources = {
     Audio: audioCreateSource,
