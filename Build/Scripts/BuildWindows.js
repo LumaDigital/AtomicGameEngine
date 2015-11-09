@@ -6,7 +6,55 @@ var atomicRoot = host.atomicRoot;
 var buildDir = host.artifactsRoot + "Build/Windows/";
 var editorAppFolder = host.artifactsRoot + "AtomicEditor/";
 
+// Copy Editor binaries and resources
+function PackageBinariesAndResources() {
+
+  // Copy the Editor binaries
+  fs.copySync(buildDir + "Source/AtomicEditor/Release/AtomicEditor.exe",
+    host.artifactsRoot + "AtomicEditor/AtomicEditor.exe");
+  fs.copySync(buildDir + "Source/AtomicEditor/Release/D3DCompiler_47.dll",
+    host.artifactsRoot + "AtomicEditor/D3DCompiler_47.dll");
+
+  // We need some resources to run
+  fs.copySync(atomicRoot + "Resources/CoreData",
+    editorAppFolder + "Resources/CoreData");
+
+  fs.copySync(atomicRoot + "Resources/PlayerData",
+    editorAppFolder + "Resources/PlayerData");
+
+  fs.copySync(atomicRoot + "Data/AtomicEditor",
+    editorAppFolder + "Resources/ToolData");
+
+  fs.copySync(atomicRoot + "Resources/EditorData",
+    editorAppFolder + "Resources/EditorData");
+
+  fs.copySync(atomicRoot + "Artifacts/Build/Resources/EditorData/AtomicEditor/EditorScripts",
+    editorAppFolder + "Resources/EditorData/AtomicEditor/EditorScripts");
+
+  fs.copySync(buildDir +  "Source/AtomicPlayer/Application/Release/AtomicPlayer.exe",
+    editorAppFolder + "Resources/ToolData/Deployment/Windows/x64/AtomicPlayer.exe");
+
+  fs.copySync(buildDir +  "Source/AtomicPlayer/Application/Release/D3DCompiler_47.dll",
+    editorAppFolder + "Resources/ToolData/Deployment/Windows/x64/D3DCompiler_47.dll");
+
+}
+
 namespace('build', function() {
+
+  // Packages existing executables and resources
+  task('package', {
+    async: true
+  }, function() {
+    // Clean build
+    var cleanBuild = true;
+    if (cleanBuild) {
+      common.cleanCreateDir(editorAppFolder);
+    }
+
+    PackageBinariesAndResources();
+
+    complete();
+  });
 
   // Builds a standalone Atomic Editor, which can be distributed out of build tree
   task('atomiceditor', {
@@ -33,33 +81,7 @@ namespace('build', function() {
 
     jake.exec(cmds, function() {
 
-      // Copy the Editor binaries
-      fs.copySync(buildDir + "Source/AtomicEditor/Release/AtomicEditor.exe",
-        host.artifactsRoot + "AtomicEditor/AtomicEditor.exe");
-      fs.copySync(buildDir + "Source/AtomicEditor/Release/D3DCompiler_47.dll",
-        host.artifactsRoot + "AtomicEditor/D3DCompiler_47.dll");
-
-      // We need some resources to run
-      fs.copySync(atomicRoot + "Resources/CoreData",
-        editorAppFolder + "Resources/CoreData");
-
-      fs.copySync(atomicRoot + "Resources/PlayerData",
-        editorAppFolder + "Resources/PlayerData");
-
-      fs.copySync(atomicRoot + "Data/AtomicEditor",
-        editorAppFolder + "Resources/ToolData");
-
-      fs.copySync(atomicRoot + "Resources/EditorData",
-        editorAppFolder + "Resources/EditorData");
-
-      fs.copySync(atomicRoot + "Artifacts/Build/Resources/EditorData/AtomicEditor/EditorScripts",
-        editorAppFolder + "Resources/EditorData/AtomicEditor/EditorScripts");
-
-      fs.copySync(buildDir +  "Source/AtomicPlayer/Application/Release/AtomicPlayer.exe",
-        editorAppFolder + "Resources/ToolData/Deployment/Windows/x64/AtomicPlayer.exe");
-
-      fs.copySync(buildDir +  "Source/AtomicPlayer/Application/Release/D3DCompiler_47.dll",
-        editorAppFolder + "Resources/ToolData/Deployment/Windows/x64/D3DCompiler_47.dll");
+      PackageBinariesAndResources();
 
       console.log("Atomic Editor build to ", editorAppFolder);
 
