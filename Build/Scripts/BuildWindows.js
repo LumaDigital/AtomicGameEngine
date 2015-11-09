@@ -76,7 +76,8 @@ namespace('build', function() {
     async: true
   }, function() {
 
-    var slnRoot = path.resolve(atomicRoot, "") + "-VS2015\\";
+    // Luma: Rather use buildroot, to keep dev and build paths consistent
+    var slnRoot = buildDir; //path.resolve(atomicRoot, "") + "-VS2015\\";
 
     if (!fs.existsSync(slnRoot)) {
         jake.mkdirP(slnRoot);
