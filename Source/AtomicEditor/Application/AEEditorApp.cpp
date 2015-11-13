@@ -58,7 +58,6 @@ void AEEditorApp::Start()
     ui->Initialize("AtomicEditor/resources/language/lng_en.tb.txt");
 
     SubscribeToEvent(E_JSERROR, HANDLER(AEEditorApp, HandleJSError));
-    SubscribeToEvent(E_EXITREQUESTED, HANDLER(AEEditorApp, HandleExitRequested));
 
     jsapi_init_editor(vm_);
 
@@ -123,11 +122,6 @@ void AEEditorApp::Setup()
 void AEEditorApp::Stop()
 {
     AEEditorCommon::Stop();
-}
-
-void AEEditorApp::HandleExitRequested(StringHash eventType, VariantMap& eventData)
-{
-
 }
 
 void AEEditorApp::HandleJSError(StringHash eventType, VariantMap& eventData)
