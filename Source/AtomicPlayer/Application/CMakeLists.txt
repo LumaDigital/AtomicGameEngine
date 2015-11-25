@@ -31,7 +31,7 @@ else()
 	add_executable(AtomicPlayer ${EXE_TYPE} ${SOURCE_FILES} ${ATOMIC_EDITOR_ICON})
 endif()
 
-target_link_libraries(AtomicPlayer AtomicJS AtomicPlayerLib AtomicPlayerJS ${ATOMIC_LINK_LIBRARIES})
+target_link_libraries(AtomicPlayer AtomicJS AtomicPlayerLib AtomicPlayerJS ${ATOMIC_LINK_LIBRARIES} "../../../../../../../Lib/bbs" "../../../../../../../Lib/vse")
 
 if (MSVC)
   # pre-Windows 8 can't count on D3DCompiler_47.dll being on system

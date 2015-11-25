@@ -61,9 +61,9 @@ void AEEditorApp::Start()
 
     jsapi_init_editor(vm_);
 
-	// Luma
-	bbs_lib_init(context_, vm_);
-	
+    // Luma
+    bbs_lib_init(context_, vm_);
+
 
     duk_get_global_string(vm_->GetJSContext(), "require");
     duk_push_string(vm_->GetJSContext(), "main");

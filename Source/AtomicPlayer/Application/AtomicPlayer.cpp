@@ -54,6 +54,9 @@
 #include <unistd.h>
 #endif
 
+// Luma
+extern void bbs_lib_init(Context* context, JSVM* vm);
+
 DEFINE_APPLICATION_MAIN(AtomicPlayer::AtomicPlayerApp)
 
 namespace AtomicPlayer
@@ -186,6 +189,8 @@ void AtomicPlayerApp::Start()
     }
 #endif
 
+    // Luma
+    bbs_lib_init(context_, vm_);
 
     if (!vm->ExecuteMain())
     {
