@@ -31,6 +31,8 @@
 #include "../PlayerMode/AEPlayerMode.h"
 #include <AtomicPlayer/Player.h>
 
+#include "../PlayerMode/AEPlayerEvents.h"
+
 #include "AEPlayerApp.h"
 
 #include <Atomic/DebugNew.h>
@@ -59,6 +61,8 @@ AEPlayerApplication::AEPlayerApplication(Context* context) :
 void AEPlayerApplication::Setup()
 {
     AEEditorCommon::Setup();
+
+    engine_->SetAutoExit(false);
 
     FileSystem* filesystem = GetSubsystem<FileSystem>();
 
@@ -153,6 +157,26 @@ void AEPlayerApplication::Setup()
 #endif
 
             }
+            else if (argument == "--windowposx" && value.Length()) 
+            {
+                engineParameters_["WindowPositionX"] = atoi(value.CString());
+            }
+            else if (argument == "--windowposy" && value.Length())
+            {
+                engineParameters_["WindowPositionY"] = atoi(value.CString());
+            }
+            else if (argument == "--windowwidth" && value.Length())
+            {
+                engineParameters_["WindowWidth"] = atoi(value.CString());
+            }
+            else if (argument == "--windowheight" && value.Length())
+            {
+                engineParameters_["WindowHeight"] = atoi(value.CString());
+            }
+            else if (argument == "--resizable") 
+            {
+                engineParameters_["WindowResizable"] = true;
+            }
         }
     }
 
@@ -210,7 +234,14 @@ void AEPlayerApplication::Start()
         }
     }
 
+    SubscribeToEvent(E_PLAYERQUIT, HANDLER(AEPlayerApplication, HandleQuit));
+
     return;
+}
+
+void AEPlayerApplication::HandleQuit(StringHash eventType, VariantMap& eventData)
+{
+    engine_->Exit();
 }
 
 void AEPlayerApplication::Stop()

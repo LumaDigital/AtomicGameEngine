@@ -5,8 +5,6 @@
 // license information: https://github.com/AtomicGameEngine/AtomicGameEngine
 //
 
-import ComponentInspector = require("./ComponentInspector");
-
 var audioCreateSource = new Atomic.UIMenuItemSource();
 
 audioCreateSource.addItem(new Atomic.UIMenuItem("SoundListener", "SoundListener"));
@@ -74,6 +72,11 @@ subsystemCreateSource.addItem(new Atomic.UIMenuItem("DebugRenderer", "create com
 subsystemCreateSource.addItem(new Atomic.UIMenuItem("Octree", "create component"));
 subsystemCreateSource.addItem(new Atomic.UIMenuItem("PhysicsWorld", "create component"));
 
+var editorCreateSource = new Atomic.UIMenuItemSource();
+
+editorCreateSource.addItem(new Atomic.UIMenuItem("CubemapGenerator", "CubemapGenerator"));
+
+
 var componentCreateSource = new Atomic.UIMenuItemSource();
 
 var lumaCreateSource = new Atomic.UIMenuItemSource();
@@ -90,6 +93,7 @@ var sources = {
     Physics: physicsCreateSource,
     Scene: sceneCreateSource,
     SubSystem: subsystemCreateSource,
+	Editor : editorCreateSource,
 	Luma: lumaCreateSource
 }
 
@@ -104,11 +108,9 @@ for (var sub in sources) {
 
 class CreateComponentButton extends Atomic.UIButton {
 
-    constructor(node: Atomic.Node) {
+    constructor() {
 
         super();
-
-        this.node = node;
 
         this.fd.id = "Vera";
         this.fd.size = 11;
@@ -134,16 +136,7 @@ class CreateComponentButton extends Atomic.UIButton {
 
         if (ev.target && ev.target.id == "create component popup") {
 
-            var c = this.node.createComponent(ev.refid);
-
-            if (c) {
-
-              var ci = new ComponentInspector();
-              ci.inspect(c);
-
-              this.parent.addChildRelative(ci, Atomic.UI_WIDGET_Z_REL_BEFORE, this);
-
-            }
+            this.sendEvent("SelectionCreateComponent", { componentTypeName : ev.refid});
 
             return true;
 
@@ -151,7 +144,6 @@ class CreateComponentButton extends Atomic.UIButton {
 
     }
 
-    node: Atomic.Node;
     fd: Atomic.UIFontDescription = new Atomic.UIFontDescription();
 
 }
