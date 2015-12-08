@@ -84,6 +84,7 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("GridPositioner", "ComponentGridP
 lumaCreateSource.addItem(new Atomic.UIMenuItem("TestEvents", "ComponentTestEvents"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("DynamicDataTexture2D", "ComponentDynamicDataTexture2D"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("BrandingApplier", "ComponentBrandingApplier"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerDynamicKit", "ComponentPlayerDynamicKit"));
 
 var sources = {
     Audio: audioCreateSource,
