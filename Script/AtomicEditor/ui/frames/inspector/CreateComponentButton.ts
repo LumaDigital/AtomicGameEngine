@@ -88,6 +88,7 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerDynamicKit", "ComponentPla
 lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerComponent", "PlayerComponent"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Rack", "ComponentRack"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Ball", "ComponentBall"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeTexture", "ComponentRandomizeTexture"));
 
 
 var sources = {
