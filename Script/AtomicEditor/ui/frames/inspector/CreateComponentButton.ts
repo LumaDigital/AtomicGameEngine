@@ -89,6 +89,7 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerComponent", "PlayerCompone
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Rack", "ComponentRack"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Ball", "ComponentBall"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeMaterial", "ComponentRandomizeMaterial"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeAnimation", "ComponentRandomizeAnimation"));
 
 
 var sources = {
