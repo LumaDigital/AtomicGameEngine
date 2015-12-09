@@ -87,6 +87,8 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("BrandingApplier", "ComponentBran
 lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerDynamicKit", "ComponentPlayerDynamicKit"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerComponent", "PlayerComponent"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Rack", "ComponentRack"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("Ball", "ComponentBall"));
+
 
 var sources = {
     Audio: audioCreateSource,
