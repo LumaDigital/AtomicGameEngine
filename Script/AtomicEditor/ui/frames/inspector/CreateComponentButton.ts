@@ -85,7 +85,8 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("TestEvents", "ComponentTestEvent
 lumaCreateSource.addItem(new Atomic.UIMenuItem("DynamicDataTexture2D", "ComponentDynamicDataTexture2D"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("BrandingApplier", "ComponentBrandingApplier"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerDynamicKit", "ComponentPlayerDynamicKit"));
-lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerComponent", "PlayerComponent"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("Entity", "ComponentSceneEntity"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("Player", "PlayerComponent"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Rack", "ComponentRack"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Ball", "ComponentBall"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeMaterial", "ComponentRandomizeMaterial"));
