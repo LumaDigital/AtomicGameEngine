@@ -28,7 +28,7 @@
 using namespace ToolCore;
 
 // Luma
-extern void bbs_lib_init(Context* context, JSVM* vm);
+extern void vse_lib_init(Context* context, JSVM* vm);
 
 namespace AtomicEditor
 {
@@ -62,7 +62,7 @@ void AEEditorApp::Start()
     jsapi_init_editor(vm_);
 
     // Luma
-    bbs_lib_init(context_, vm_);
+    vse_lib_init(context_, vm_);
 
 
     duk_get_global_string(vm_->GetJSContext(), "require");

@@ -55,7 +55,7 @@
 #endif
 
 // Luma
-extern void bbs_lib_init(Context* context, JSVM* vm);
+extern void vse_lib_init(Context* context, JSVM* vm);
 
 DEFINE_APPLICATION_MAIN(AtomicPlayer::AtomicPlayerApp)
 
@@ -190,7 +190,7 @@ void AtomicPlayerApp::Start()
 #endif
 
     // Luma
-    bbs_lib_init(context_, vm_);
+    vse_lib_init(context_, vm_);
 
     if (!vm->ExecuteMain())
     {

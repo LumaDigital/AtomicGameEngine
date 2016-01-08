@@ -48,7 +48,7 @@ namespace AtomicPlayer
 }
 
 // Luma
-extern void bbs_lib_init(Context* context, JSVM* vm);
+extern void vse_lib_init(Context* context, JSVM* vm);
 
 namespace AtomicEditor
 {
@@ -264,7 +264,7 @@ void AEPlayerApplication::Start()
 #endif
 
     // Luma
-    bbs_lib_init(context_, vm_);
+    vse_lib_init(context_, vm_);
 
     if (!playerMode->launchedByEditor())
     {
