@@ -51,7 +51,7 @@ elseif(LINUX)
     target_link_libraries(AtomicEditor NETCore NETScript libcurl nativefiledialog ${GTK3_LIBRARIES})
 
 else()
-    target_link_libraries(AtomicEditor NETCore NETScript libcurl Iphlpapi Wldap32  "../../../../../../Lib/vse" "../../../../../../Lib/vse.bbs" "../../../../../../Lib/vse.atomic" "imagehlp.lib")
+    target_link_libraries(AtomicEditor NETCore NETScript libcurl Iphlpapi Wldap32  "../../../../../../Lib/vse" "../../../../../../Lib/vse.bbs" "../../../../../../Lib/vse.vision" "../../../../../../Lib/vse.atomic" "imagehlp.lib")
 
     # pre-Windows 8 can't count on D3DCompiler_47.dll being on system
     add_custom_command (TARGET AtomicEditor POST_BUILD
