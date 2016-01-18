@@ -111,7 +111,7 @@ var sources = {
     SubSystem: subsystemCreateSource,
 	Editor : editorCreateSource,
 	Luma: lumaCreateSource
-}
+};
 
 for (var sub in sources) {
 
@@ -143,7 +143,7 @@ class CreateComponentButton extends Atomic.UIButton {
         var menu = new Atomic.UIMenuWindow(this, "create component popup");
         menu.fontDescription = this.fd;
         menu.show(componentCreateSource);
-    }
+    };
 
     handleWidgetEvent(ev: Atomic.UIWidgetEvent) {
 
