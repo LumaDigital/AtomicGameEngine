@@ -97,6 +97,7 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("Ball", "ComponentBall"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeMaterial", "ComponentRandomizeMaterial"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeAnimation", "ComponentRandomizeAnimation"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("SubmeshSetSwitcher", "ComponentSubmeshSetSwitcher"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("MaterialSetSwitcher", "ComponentMaterialSetSwitcher"));
 
 
 var sources = {
