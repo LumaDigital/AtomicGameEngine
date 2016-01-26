@@ -99,6 +99,7 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeMaterial", "ComponentRa
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeAnimation", "ComponentRandomizeAnimation"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("SubmeshSetSwitcher", "ComponentSubmeshSetSwitcher"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("MaterialSetSwitcher", "ComponentMaterialSetSwitcher"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("ScreenFade", "ComponentScreenFade"));
 
 
 var sources = {
