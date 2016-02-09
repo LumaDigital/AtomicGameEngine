@@ -52,7 +52,7 @@ elseif(LINUX)
 
 else()
     target_link_libraries(AtomicEditor NETCore NETScript libcurl Iphlpapi Wldap32  "../../../../../../Lib/vse" "../../../../../../Lib/vse.bbs" "../../../../../../Lib/vse.vision" "../../../../../../Lib/vse.atomic" "imagehlp.lib")
-
+	
     # pre-Windows 8 can't count on D3DCompiler_47.dll being on system
     add_custom_command (TARGET AtomicEditor POST_BUILD
     COMMAND ${CMAKE_COMMAND}
@@ -62,6 +62,14 @@ endif()
 
 if (TARGET_PROPERTIES)
     set_target_properties (AtomicEditor PROPERTIES ${TARGET_PROPERTIES})
+endif ()
+
+if (PROJECT_PROPERTIES_CXX)
+	set_target_properties (AtomicEditor PROPERTIES COMPILE_FLAGS ${PROJECT_PROPERTIES_CXX})
+endif ()
+
+if (PROJECT_PROPERTIES_LINKER)
+	set_target_properties (AtomicEditor PROPERTIES LINK_FLAGS ${PROJECT_PROPERTIES_LINKER})
 endif ()
 
 GroupSources("Application")

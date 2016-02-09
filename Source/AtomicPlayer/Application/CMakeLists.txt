@@ -80,3 +80,11 @@ endif(LINUX)
 if (TARGET_PROPERTIES)
     set_target_properties (AtomicPlayer PROPERTIES ${TARGET_PROPERTIES})
 endif ()
+
+if (PROJECT_PROPERTIES_CXX)
+	set_target_properties (AtomicPlayer PROPERTIES COMPILE_FLAGS ${PROJECT_PROPERTIES_CXX})
+endif ()
+
+if (PROJECT_PROPERTIES_LINKER)
+	set_target_properties (AtomicPlayer PROPERTIES LINK_FLAGS ${PROJECT_PROPERTIES_LINKER})
+endif ()

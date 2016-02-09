@@ -92,6 +92,43 @@ namespace('build', function() {
     });
 
   });
+  
+  // Builds a standalone Atomic Editor, which can be distributed out of build tree
+  task('atomiceditordebug', {
+    async: true
+  }, function() {
+
+    // Clean build
+    var cleanBuild = true;
+    if (cleanBuild) {
+      common.cleanCreateDir(buildDir);
+      common.cleanCreateDir(editorAppFolder);
+      common.cleanCreateDir(host.getGenScriptRootDir("WINDOWS"));
+    }
+
+    // create the generated script files, so they will be picked up by cmake
+    host.createGenScriptFiles("WINDOWS");
+
+    process.chdir(buildDir);
+
+    var cmds = [];
+
+    // Build the AtomicEditor
+    cmds.push(atomicRoot + "Build/Scripts/Windows/CompileAtomicEditorDebug.bat");
+	
+    jake.exec(cmds, function() {
+
+      PackageBinariesAndResources();
+
+      console.log("Atomic Editor build to ", editorAppFolder);
+
+      complete();
+
+    }, {
+      printStdout: true
+    });
+
+  });
 
   // Generate a Visual Studio 2015 solution
   task('genvs2015', {
