@@ -10,10 +10,8 @@ var editorAppFolder = host.artifactsRoot + "AtomicEditor/";
 function PackageBinariesAndResources() {
 
   // Copy the Editor binaries
-  fs.copySync(buildDir + "Source/AtomicEditor/Release/AtomicEditor.exe",
-    host.artifactsRoot + "AtomicEditor/AtomicEditor.exe");
-  fs.copySync(buildDir + "Source/AtomicEditor/Release/D3DCompiler_47.dll",
-    host.artifactsRoot + "AtomicEditor/D3DCompiler_47.dll");
+  fs.copySync(buildDir + "Source/AtomicEditor/Release",
+    host.artifactsRoot + "AtomicEditor");
 
   // We need some resources to run
   fs.copySync(atomicRoot + "Resources/CoreData",
