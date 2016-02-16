@@ -120,7 +120,7 @@ namespace('build', function() {
 
       PackageBinariesAndResources();
 
-      console.log("Atomic Editor build to ", editorAppFolder);
+      console.log("Atomic Editor debug build to ", editorAppFolder);
 
       complete();
 
