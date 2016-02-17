@@ -8,7 +8,11 @@ set /p shaCurrent=<shaCurrent.txt
 
 
 IF %shaPrev%==%shaCurrent% (
-	call ./_build_art_minimal.bat
+	echo "Performing minimal rebuild"
+	call cd..
+	call _build_art_minimal.bat
 ) ELSE (
-	call ./_build_art.bat
+	echo "Performing full rebuild"
+	call cd..
+	call _build_art.bat
 )
