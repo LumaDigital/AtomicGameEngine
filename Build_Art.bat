@@ -8,7 +8,7 @@ set /p shaCurrent=<shaCurrent.txt
 
 
 IF %shaPrev%==%shaCurrent% (
-	call ../_build_art_minimal.bat
+	call ./_build_art_minimal.bat
 ) ELSE (
-	call ../_build_art.bat
+	call ./_build_art.bat
 )
