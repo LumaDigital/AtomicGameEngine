@@ -6,7 +6,6 @@ git reset --hard origin/bbs
 git rev-parse HEAD > shaCurrent.txt
 set /p shaCurrent=<shaCurrent.txt
 
-
 IF %shaPrev%==%shaCurrent% (
 	echo "Performing minimal rebuild"
 	call cd..
