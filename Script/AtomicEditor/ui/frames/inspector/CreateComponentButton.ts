@@ -98,6 +98,7 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("Basket", "ComponentBasket"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("BallPhysics", "BallPhysicsComponent"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeMaterial", "ComponentRandomizeMaterial"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeAnimation", "ComponentRandomizeAnimation"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomNumberGenerator", "ComponentRandomNumberGenerator"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("SubmeshSetSwitcher", "ComponentSubmeshSetSwitcher"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("MaterialSetSwitcher", "ComponentMaterialSetSwitcher"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("ScreenFade", "ComponentScreenFade"));
