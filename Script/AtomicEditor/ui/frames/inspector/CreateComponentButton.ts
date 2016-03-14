@@ -86,10 +86,10 @@ var componentCreateSource = new Atomic.UIMenuItemSource();
 
 var lumaCreateSource = new Atomic.UIMenuItemSource();
 lumaCreateSource.addItem(new Atomic.UIMenuItem("GridPositioner", "ComponentGridPositioner"));
-lumaCreateSource.addItem(new Atomic.UIMenuItem("TestEvents", "ComponentTestEvents"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("DynamicDataTexture2D", "ComponentDynamicDataTexture2D"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("BrandingApplier", "ComponentBrandingApplier"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerDynamicKit", "ComponentPlayerDynamicKit"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("CourtDynamicKit", "ComponentCourtDynamicKit"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Entity", "ComponentSceneEntity"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Player", "PlayerComponent"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Rack", "ComponentRack"));
