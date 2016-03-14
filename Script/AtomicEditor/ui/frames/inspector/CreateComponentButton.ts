@@ -102,6 +102,7 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomNumberGenerator", "Compone
 lumaCreateSource.addItem(new Atomic.UIMenuItem("SubmeshSetSwitcher", "ComponentSubmeshSetSwitcher"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("MaterialSetSwitcher", "ComponentMaterialSetSwitcher"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("ScreenFade", "ComponentScreenFade"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("PostProcess", "ComponentPostProcess"));
 
 
 var sources = {
