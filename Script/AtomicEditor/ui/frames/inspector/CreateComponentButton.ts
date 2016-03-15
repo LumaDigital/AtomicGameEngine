@@ -91,11 +91,11 @@ lumaCreateSource.addItem(new Atomic.UIMenuItem("BrandingApplier", "ComponentBran
 lumaCreateSource.addItem(new Atomic.UIMenuItem("PlayerDynamicKit", "ComponentPlayerDynamicKit"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("CourtDynamicKit", "ComponentCourtDynamicKit"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Entity", "ComponentSceneEntity"));
-lumaCreateSource.addItem(new Atomic.UIMenuItem("Player", "PlayerComponent"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("Player", "ComponentPlayer"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Rack", "ComponentRack"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Ball", "ComponentBall"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("Basket", "ComponentBasket"));
-lumaCreateSource.addItem(new Atomic.UIMenuItem("BallPhysics", "BallPhysicsComponent"));
+lumaCreateSource.addItem(new Atomic.UIMenuItem("BallPhysics", "ComponentPhysicsBall"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeMaterial", "ComponentRandomizeMaterial"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomizeAnimation", "ComponentRandomizeAnimation"));
 lumaCreateSource.addItem(new Atomic.UIMenuItem("RandomNumberGenerator", "ComponentRandomNumberGenerator"));
