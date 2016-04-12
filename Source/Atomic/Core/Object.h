@@ -38,6 +38,7 @@ class EventHandler;
         virtual Atomic::StringHash GetType() const { return GetTypeStatic(); } \
         virtual Atomic::StringHash GetBaseType() const { return GetBaseTypeStatic(); } \
         virtual const Atomic::String& GetTypeName() const { return GetTypeNameStatic(); } \
+        virtual const Atomic::String& GetBaseTypeName() const { return GetBaseTypeNameStatic(); } \
         static Atomic::StringHash GetTypeStatic() { static const Atomic::StringHash typeStatic(#typeName); return typeStatic; } \
         static const Atomic::String& GetTypeNameStatic() { static const Atomic::String typeNameStatic(#typeName); return typeNameStatic; } \
         virtual Atomic::ClassID GetClassID() const { return GetClassIDStatic(); } \
@@ -46,6 +47,7 @@ class EventHandler;
 #define BASEOBJECT(typeName) \
     public: \
         static Atomic::StringHash GetBaseTypeStatic() { static const Atomic::StringHash baseTypeStatic(#typeName); return baseTypeStatic; } \
+        static const Atomic::String& GetBaseTypeNameStatic() { static const Atomic::String baseTypeNameStatic(#typeName); return baseTypeNameStatic; }
 
 /// Base class for objects with type identification, subsystem access and event sending/receiving capability.
 class ATOMIC_API Object : public RefCounted
@@ -66,6 +68,8 @@ public:
     virtual Atomic::StringHash GetBaseType() const = 0;
     /// Return type name.
     virtual const Atomic::String& GetTypeName() const = 0;
+    /// Return base type name.
+    virtual const Atomic::String& GetBaseTypeName() const = 0;
     /// Handle event.
     virtual void OnEvent(Object* sender, StringHash eventType, VariantMap& eventData);
 
