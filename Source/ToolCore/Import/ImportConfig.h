@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2016 THUNDERBEAST GAMES LLC
+// Copyright (c) 2014-2015, THUNDERBEAST GAMES LLC All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,35 @@
 // THE SOFTWARE.
 //
 
-/**
- * All of the publicly available events that client extensions listen to
- */
-export default class ClientExtensionEventNames {
-    static CodeLoadedEvent = "CodeLoadedEvent";
-    static ConfigureEditorEvent = "ConfigureEditorEvent";
-    static CodeSavedEvent = "CodeSavedEvent";
-    static ResourceRenamedEvent = "ResourceRenamedEvent";
-    static ResourceDeletedEvent = "ResourceDeletedEvent";
-    static ProjectUnloadedEvent = "ProjectUnloadedEvent";
+#pragma once
+
+#include "../../Atomic/Core/Variant.h"
+#include "../../Atomic/Resource/JSONValue.h"
+#include "../../Atomic/Resource/Configuration.h"
+
+namespace Atomic
+{
+
+class Context;
+
+class ImportConfig :
+    Configuration
+{
+
+public:
+
+    static bool LoadFromFile(Context* context, const String& filename) { return importConfig_.Configuration::LoadFromFile(context, filename); }
+    static bool LoadFromJSON(const String& json) { return importConfig_.Configuration::LoadFromJSON(json); }
+
+    /// Apply the configuration to a setting variant map, values that exist will not be overriden
+    static void ApplyConfig(VariantMap& settings, bool overwrite = false) { return importConfig_.Configuration::ApplyConfig(settings, overwrite); }
+
+private:
+
+    virtual bool LoadDesktopConfig(JSONValue root);
+    bool LoadAIFlagsDefaultConfig(const JSONValue& jflags);
+
+    static ImportConfig importConfig_;
+};
+
 }

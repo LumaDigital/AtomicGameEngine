@@ -77,6 +77,10 @@ declare module Editor.EditorEvents {
         code: string;
     }
 
+    export interface CodeSavedEvent extends EditorFileEvent {
+        code: string;
+    }
+
     export interface EditorCloseResourceEvent {
 
         editor: Editor.ResourceEditor;
@@ -277,7 +281,7 @@ declare module Editor.ClientExtensions {
     export interface WebViewService extends Editor.Extensions.EditorService {
         configureEditor?(ev: EditorEvents.EditorFileEvent);
         codeLoaded?(ev: EditorEvents.CodeLoadedEvent);
-        save?(ev: EditorEvents.SaveResourceEvent);
+        save?(ev: EditorEvents.CodeSavedEvent);
         delete?(ev: EditorEvents.DeleteResourceEvent);
         rename?(ev: EditorEvents.RenameResourceEvent);
         projectUnloaded?();

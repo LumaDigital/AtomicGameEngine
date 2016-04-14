@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2016 THUNDERBEAST GAMES LLC
+// Copyright (c) 2014-2015, THUNDERBEAST GAMES LLC All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,41 @@
 // THE SOFTWARE.
 //
 
-/**
- * All of the publicly available events that client extensions listen to
- */
-export default class ClientExtensionEventNames {
-    static CodeLoadedEvent = "CodeLoadedEvent";
-    static ConfigureEditorEvent = "ConfigureEditorEvent";
-    static CodeSavedEvent = "CodeSavedEvent";
-    static ResourceRenamedEvent = "ResourceRenamedEvent";
-    static ResourceDeletedEvent = "ResourceDeletedEvent";
-    static ProjectUnloadedEvent = "ProjectUnloadedEvent";
+#pragma once
+
+#include "../Core/Variant.h"
+#include "JSONValue.h"
+
+namespace Atomic
+{
+
+class Context;
+
+class Configuration
+{
+public:
+
+    bool LoadFromFile(Context* context, const String& filename);
+    bool LoadFromJSON(const String& json);
+
+    /// Apply the configuration to a setting variant map, values that exist will not be overriden
+    void ApplyConfig(VariantMap& settings, bool overwrite = false);
+
+    const VariantMap& GetConfig() { return valueMap_; }
+
+protected:
+    static bool GetBoolValue(const JSONValue& jvalue, bool defaultValue);
+    static int GetIntValue(const JSONValue& jvalue, int defaultValue);
+    static String GetStringValue(const JSONValue& jvalue, const String& defaultValue);
+
+    virtual bool LoadDesktopConfig(JSONValue root) { return true; };
+
+    VariantMap valueMap_;
+
+private:
+    String filename_;
+};
 }
+
+
+
