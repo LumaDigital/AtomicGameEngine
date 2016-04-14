@@ -1748,6 +1748,10 @@ TBBlock *TBStyleEdit::FindBlock(int32 y) const
 
 bool TBStyleEdit::KeyDown(int key, SPECIAL_KEY special_key, MODIFIER_KEYS modifierkeys)
 {
+    //Deselects the text if the focus moves to another editfield
+    if (selection.IsSelected() && special_key == TB_KEY_TAB)
+        selection.SelectNothing();
+
     if (select_state)
         return false;
 
@@ -1945,6 +1949,17 @@ bool TBStyleEdit::KeyDown(int key, SPECIAL_KEY special_key, MODIFIER_KEYS modifi
     }
     if (handled)
         ScrollIfNeeded();
+
+    return handled;
+}
+
+//Selects the text when navigating the editfields with the Tab key
+bool TBStyleEdit::KeyUp(int key, SPECIAL_KEY special_key, MODIFIER_KEYS modifierkeys)
+{
+    bool handled = true;
+
+    if (special_key == TB_KEY_TAB)
+        selection.SelectAll();
 
     return handled;
 }
