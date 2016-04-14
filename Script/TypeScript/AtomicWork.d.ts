@@ -250,7 +250,7 @@ declare module Atomic {
 
 }
 
-/*declare module AtomicNET {
+declare module AtomicNET {
 
     export interface CSComponentClassChangedEvent {
 
@@ -259,7 +259,7 @@ declare module Atomic {
 
     }
 
-}*/
+}
 
 declare module Editor {
 
