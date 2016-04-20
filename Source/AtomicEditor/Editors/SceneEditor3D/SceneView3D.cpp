@@ -74,7 +74,7 @@ SceneView3D ::SceneView3D(Context* context, SceneEditor3D *sceneEditor) :
     mouseMoved_(false),
     enabled_(true),
     cameraMove_(false),
-    cameraMoveSpeed_(20.0f)
+    cameraMoveSpeed_(20.0f),
     gridEnabled_(false)
 {
 
