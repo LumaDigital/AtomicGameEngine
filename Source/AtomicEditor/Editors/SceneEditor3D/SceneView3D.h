@@ -77,6 +77,8 @@ private:
 
     bool GetChangingCameraSpeed();
 
+    void ToggleGrid();
+
     void HandleMouseMove(StringHash eventType, VariantMap& eventData);
 
     void UpdateDragNode(int mouseX, int mouseY);
@@ -103,6 +105,7 @@ private:
     bool mouseMoved_;
 
     bool enabled_;
+    bool gridEnabled_;
 
     bool cameraMove_;
     float cameraMoveTime_;
