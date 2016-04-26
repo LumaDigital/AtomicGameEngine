@@ -272,11 +272,6 @@ bool TBEditField::OnEvent(const TBWidgetEvent &ev)
 
         return m_style_edit.KeyDown(ev.key, ev.special_key, ev.modifierkeys);
     }
-    else if (ev.type == EVENT_TYPE_KEY_UP)
-    {
-        TBWidget::OnEvent(ev);
-        return m_style_edit.KeyUp(ev.key, ev.special_key, ev.modifierkeys);
-    }
     else if ((ev.type == EVENT_TYPE_CLICK && ev.target->GetID() == TBIDC("popupmenu")) ||
              (ev.type == EVENT_TYPE_SHORTCUT))
     {
