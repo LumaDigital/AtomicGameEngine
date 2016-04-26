@@ -77,6 +77,8 @@ private:
 
     bool GetChangingCameraSpeed();
 
+    void ToggleGrid();
+
     void HandleMouseMove(StringHash eventType, VariantMap& eventData);
 
     void UpdateDragNode(int mouseX, int mouseY);
@@ -96,6 +98,8 @@ private:
 
     WeakPtr<SceneEditor3D> sceneEditor_;
 
+    int newCameraYPos_;
+
     float yaw_;
     float pitch_;
 
@@ -103,6 +107,7 @@ private:
     bool mouseMoved_;
 
     bool enabled_;
+    bool gridEnabled_;
 
     bool cameraMove_;
     float cameraMoveTime_;
