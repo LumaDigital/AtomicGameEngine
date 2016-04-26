@@ -242,6 +242,7 @@ void TBSelection::Select(const TBPoint &from, const TBPoint &to)
     CorrectOrder();
     Invalidate();
     styledit->caret.UpdateWantedX();
+    SelectAll();
 }
 
 void TBSelection::Select(int glob_ofs_from, int glob_ofs_to)
@@ -1953,17 +1954,6 @@ bool TBStyleEdit::KeyDown(int key, SPECIAL_KEY special_key, MODIFIER_KEYS modifi
     return handled;
 }
 
-//Selects the text when navigating the editfields with the Tab key
-bool TBStyleEdit::KeyUp(int key, SPECIAL_KEY special_key, MODIFIER_KEYS modifierkeys)
-{
-    bool handled = true;
-
-    if (special_key == TB_KEY_TAB)
-        selection.SelectAll();
-
-    return handled;
-}
-
 void TBStyleEdit::Cut()
 {
     if (packed.password_on)
@@ -2112,9 +2102,15 @@ bool TBStyleEdit::MouseMove(const TBPoint &point)
 void TBStyleEdit::Focus(bool focus)
 {
     if (focus)
+    {
         listener->CaretBlinkStart();
+        selection.SelectAll();
+    }
     else
+    {
         listener->CaretBlinkStop();
+        selection.SelectNothing();
+    }
 
     caret.on = focus;
     caret.Invalidate();
