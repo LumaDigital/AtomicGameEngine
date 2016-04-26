@@ -1749,10 +1749,6 @@ TBBlock *TBStyleEdit::FindBlock(int32 y) const
 
 bool TBStyleEdit::KeyDown(int key, SPECIAL_KEY special_key, MODIFIER_KEYS modifierkeys)
 {
-    //Deselects the text if the focus moves to another editfield
-    if (selection.IsSelected() && special_key == TB_KEY_TAB)
-        selection.SelectNothing();
-
     if (select_state)
         return false;
 
