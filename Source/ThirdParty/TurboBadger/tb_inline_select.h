@@ -60,6 +60,9 @@ protected:
 private:
 
     TBStr m_initial_edit_value;
+    bool m_button_pointer_down;
+    bool m_spinning;
+    int m_last_position_x;
 
     void InvokeModifiedEvent();
     void OnWidgetFocusChanged(TBWidget *widget, bool focused);

@@ -20,6 +20,8 @@ TBInlineSelect::TBInlineSelect()
     , m_min(0)
     , m_max(100)
     , m_modified(false)
+    , m_button_pointer_down(false)
+    , m_spinning(false)
 {
     SetSkinBg(TBIDC("TBInlineSelect"));
     AddChild(&m_layout);
@@ -117,14 +119,42 @@ bool TBInlineSelect::OnEvent(const TBWidgetEvent &ev)
             return true;
         }
     }
-    else if (ev.type == EVENT_TYPE_CLICK && ev.target->GetID() == TBIDC("dec"))
+    else if (ev.type == EVENT_TYPE_POINTER_DOWN)
     {
-        SetValueDouble(GetValueDouble() - 1);
+        m_button_pointer_down = true;
+        m_spinning = false;
+        int test4 = ev.target_x;
+        m_last_position_x = ev.target_x;
+    }
+    else if (ev.type == EVENT_TYPE_POINTER_MOVE && (ev.target->GetID() == TBIDC("dec") || ev.target->GetID() == TBIDC("inc")) && m_button_pointer_down)
+    {
+
+        if ((ev.target_x - m_last_position_x) > 0)  //positive increments
+            SetValueDouble(GetValueDouble() + 0.01);
+        else
+            SetValueDouble(GetValueDouble() - 0.01);
+
+        m_last_position_x = ev.target_x;
+
+        
         if (!ev.target->IsCaptured()) {
 
             InvokeModifiedEvent();
 
         }
+
+        return true;
+    }
+    else if (ev.type == EVENT_TYPE_POINTER_UP)
+    {
+        if (m_spinning)
+        {
+            m_spinning = false;
+            m_button_pointer_down = false;
+        }
+        else 
+            m_spinning = true;
+
         return true;
     }
     else if (ev.type == EVENT_TYPE_CLICK && ev.target->GetID() == TBIDC("inc"))
@@ -136,6 +166,22 @@ bool TBInlineSelect::OnEvent(const TBWidgetEvent &ev)
             InvokeModifiedEvent();
 
         }
+
+        m_button_pointer_down = false;
+
+        return true;
+    }
+    else if (ev.type == EVENT_TYPE_CLICK && ev.target->GetID() == TBIDC("dec"))
+    {
+        SetValueDouble(GetValueDouble() - 1);
+
+        if (!ev.target->IsCaptured()) {
+
+            InvokeModifiedEvent();
+
+        }
+
+        m_button_pointer_down = false;
 
         return true;
     }
