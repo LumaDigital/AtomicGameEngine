@@ -29,6 +29,7 @@
 #include "../IO/File.h"
 #include "../IO/Log.h"
 #include "../IO/PackageFile.h"
+#include "../IO/FileSystem.h"
 #include "../Resource/ResourceCache.h"
 #include "../Resource/ResourceEvents.h"
 #include "../Resource/XMLFile.h"
@@ -1062,6 +1063,8 @@ void Scene::FinishLoading(Deserializer* source)
     {
         fileName_ = source->GetName();
         checksum_ = source->GetChecksum();
+        if (GetName() == String::EMPTY)
+            SetName(Atomic::GetFileName(fileName_));
     }
 }
 
