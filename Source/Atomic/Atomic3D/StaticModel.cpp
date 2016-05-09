@@ -76,6 +76,9 @@ void StaticModel::RegisterObject(Context* context)
 
     ACCESSOR_ATTRIBUTE("Geometry Enabled", GetGeometryEnabledAttr, SetGeometryEnabledAttr, VariantVector,
         Variant::emptyVariantVector, AM_FILE | AM_NOEDIT);
+    // TODO: NOEDIT
+    ACCESSOR_ATTRIBUTE("Lightmap UV offsets", GetLightmapUVOffset, SetLightmapUVOffset, Vector2, Vector2::ZERO, AM_DEFAULT/* | AM_NOEDIT*/);
+    ACCESSOR_ATTRIBUTE("Lightmap UV scale", GetLightmapUVScale, SetLightmapUVScale, Vector2, Vector2::ZERO, AM_DEFAULT/* | AM_NOEDIT*/);
 
     // ATOMIC END
 }
@@ -572,6 +575,20 @@ const VariantVector& StaticModel::GetGeometryEnabledAttr() const
     }
 
     return geometryEnabled_;
+}
+
+void StaticModel::SetLightmapUVOffset(const Vector2& offset)
+{
+    lightmapUVOffset_ = offset;
+
+    // TODO: Apply offset
+}
+
+void StaticModel::SetLightmapUVScale(const Vector2& scale)
+{
+    lightmapUVOffset_ = scale;
+
+    // TODO: Apply offset
 }
 
 // ATOMIC END

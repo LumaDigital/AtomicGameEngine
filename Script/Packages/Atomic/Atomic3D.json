@@ -8,7 +8,7 @@
 				 "StaticModel",
 				 "Animation", "AnimatedModel", "AnimationController", "AnimationState", "Billboard", "BillboardSet", "CustomGeometry",
 				 "DecalSet", "ParticleEffect", "ParticleEmitter",
-				 "Skybox", "StaticModelGroup", "Terrain", "TerrainPatch", "ModelLightmap"],
+				 "Skybox", "StaticModelGroup", "Terrain", "TerrainPatch", "StaticModelLightmapGenerator", "SceneLightmapGenerator"],
 	"overloads" : {
 		"StaticModel" : {
 			"SetMaterial" : ["Material"]

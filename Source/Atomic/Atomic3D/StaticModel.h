@@ -118,6 +118,11 @@ public:
     void SetGeometryEnabledAttr(const VariantVector& value);
     const VariantVector& GetGeometryEnabledAttr() const;
 
+    void SetLightmapUVOffset(const Vector2& offset);
+    const Vector2& GetLightmapUVOffset() const { return lightmapUVOffset_; }
+    void SetLightmapUVScale(const Vector2& scale);
+    const Vector2& GetLightmapUVScale() const { return lightmapUVScale_; }
+
     // ATOMIC END
 
 protected:
@@ -147,6 +152,10 @@ protected:
     mutable VariantVector geometryEnabled_;
     /// true if any geometry has been disabled
     mutable bool geometryDisabled_;
+    /// UV offset into scene lightmap texture
+    Vector2 lightmapUVOffset_;
+    /// UV scale in scene lightmap texture
+    Vector2 lightmapUVScale_;
     // ATOMIC END
 
 private:
