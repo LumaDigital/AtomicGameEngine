@@ -2123,7 +2123,7 @@ namespace Atomic
         }
     }
 
-    bool Image::SetSubimage(const Image* image, const IntRect& rect) const
+    bool Image::SetSubimage(const Image* image, const IntRect& rect)
     {
         if (!data_)
             return false;

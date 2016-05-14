@@ -72,9 +72,9 @@ public:
     /// Set model.
     void SetModel(Model* model);
     /// Set material on all geometries.
-    void SetMaterial(Material* material);
+    virtual void SetMaterial(Material* material);
     /// Set material on one geometry. Return true if successful.
-    bool SetMaterial(unsigned index, Material* material);
+    virtual bool SetMaterial(unsigned index, Material* material);
     /// Set occlusion LOD level. By default (M_MAX_UNSIGNED) same as visible.
     void SetOcclusionLodLevel(unsigned level);
     /// Apply default materials from a material list file. If filename is empty (default), the model's resource name with extension .txt will be used.
@@ -104,7 +104,7 @@ public:
     /// Return model attribute.
     ResourceRef GetModelAttr() const;
     /// Return materials attribute.
-    const ResourceRefList& GetMaterialsAttr() const;
+    virtual const ResourceRefList& GetMaterialsAttr() const;
 
     // ATOMIC BEGIN
 
@@ -117,11 +117,6 @@ public:
 
     void SetGeometryEnabledAttr(const VariantVector& value);
     const VariantVector& GetGeometryEnabledAttr() const;
-
-    void SetLightmapUVOffset(const Vector2& offset);
-    const Vector2& GetLightmapUVOffset() const { return lightmapUVOffset_; }
-    void SetLightmapUVScale(const Vector2& scale);
-    const Vector2& GetLightmapUVScale() const { return lightmapUVScale_; }
 
     // ATOMIC END
 
@@ -152,10 +147,6 @@ protected:
     mutable VariantVector geometryEnabled_;
     /// true if any geometry has been disabled
     mutable bool geometryDisabled_;
-    /// UV offset into scene lightmap texture
-    Vector2 lightmapUVOffset_;
-    /// UV scale in scene lightmap texture
-    Vector2 lightmapUVScale_;
     // ATOMIC END
 
 private:

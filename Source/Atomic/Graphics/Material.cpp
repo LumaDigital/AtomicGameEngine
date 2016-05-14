@@ -588,27 +588,9 @@ void Material::SetTexture(TextureUnit unit, Texture* texture)
 
 void Material::SetUVTransform(const Vector2& offset, float rotation, const Vector2& repeat)
 {
-    Matrix3x4 transform(Matrix3x4::IDENTITY);
-    transform.m00_ = repeat.x_;
-    transform.m11_ = repeat.y_;
-    transform.m03_ = -0.5f * transform.m00_ + 0.5f;
-    transform.m13_ = -0.5f * transform.m11_ + 0.5f;
-
-    Matrix3x4 rotationMatrix(Matrix3x4::IDENTITY);
-    rotationMatrix.m00_ = Cos(rotation);
-    rotationMatrix.m01_ = Sin(rotation);
-    rotationMatrix.m10_ = -rotationMatrix.m01_;
-    rotationMatrix.m11_ = rotationMatrix.m00_;
-    rotationMatrix.m03_ = 0.5f - 0.5f * (rotationMatrix.m00_ + rotationMatrix.m01_);
-    rotationMatrix.m13_ = 0.5f - 0.5f * (rotationMatrix.m10_ + rotationMatrix.m11_);
-
-    transform = rotationMatrix * transform;
-
-    Matrix3x4 offsetMatrix = Matrix3x4::IDENTITY;
-    offsetMatrix.m03_ = offset.x_;
-    offsetMatrix.m13_ = offset.y_;
-
-    transform = offsetMatrix * transform;
+    // ATOMIC BEGIN
+    Matrix3x4 transform = CalculateUVTransform(offset, rotation, repeat);
+    // ATOMIC END
 
     SetShaderParameter("UOffset", Vector4(transform.m00_, transform.m01_, transform.m02_, transform.m03_));
     SetShaderParameter("VOffset", Vector4(transform.m10_, transform.m11_, transform.m12_, transform.m13_));
@@ -806,6 +788,10 @@ void Material::ResetToDefaults()
     shaderParameters_.Clear();
     SetShaderParameter("UOffset", Vector4(1.0f, 0.0f, 0.0f, 0.0f));
     SetShaderParameter("VOffset", Vector4(0.0f, 1.0f, 0.0f, 0.0f));
+    // ATOMIC BEGIN
+    SetShaderParameter("UOffset2", Vector4(1.0f, 0.0f, 0.0f, 0.0f));
+    SetShaderParameter("VOffset2", Vector4(0.0f, 1.0f, 0.0f, 0.0f));
+    // ATOMIC END
     SetShaderParameter("MatDiffColor", Vector4::ONE);
     SetShaderParameter("MatEmissiveColor", Vector3::ZERO);
     SetShaderParameter("MatEnvMapColor", Vector3::ONE);
@@ -894,5 +880,50 @@ void Material::HandleAttributeAnimationUpdate(StringHash eventType, VariantMap& 
     for (unsigned i = 0; i < finishedNames.Size(); ++i)
         SetShaderParameterAnimation(finishedNames[i], 0);
 }
+
+// ATOMIC BEGIN
+
+/// Set texture coordinate transform.
+void Material::SetUVTransform2(const Vector2& offset, float rotation, const Vector2& repeat)
+{
+    Matrix3x4 transform = CalculateUVTransform(offset, rotation, repeat);
+
+    SetShaderParameter("UOffset2", Vector4(transform.m00_, transform.m01_, transform.m02_, transform.m03_));
+    SetShaderParameter("VOffset2", Vector4(transform.m10_, transform.m11_, transform.m12_, transform.m13_));
+}
+
+/// Set texture coordinate transform.
+void Material::SetUVTransform2(const Vector2& offset, float rotation, float repeat)
+{
+    SetUVTransform2(offset, rotation, Vector2(repeat, repeat));
+}
+
+Matrix3x4 Material::CalculateUVTransform(const Vector2& offset, float rotation, const Vector2& repeat)
+{
+    Matrix3x4 transform(Matrix3x4::IDENTITY);
+    transform.m00_ = repeat.x_;
+    transform.m11_ = repeat.y_;
+    transform.m03_ = -0.5f * transform.m00_ + 0.5f;
+    transform.m13_ = -0.5f * transform.m11_ + 0.5f;
+
+    Matrix3x4 rotationMatrix(Matrix3x4::IDENTITY);
+    rotationMatrix.m00_ = Cos(rotation);
+    rotationMatrix.m01_ = Sin(rotation);
+    rotationMatrix.m10_ = -rotationMatrix.m01_;
+    rotationMatrix.m11_ = rotationMatrix.m00_;
+    rotationMatrix.m03_ = 0.5f - 0.5f * (rotationMatrix.m00_ + rotationMatrix.m01_);
+    rotationMatrix.m13_ = 0.5f - 0.5f * (rotationMatrix.m10_ + rotationMatrix.m11_);
+
+    transform = rotationMatrix * transform;
+
+    Matrix3x4 offsetMatrix = Matrix3x4::IDENTITY;
+    offsetMatrix.m03_ = offset.x_;
+    offsetMatrix.m13_ = offset.y_;
+
+    return offsetMatrix * transform;
+}
+
+// ATOMIC END
+
 
 }

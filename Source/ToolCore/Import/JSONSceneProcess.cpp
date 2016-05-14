@@ -805,10 +805,10 @@ bool JSONSceneProcess::ProcessComponent(Node* node, const JSONMeshRenderer* jmes
         LMStaticModel* lmstatic = node->CreateComponent<LMStaticModel>();
         staticModel = lmstatic;
 
-        const Vector4& tilingOffset = jmeshrenderer->GetLightmapTilingOffset();
-        lmstatic->lightmapTilingOffset_ = tilingOffset;
+        Vector4 tilingOffset = jmeshrenderer->GetLightmapTilingOffset();
+        tilingOffset.w_ = -tilingOffset.w_;
+        lmstatic->SetLightmapUVTransform(tilingOffset);
 
-        lmstatic->lightmapTilingOffset_.w_ = -lmstatic->lightmapTilingOffset_.w_;
 
         String lightmapName;
 

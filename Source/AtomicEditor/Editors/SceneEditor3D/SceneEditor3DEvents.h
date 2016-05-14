@@ -154,4 +154,10 @@ EVENT(E_CUBEMAPRENDEREND, CubemapRenderEnd)
 
 }
 
+
+EVENT(E_LIGHTMAPGENERATEEND, LightmapGenerateEnd)
+{
+
+}
+
 }

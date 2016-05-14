@@ -103,12 +103,8 @@ bool CubemapGenerator::InitPaths()
         }
     }
 
-    // TODO: There should be a better way of getting the resource path
-    ToolSystem* tsystem = GetSubsystem<ToolSystem>();
-    Project* project = tsystem->GetProject();
-
-    resourcePath_ = outputPathAbsolute_;
-    resourcePath_.Replace(project->GetResourcePath(), "");
+    Project* project = GetSubsystem<ToolSystem>()->GetProject();
+    resourcePath_ = project->GetResourceRelativePath(outputPathAbsolute_);
     resourcePath_ = AddTrailingSlash(resourcePath_);
 
     return true;

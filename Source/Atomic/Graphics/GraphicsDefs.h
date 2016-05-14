@@ -294,6 +294,10 @@ extern ATOMIC_API const StringHash VSP_MODEL;
 extern ATOMIC_API const StringHash VSP_VIEWPROJ;
 extern ATOMIC_API const StringHash VSP_UOFFSET;
 extern ATOMIC_API const StringHash VSP_VOFFSET;
+// ATOMIC BEGIN
+extern ATOMIC_API const StringHash VSP_UOFFSET2;
+extern ATOMIC_API const StringHash VSP_VOFFSET2;
+// ATOMIC END
 extern ATOMIC_API const StringHash VSP_ZONE;
 extern ATOMIC_API const StringHash VSP_LIGHTMATRICES;
 extern ATOMIC_API const StringHash VSP_SKINMATRICES;

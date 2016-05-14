@@ -234,6 +234,16 @@ public:
     /// Return the names of supported texture units
     static const char** GetTextureUnitNames();
 
+    // ATOMIC BEGIN
+    /// Set second texture coordinate transform.
+    void SetUVTransform2(const Vector2& offset, float rotation, const Vector2& repeat);
+    /// Set second texture coordinate transform.
+    void SetUVTransform2(const Vector2& offset, float rotation, float repeat);
+
+    static Matrix3x4 CalculateUVTransform(const Vector2& offset, float rotation, const Vector2& repeat);
+
+    // ATOMIC END
+
 private:
     /// Re-evaluate occlusion rendering.
     void CheckOcclusion();
@@ -284,6 +294,7 @@ private:
     SharedPtr<XMLFile> loadXMLFile_;
     /// Associated scene for shader parameter animation updates.
     WeakPtr<Scene> scene_;
+
 };
 
 }

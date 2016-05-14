@@ -50,6 +50,7 @@ public:
 
     /// Paths
     const String& GetResourcePath() { return resourcePath_; }
+    String GetResourceRelativePath(const String& resourceAbsolutePath) const;
     void SetResourcePath(const String& resourcePath)
     {
         resourcePath_ = AddTrailingSlash(resourcePath);

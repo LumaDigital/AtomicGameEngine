@@ -25,6 +25,10 @@ uniform float4x3 cModel;
 uniform float4x4 cViewProj;
 uniform float4 cUOffset;
 uniform float4 cVOffset;
+// ATOMIC BEGIN
+uniform float4 cUOffset2;
+uniform float4 cVOffset2;
+// ATOMIC END
 uniform float4x3 cZone;
 #ifdef SKINNED
     uniform float4x3 cSkinMatrices[MAXBONES];
@@ -113,6 +117,10 @@ cbuffer MaterialVS : register(b4)
 {
     float4 cUOffset;
     float4 cVOffset;
+// ATOMIC BEGIN
+    float4 cUOffset2;
+    float4 cVOffset2;
+// ATOMIC END
 }
 #endif
 

@@ -22,22 +22,23 @@
 
 // TODO: Replace Image pixel accessors with direct buffer access
 
-#include "../Container/Sort.h"
-#include "../Scene/Node.h"
-#include "../Scene/Scene.h"
-#include "../Graphics/Geometry.h"
-#include "../Graphics/GraphicsDefs.h"
-#include "../Graphics/VertexBuffer.h"
-#include "../Graphics/IndexBuffer.h"
-#include "../Graphics/Octree.h"
-#include "../Graphics/OctreeQuery.h"
-#include "../Graphics/Light.h"
-#include "../IO/Log.h"
+#include <Atomic/Container/Sort.h>
+#include <Atomic/Scene/Node.h>
+#include <Atomic/Scene/Scene.h>
+#include <Atomic/Graphics/Geometry.h>
+#include <Atomic/Graphics/GraphicsDefs.h>
+#include <Atomic/Graphics/VertexBuffer.h>
+#include <Atomic/Graphics/IndexBuffer.h>
+#include <Atomic/Graphics/Octree.h>
+#include <Atomic/Graphics/OctreeQuery.h>
+#include <Atomic/Graphics/Light.h>
+#include <Atomic/IO/Log.h>
+#include <Atomic/Atomic3D/Model.h>
 
-#include "Model.h"
 #include "StaticModelLightmapGenerator.h"
 
 using namespace Atomic;
+using namespace AtomicEditor;
 
 Vector<Pair<int, int>> StaticModelLightmapGenerator::searchPattern_;
 
@@ -63,7 +64,7 @@ unsigned StaticModelLightmapGenerator::GetRequiredImageSize() const
     return imageSize_;
 }
 
-bool StaticModelLightmapGenerator::PreprocessVertexData(StaticModel* model, float pixelsPerUnit, bool powerOfTwo)
+bool StaticModelLightmapGenerator::PreprocessVertexData(LMStaticModel* model, float pixelsPerUnit, bool powerOfTwo)
 {
     assert(pixelsPerUnit > 0);
     assert(NULL != model);
@@ -133,7 +134,7 @@ bool StaticModelLightmapGenerator::PreprocessVertexData(StaticModel* model, floa
     return true;
 }
 
-SharedPtr<Image> Atomic::StaticModelLightmapGenerator::GenerateLightmapImage(StaticModel* model, float pixelsPerUnit)
+SharedPtr<Image> StaticModelLightmapGenerator::GenerateLightmapImage(LMStaticModel* model, float pixelsPerUnit)
 {
     if ((model != model_ || pixelsPerUnit != pixelsPerUnit_ || !IsPowerOfTwo(imageSize_) ) && 
         !PreprocessVertexData(model, pixelsPerUnit, true))
@@ -387,7 +388,7 @@ float StaticModelLightmapGenerator::GetTriangleArea(const Vector3& p1, const Vec
     return 0.5f * (p2 - p1).CrossProduct(p3 - p1).Length();
 }
 
-bool StaticModelLightmapGenerator::GetCompatibleBuffers(StaticModel* model, VertexBuffer** vertexBuffer, IndexBuffer** indexBuffer)
+bool StaticModelLightmapGenerator::GetCompatibleBuffers(LMStaticModel* model, VertexBuffer** vertexBuffer, IndexBuffer** indexBuffer)
 {
     static const unsigned REQUIRED_ELEMENTS = MASK_POSITION | MASK_NORMAL | MASK_TEXCOORD2;
 

@@ -21,15 +21,21 @@
 //
 
 #pragma once
-#include "../Container/Ptr.h"
-#include "../Container/Vector.h"
-#include "../Math/Rect.h"
-#include "../Resource/Image.h"
+#include <Atomic/Container/Ptr.h>
+#include <Atomic/Container/Vector.h>
+#include <Atomic/Math/Rect.h>
+#include <Atomic/Resource/Image.h>
 
 namespace Atomic
 {
     class Scene;
-    class StaticModel;;
+    class StaticModel;
+}
+
+using namespace Atomic;
+
+namespace AtomicEditor
+{
 
 class ATOMIC_API ImageAtlasGenerator : public Object
 {

@@ -21,34 +21,48 @@
 //
 
 #pragma once
-#include "../Container/Ptr.h"
-#include "../Container/Pair.h"
-#include "../Container/Vector.h"
-#include "../Math/Vector3.h"
-#include "../Graphics/Texture2D.h"
-#include "../Graphics/Material.h"
-#include "../Resource/Image.h"
+#include <Atomic/Container/Ptr.h>
+#include <Atomic/Container/Vector.h>
 
-#include "StaticModel.h"
+#include "../Utils/StaticModelLightmapGenerator.h"
+
+#include "EditorComponent.h"
 
 namespace Atomic
 {
     class Scene;
-    class StaticModel;;
+}
 
-class ATOMIC_API SceneLightmapGenerator : public Object
+using namespace Atomic;
+
+namespace AtomicEditor
 {
-    OBJECT(SceneLightmapGenerator);
-    BASEOBJECT(SceneLightmapGenerator);
+
+class ATOMIC_API LightmapGenerator : public EditorComponent
+{
+    OBJECT(LightmapGenerator);
+
 public:
-    SceneLightmapGenerator(Context* context);
-    ~SceneLightmapGenerator();
+    /// Construct.
+    LightmapGenerator(Context* context);
+
+    /// Destruct.
+    ~LightmapGenerator();
+
+    /// Register object factory.
+    static void RegisterObject(Context* context);
 
     /// Generates a lightmap for the scene at the specified resolution. Returns the lightmap image if successful, null otherwise.
-    SharedPtr<Image> GenerateLightmapImage(Scene* scene, float pixelsPerUnit);
+    bool GenerateLightmap();
 
 protected:
-    static void GetModelGenerators(Scene* scene, Vector<SharedPtr<StaticModelLightmapGenerator>>& generators, float pixelsPerUnit);
+    bool InitPaths();
+    void GetModelGenerators(Vector<SharedPtr<StaticModelLightmapGenerator>>& generators, float pixelsPerUnit);
+
+    float pixelsPerUnit_;
+    WeakPtr<SceneEditor3D> sceneEditor_;
+    String outputPathAbsolute_;
+    String resourcePath_;
 
 };
 }

@@ -48,6 +48,7 @@ geometryCreateSource.addItem(new Atomic.UIMenuItem("CustomGeometry", "CustomGeom
 geometryCreateSource.addItem(new Atomic.UIMenuItem("ParticleEmitter", "ParticleEmitter"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("Skybox", "SkyBox"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("StaticModelGroup", "StaticModelGroup"));
+geometryCreateSource.addItem(new Atomic.UIMenuItem("LMStaticModel", "LMStaticModel"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("Terrain", "Terrain"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("Text3D", "create component"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("Water", "Water"));
@@ -95,6 +96,7 @@ subsystemCreateSource.addItem(new Atomic.UIMenuItem("PhysicsWorld", "create comp
 var editorCreateSource = new Atomic.UIMenuItemSource();
 
 editorCreateSource.addItem(new Atomic.UIMenuItem("CubemapGenerator", "CubemapGenerator"));
+editorCreateSource.addItem(new Atomic.UIMenuItem("LightmapGenerator", "SceneLightmapGenerator"));
 
 
 var componentCreateSource = new Atomic.UIMenuItemSource();

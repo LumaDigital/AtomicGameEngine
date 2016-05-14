@@ -21,28 +21,32 @@
 //
 
 #pragma once
-#include "../Container/Ptr.h"
-#include "../Container/Vector.h"
-#include "../Math/Vector3.h"
-#include "../Resource/Image.h"
-
-#include "StaticModel.h"
+#include <Atomic/Container/Ptr.h>
+#include <Atomic/Container/Vector.h>
+#include <Atomic/Math/Vector3.h>
+#include <Atomic/Resource/Image.h>
+#include <Atomic/Atomic3D/LMStaticModel.h>
 
 namespace Atomic
 {
     class Scene;
-    class StaticModel;;
     class VertexBuffer;
     class IndexBuffer;
     class Octree;
     class Light;
+}
+
+using namespace Atomic;
+
+namespace AtomicEditor
+{
 
 class ATOMIC_API StaticModelLightmapGenerator : public Object
 {
     OBJECT(StaticModelLightmapGenerator);
     BASEOBJECT(StaticModelLightmapGenerator);
 
-    friend class SceneLightmapGenerator;
+    friend class LightmapGenerator;
 
 public:
     StaticModelLightmapGenerator(Context* context);
@@ -51,12 +55,12 @@ public:
     /// Returns the size of the image that will be required to generate a lightmap for the model. Requires that PreprocessVertexData has been called.
     unsigned GetRequiredImageSize() const;
     /// Returns the model last used to precalculate vertex data and required image size.
-    StaticModel* GetModel() const { return model_; }
+    LMStaticModel* GetModel() const { return model_; }
 
     /// Calculates transformed vertex data and determines required image size. Returns true if compatible vertex data exists on the model, false otherwise.
-    bool PreprocessVertexData(StaticModel* model, float pixelsPerUnit, bool powerOfTwo);
+    bool PreprocessVertexData(LMStaticModel* model, float pixelsPerUnit, bool powerOfTwo);
     /// Generates a lightmap for the model at the specified resolution. Returns the lightmap image if successful, null otherwise.
-    SharedPtr<Image> GenerateLightmapImage(StaticModel* model, float pixelsPerUnit);
+    SharedPtr<Image> GenerateLightmapImage(LMStaticModel* model, float pixelsPerUnit);
 
 protected:
     Image* GenerateLightmapImageInternal(const Octree* octree, const PODVector<Light*>& lights, bool powerOfTwo);
@@ -80,11 +84,11 @@ protected:
     static Vector3 GetBarycentricCoordinates(const Vector2& p1, const Vector2& p2, const Vector2& p3, const Vector2& p);
     static unsigned GetImageSize(float pixelsPerUnit, const PODVector<Vector3>& positions, const PODVector<unsigned>& indices, bool powerOfTwo);
     static float GetTriangleArea(const Vector3& p1, const Vector3& p2, const Vector3& p3);
-    static bool GetCompatibleBuffers(StaticModel* model, VertexBuffer** vertexBuffer, IndexBuffer** indexBuffer);
+    static bool GetCompatibleBuffers(LMStaticModel* model, VertexBuffer** vertexBuffer, IndexBuffer** indexBuffer);
     static void FindCompatibleLights(Scene* scene, PODVector<Light*>& lights);
     static void BuildSearchPattern();
 
-    SharedPtr<StaticModel> model_;
+    SharedPtr<LMStaticModel> model_;
     PODVector<Vector3> positions_;
     PODVector<Vector3> normals_;
     PODVector<Vector2> uvs_;

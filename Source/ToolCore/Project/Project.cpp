@@ -184,6 +184,13 @@ void Project::Save(const String& fullpath)
     dirty_ = false;
 }
 
+String Project::GetResourceRelativePath(const String & resourceAbsolutePath) const
+{
+    String resourceRelativePath = resourceAbsolutePath;
+    resourceRelativePath.Replace(resourcePath_, "");
+    return resourceRelativePath;
+}
+
 bool Project::IsComponentsDirOrFile(const String& fullPath)
 {
     String pathName;

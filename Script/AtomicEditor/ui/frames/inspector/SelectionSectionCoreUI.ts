@@ -132,5 +132,60 @@ class CubemapGeneratorSectionUI extends SelectionSectionUI {
 
 }
 
+
+class SceneLightmapGeneratorSectionUI extends SelectionSectionUI {
+
+    createUI(editType: SerializableEditType) {
+
+        this.editType = editType;
+
+        let button = new Atomic.UIButton();
+        button.fontDescription = InspectorUtils.attrFontDesc;
+        button.gravity = Atomic.UI_GRAVITY_RIGHT;
+        button.text = "Generate Lightmap";
+
+        button.onClick = () => {
+
+            let progressModal : ProgressModal = null;
+            let gen : Editor.LightmapGenerator = null;
+
+            // Should really be exactly one
+            for (var i in this.editType.objects) {
+
+                gen = <Editor.LightmapGenerator>this.editType.objects[i];
+
+                if (gen) 
+                    break;
+            }
+
+            if (gen) {
+                this.subscribeToEvent(gen, "LightmapGenerateEnd", () => {
+                    if (progressModal)
+                        progressModal.hide();
+                });
+
+                progressModal = new ProgressModal("Generating Lightmap", "Generating Lightmap, please wait...");
+                progressModal.show();
+
+                if (!gen.generateLightmap()) {
+                    progressModal.hide();
+                    progressModal = null;
+
+                    EditorUI.showModalError("Generating Lightmap",
+                        "There was an error generating lightmaps, please see the application log");
+                }
+                else {
+                    gen.getScene().sendEvent("SceneEditEnd");
+                }
+
+            }
+        };
+
+        this.addChild(button);
+    }
+
+}
+
 SelectionSection.registerCustomSectionUI("CollisionShape", CollisionShapeSectionUI);
 SelectionSection.registerCustomSectionUI("CubemapGenerator", CubemapGeneratorSectionUI);
+SelectionSection.registerCustomSectionUI("LightmapGenerator", SceneLightmapGeneratorSectionUI);

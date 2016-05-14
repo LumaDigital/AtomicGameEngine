@@ -23,6 +23,7 @@
 #include "ImageAtlasGenerator.h"
 
 using namespace Atomic;
+using namespace AtomicEditor;
 
 ImageAtlasGenerator::ImageAtlasGenerator(Context* context) :
     Object(context)
