@@ -118,7 +118,7 @@ void VS(float4 iPos : POSITION,
             // If using lightmap, disregard zone ambient light
             // If using AO, calculate ambient in the PS
             oVertexLight = float3(0.0, 0.0, 0.0);
-            oTexCoord2 = GetTexCoord(iTexCoord2);
+            oTexCoord2 = GetTexCoord2(iTexCoord2);
         #else
             oVertexLight = GetAmbient(GetZonePos(worldPos));
         #endif

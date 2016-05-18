@@ -36,11 +36,11 @@ public:
 
     void SetLightmapUVTransform(const Vector2& offset, float rotation, const Vector2& repeat);
     void SetLightmapUVOffsetAttr(const Vector2& offset);
-    const Vector2& SetLightmapUVOffsetAttr() const { return lightmapUVOffset_; }
+    const Vector2& GetLightmapUVOffsetAttr() const { return lightmapUVOffset_; }
     void SetLightmapUVRepeatAttr(const Vector2& repeat);
-    const Vector2& SetLightmapUVRepeatAttr() const { return lightmapUVRepeat_; }
-    void SetLightmapUVRepeatAttr(float rotation);
-    float SetLightmapUVRotationAttr() const { return lightmapUVRotation_; }
+    const Vector2& GetLightmapUVRepeatAttr() const { return lightmapUVRepeat_; }
+    void SetLightmapUVRotationAttr(float rotation);
+    float GetLightmapUVRotationAttr() const { return lightmapUVRotation_; }
 
     void SetLightmapUVTransform(const Vector4& transform);
 

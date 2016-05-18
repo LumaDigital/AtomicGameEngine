@@ -37,8 +37,9 @@ void LMStaticModel::RegisterObject(Context* context)
 
     COPY_BASE_ATTRIBUTES(StaticModel);
     MIXED_ACCESSOR_ATTRIBUTE("LightmapTexture", GetLightmapTextureAttr, SetLightmapTextureAttr, ResourceRef, ResourceRef(Texture2D::GetTypeStatic()), AM_DEFAULT);
-    ACCESSOR_ATTRIBUTE("Lightmap UV Offset", SetLightmapUVOffsetAttr, SetLightmapUVOffsetAttr, Vector2, Vector2::ZERO, AM_DEFAULT);
-    ACCESSOR_ATTRIBUTE("Lightmap UV Repeat", SetLightmapUVRepeatAttr, SetLightmapUVRepeatAttr, Vector2, Vector2::ZERO, AM_DEFAULT);
+    ACCESSOR_ATTRIBUTE("Lightmap UV Offset", GetLightmapUVOffsetAttr, SetLightmapUVOffsetAttr, Vector2, Vector2::ZERO, AM_DEFAULT);
+    ACCESSOR_ATTRIBUTE("Lightmap UV Repeat", GetLightmapUVRepeatAttr, SetLightmapUVRepeatAttr, Vector2, Vector2::ZERO, AM_DEFAULT);
+    ACCESSOR_ATTRIBUTE("Lightmap UV Rotation", GetLightmapUVRotationAttr, SetLightmapUVRotationAttr, float, 0.0f, AM_DEFAULT);
 }
 
 void LMStaticModel::SetMaterial(Material* material)
@@ -117,7 +118,7 @@ void LMStaticModel::SetLightmapUVRepeatAttr(const Vector2& repeat)
     SetLightmapUVTransform(lightmapUVOffset_, lightmapUVRotation_, repeat);
 }
 
-void LMStaticModel::SetLightmapUVRepeatAttr(float rotation)
+void LMStaticModel::SetLightmapUVRotationAttr(float rotation)
 {
     SetLightmapUVTransform(lightmapUVOffset_, rotation, lightmapUVRepeat_);
 }
@@ -147,6 +148,7 @@ void LMStaticModel::CreateLightmapMaterial()
     baseMaterial_ = GetMaterial(0);
     if (baseMaterial_)
     {
+        lightmapMaterial_ = baseMaterial_;
         lightmapMaterial_ = baseMaterial_->Clone();
         Technique* baseTechnique = lightmapMaterial_->GetTechnique(0);
         const String& techniqueName = baseTechnique->GetName();
@@ -168,17 +170,15 @@ void LMStaticModel::CreateLightmapMaterial()
 void LMStaticModel::UpdateBatches(const FrameInfo& frame)
 {
     StaticModel::UpdateBatches(frame);
-    for (unsigned i = 0; i < batches_.Size(); ++i)
+    if (lightmapMaterial_.NotNull())
     {
-        //batches_[i].lightmapTilingOffset_ = &lightmapTilingOffset_;
-        batches_[i].geometryType_ = GEOM_STATIC_NOINSTANCING;
+        for (unsigned i = 0; i < batches_.Size(); ++i)
+        {
+            //batches_[i].lightmapTilingOffset_ = &lightmapTilingOffset_;
+            batches_[i].geometryType_ = GEOM_STATIC_NOINSTANCING;
 
-        if (!lightmapMaterial_.Null())
             batches_[i].material_ = lightmapMaterial_;
+        }
     }
 }
-
-
 }
-
-
