@@ -114,7 +114,7 @@ bool LightmapGenerator::GenerateLightmap()
     SharedPtr<ImageAtlasGenerator> atlasGenerator(new ImageAtlasGenerator(context_));
     SharedPtr<Image> atlas = atlasGenerator->GenerateAtlassedImage(images, rects);
     // Save logs error
-    if (!atlas->SaveToFile(outputPathAbsolute_, 100))
+    if (!atlas->SaveJPG(outputPathAbsolute_, 100))
         return false;
 
     // Reload as asset so models have correct file path

@@ -140,8 +140,6 @@ public:
     bool SaveJPG(const String& fileName, int quality) const;
     /// Save in DDS format. Return true if successful.
     bool SaveDDS(const String& fileName) const;
-    /// Save file in format based on extension of passed in filename. Default to BMP if no extension. Return true if successful.
-    bool SaveToFile(const String& fileName, int quality) const;
     /// Whether this texture is detected as a cubemap, only relevant for DDS.
     bool IsCubemap() const { return cubemap_; }
     /// Whether this texture has been detected as a volume, only relevant for DDS.
