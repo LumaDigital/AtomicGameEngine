@@ -295,8 +295,8 @@ extern ATOMIC_API const StringHash VSP_VIEWPROJ;
 extern ATOMIC_API const StringHash VSP_UOFFSET;
 extern ATOMIC_API const StringHash VSP_VOFFSET;
 // ATOMIC BEGIN
-extern ATOMIC_API const StringHash VSP_UOFFSET2;
-extern ATOMIC_API const StringHash VSP_VOFFSET2;
+extern ATOMIC_API const StringHash VSP_UOFFSETLM;
+extern ATOMIC_API const StringHash VSP_VOFFSETLM;
 // ATOMIC END
 extern ATOMIC_API const StringHash VSP_ZONE;
 extern ATOMIC_API const StringHash VSP_LIGHTMATRICES;

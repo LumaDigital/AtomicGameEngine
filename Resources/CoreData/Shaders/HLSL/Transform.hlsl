@@ -24,7 +24,7 @@ float2 GetTexCoord(float2 iTexCoord)
 // ATOMIC BEGIN
 float2 GetTexCoord2(float2 iTexCoord)
 {
-    return float2(dot(iTexCoord, cUOffset2.xy) + cUOffset2.w, dot(iTexCoord, cVOffset2.xy) + cVOffset2.w);
+    return float2(dot(iTexCoord, cUOffsetLM.xy) + cUOffsetLM.w, dot(iTexCoord, cVOffsetLM.xy) + cVOffsetLM.w);
 };
 // ATOMIC END
 

@@ -789,8 +789,8 @@ void Material::ResetToDefaults()
     SetShaderParameter("UOffset", Vector4(1.0f, 0.0f, 0.0f, 0.0f));
     SetShaderParameter("VOffset", Vector4(0.0f, 1.0f, 0.0f, 0.0f));
     // ATOMIC BEGIN
-    SetShaderParameter("UOffset2", Vector4(1.0f, 0.0f, 0.0f, 0.0f));
-    SetShaderParameter("VOffset2", Vector4(0.0f, 1.0f, 0.0f, 0.0f));
+    SetShaderParameter("UOffsetLM", Vector4(1.0f, 0.0f, 0.0f, 0.0f));
+    SetShaderParameter("VOffsetLM", Vector4(0.0f, 1.0f, 0.0f, 0.0f));
     // ATOMIC END
     SetShaderParameter("MatDiffColor", Vector4::ONE);
     SetShaderParameter("MatEmissiveColor", Vector3::ZERO);
@@ -888,8 +888,8 @@ void Material::SetUVTransform2(const Vector2& offset, float rotation, const Vect
 {
     Matrix3x4 transform = CalculateUVTransform(offset, rotation, repeat);
 
-    SetShaderParameter("UOffset2", Vector4(transform.m00_, transform.m01_, transform.m02_, transform.m03_));
-    SetShaderParameter("VOffset2", Vector4(transform.m10_, transform.m11_, transform.m12_, transform.m13_));
+    SetShaderParameter("UOffsetLM", Vector4(transform.m00_, transform.m01_, transform.m02_, transform.m03_));
+    SetShaderParameter("VOffsetLM", Vector4(transform.m10_, transform.m11_, transform.m12_, transform.m13_));
 }
 
 /// Set texture coordinate transform.

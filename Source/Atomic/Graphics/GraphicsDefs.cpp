@@ -53,8 +53,8 @@ extern ATOMIC_API const StringHash VSP_VIEWPROJ("ViewProj");
 extern ATOMIC_API const StringHash VSP_UOFFSET("UOffset");
 extern ATOMIC_API const StringHash VSP_VOFFSET("VOffset");
 // ATOMIC BEGIN
-extern ATOMIC_API const StringHash VSP_UOFFSET2("UOffset2");
-extern ATOMIC_API const StringHash VSP_VOFFSET2("VOffset2");
+extern ATOMIC_API const StringHash VSP_UOFFSETLM("UOffsetLM");
+extern ATOMIC_API const StringHash VSP_VOFFSETLM("VOffsetLM");
 // ATOMIC END
 extern ATOMIC_API const StringHash VSP_ZONE("Zone");
 extern ATOMIC_API const StringHash VSP_LIGHTMATRICES("LightMatrices");

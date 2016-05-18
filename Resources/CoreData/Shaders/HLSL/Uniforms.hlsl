@@ -26,8 +26,8 @@ uniform float4x4 cViewProj;
 uniform float4 cUOffset;
 uniform float4 cVOffset;
 // ATOMIC BEGIN
-uniform float4 cUOffset2;
-uniform float4 cVOffset2;
+uniform float4 cUOffsetLM;
+uniform float4 cVOffsetLM;
 // ATOMIC END
 uniform float4x3 cZone;
 #ifdef SKINNED
@@ -117,10 +117,6 @@ cbuffer MaterialVS : register(b4)
 {
     float4 cUOffset;
     float4 cVOffset;
-// ATOMIC BEGIN
-    float4 cUOffset2;
-    float4 cVOffset2;
-// ATOMIC END
 }
 #endif
 
