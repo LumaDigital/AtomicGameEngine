@@ -212,6 +212,11 @@ void SceneView3D::MoveCamera(float timeStep)
     // Tempo used when zooming in and out
     const float ZOOM_TEMPO = 0.6f;
 
+    // Orthographic zoom settings
+    float currCameraZoom = camera_->GetZoom();
+    const float ZOOM_INCREMENT = 0.1f;
+    const float DEFAULT_ZOOM = 1.0f;
+
     // Use this frame's mouse motion to adjust camera node yaw and pitch. Clamp the pitch between -90 and 90 degrees
     if ((mouseInView && input->GetMouseButtonDown(MOUSEB_RIGHT)) || orbitting)
     {
@@ -319,6 +324,16 @@ void SceneView3D::MoveCamera(float timeStep)
         cameraNode_->SetWorldPosition(pos);
 
     }
+
+    if (camera_->IsOrthographic() && mouseInView && !orbitting)
+    {
+        if (input->GetMouseMoveWheel() > 0)
+            camera_->SetZoom(currCameraZoom + ZOOM_INCREMENT);
+        if (input->GetMouseMoveWheel() < 0)
+            camera_->SetZoom(currCameraZoom - ZOOM_INCREMENT);
+    }
+    else
+        camera_->SetZoom(DEFAULT_ZOOM);
 }
 
 void SceneView3D::SnapCameraToView(int snapView)
@@ -381,35 +396,19 @@ void SceneView3D::SelectView()
     if (MouseInView())
     {
         if (input->GetKeyPress(KEY_1))
-        {
             snapView = 1;
-            SetPerspectiveCameraPosition();
-        }
         if (input->GetKeyPress(KEY_2))
-        {
             snapView = 2;
-            SetPerspectiveCameraPosition();
-        }
         if (input->GetKeyPress(KEY_3))
-        {
             snapView = 3;
-            SetPerspectiveCameraPosition();
-        }
         if (input->GetKeyPress(KEY_4))
-        {
             snapView = 4;
-            SetPerspectiveCameraPosition();
-        }
         if (input->GetKeyPress(KEY_5))
-        {
             snapView = 5;
-            SetPerspectiveCameraPosition();
-        }
         if (input->GetKeyPress(KEY_6))
-        {
             snapView = 6;
-            SetPerspectiveCameraPosition();
-        }
+
+        SetPerspectiveCameraPosition();
 
         if (input->GetKeyPress(KEY_P))
         {
