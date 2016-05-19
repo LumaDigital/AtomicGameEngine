@@ -900,11 +900,13 @@ void Material::SetUVTransform2(const Vector2& offset, float rotation, float repe
 
 Matrix3x4 Material::CalculateUVTransform(const Vector2& offset, float rotation, const Vector2& repeat)
 {
+    // Note for merge back to Urho: the original version of this calculation in SetUVTransform
+    // was adding an unnecessary offset. This has been fixed on Urho master same as here so it's safe to
+    // take this version. See http://urho3d.prophpbb.com/post12757.html
+
     Matrix3x4 transform(Matrix3x4::IDENTITY);
     transform.m00_ = repeat.x_;
     transform.m11_ = repeat.y_;
-    transform.m03_ = -0.5f * transform.m00_ + 0.5f;
-    transform.m13_ = -0.5f * transform.m11_ + 0.5f;
 
     Matrix3x4 rotationMatrix(Matrix3x4::IDENTITY);
     rotationMatrix.m00_ = Cos(rotation);
@@ -914,7 +916,7 @@ Matrix3x4 Material::CalculateUVTransform(const Vector2& offset, float rotation, 
     rotationMatrix.m03_ = 0.5f - 0.5f * (rotationMatrix.m00_ + rotationMatrix.m01_);
     rotationMatrix.m13_ = 0.5f - 0.5f * (rotationMatrix.m10_ + rotationMatrix.m11_);
 
-    transform = rotationMatrix * transform;
+    transform = transform * rotationMatrix;
 
     Matrix3x4 offsetMatrix = Matrix3x4::IDENTITY;
     offsetMatrix.m03_ = offset.x_;
