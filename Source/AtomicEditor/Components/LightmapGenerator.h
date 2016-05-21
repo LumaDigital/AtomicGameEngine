@@ -60,6 +60,8 @@ protected:
     void GetModelGenerators(Vector<SharedPtr<StaticModelLightmapGenerator>>& generators, float pixelsPerUnit);
 
     float pixelsPerUnit_;
+    bool blurImage_;
+    int bleedRadius_;
     WeakPtr<SceneEditor3D> sceneEditor_;
     String outputPathAbsolute_;
     String resourcePath_;

@@ -40,7 +40,9 @@
 using namespace Atomic;
 using namespace AtomicEditor;
 
-Vector<Pair<int, int>> StaticModelLightmapGenerator::searchPattern_;
+// Image::GetPixelInt applies full alpha if no alpha channel in the image
+#define SET_PIXEL 0xff000001
+#define UNSET_PIXEL 0xff000000
 
 StaticModelLightmapGenerator::StaticModelLightmapGenerator(Context* context) :
     Object(context),
@@ -48,8 +50,6 @@ StaticModelLightmapGenerator::StaticModelLightmapGenerator(Context* context) :
     imageSize_(0),
     pixelsPerUnit_(0)
 {
-    if (searchPattern_.Empty())
-        BuildSearchPattern();
 }
 
 StaticModelLightmapGenerator::~StaticModelLightmapGenerator()
@@ -134,7 +134,7 @@ bool StaticModelLightmapGenerator::PreprocessVertexData(LMStaticModel* model, fl
     return true;
 }
 
-SharedPtr<Image> StaticModelLightmapGenerator::GenerateLightmapImage(LMStaticModel* model, float pixelsPerUnit)
+SharedPtr<Image> StaticModelLightmapGenerator::GenerateLightmapImage(LMStaticModel* model, float pixelsPerUnit, int bleedRadius, bool blur)
 {
     if ((model != model_ || pixelsPerUnit != pixelsPerUnit_ || !IsPowerOfTwo(imageSize_) ) && 
         !PreprocessVertexData(model, pixelsPerUnit, true))
@@ -143,13 +143,12 @@ SharedPtr<Image> StaticModelLightmapGenerator::GenerateLightmapImage(LMStaticMod
     PODVector<Light*> lights;
     FindCompatibleLights(model->GetScene(), lights);
 
-    return SharedPtr<Image>(GenerateLightmapImageInternal(model->GetScene()->GetComponent<Octree>(), lights, true));
+    return SharedPtr<Image>(GenerateLightmapImageInternal(model->GetScene()->GetComponent<Octree>(), lights, bleedRadius, blur, true));
 }
 
-Image* StaticModelLightmapGenerator::GenerateLightmapImageInternal(const Octree* octree, const PODVector<Light*>& lights, bool powerOfTwo)
+Image* StaticModelLightmapGenerator::GenerateLightmapImageInternal(const Octree* octree, const PODVector<Light*>& lights, int bleedRadius, bool blur, bool powerOfTwo)
 {
-    Image* image = new Image(octree->GetContext());
-    image->SetSize(imageSize_, imageSize_, 3);
+    Image* image = CreateImage();
 
     // Fill in the lightmap
     unsigned indexCount = indices_.Size();
@@ -162,9 +161,33 @@ Image* StaticModelLightmapGenerator::GenerateLightmapImageInternal(const Octree*
             uvs_[indices_[i]], uvs_[indices_[i+1]], uvs_[indices_[i+2]]);
     }
 
-    FillInvalidPixels();
-    BlurImage();
+    Image* buffer = NULL;
+    if (bleedRadius > 0)
+    {
+        buffer = CreateImage();
+        FillInvalidPixels(image, buffer, bleedRadius);
+        Swap(image, buffer);
+    }
 
+    if (blur)
+    {
+        if (!buffer)
+            buffer = CreateImage();
+
+        BlurImage(image, buffer);
+        Swap(image, buffer);
+    }
+
+    if (buffer)
+        delete(buffer);
+
+    return image;
+}
+
+Image* AtomicEditor::StaticModelLightmapGenerator::CreateImage()
+{
+    Image* image = new Image(context_);
+    image->SetSize(imageSize_, imageSize_, 2, 3);
     return image;
 }
 
@@ -202,7 +225,7 @@ void StaticModelLightmapGenerator::LightTriangle(
             textureCoord.y_ = GetTextureCoordinate(j);
             barycentricCoords = GetBarycentricCoordinates(t1, t2, t3, textureCoord);
 
-            if (image->GetPixelInt(i, j, 1) == 1 || barycentricCoords.x_ < 0 || barycentricCoords.y_ < 0 || barycentricCoords.z_ < 0)
+            if (image->GetPixelInt(i, j, 1) == SET_PIXEL || barycentricCoords.x_ < 0 || barycentricCoords.y_ < 0 || barycentricCoords.z_ < 0)
                 continue;
 
             pos = barycentricCoords.x_ * p1 + barycentricCoords.y_ * p2 + barycentricCoords.z_ * p3;
@@ -210,127 +233,174 @@ void StaticModelLightmapGenerator::LightTriangle(
             color = ambientColor;
             for (unsigned k = 0; k < lights.Size(); ++k)
             {
-                ApplyLight(octree, lights[k], pos, normal, color);
+                Light* light = lights[k];
+                if (light->GetLightType() == LightType::LIGHT_POINT)
+                    ApplyPointLight(octree, light, pos, normal, color);
+                else if (light->GetLightType() == LightType::LIGHT_DIRECTIONAL)
+                    ApplyDirectionalLight(octree, light, pos, normal, color);
             }
             image->SetPixelInt(i, j, 0, color.ToUInt());
-            image->SetPixelInt(i, j, 1, 1);
+            image->SetPixelInt(i, j, 1, SET_PIXEL);
         }
     }
 }
 
-void StaticModelLightmapGenerator::ApplyLight(const Octree* octree, const Light* light, const Vector3& pos, const Vector3& normal, Color& color)
+void StaticModelLightmapGenerator::ApplyPointLight(const Octree* octree, const Light* light, const Vector3& pos, const Vector3& normal, Color& color)
 {
-    const float directionalCastDistance = 100.0f;
+    const Vector3& lightPos = light->GetNode()->GetPosition();
+    Vector3 lightDirection = lightPos - pos;
+    float distanceSquared = lightDirection.LengthSquared();
+    float range = light->GetRange();
+    float rangeSquared = range * range;
+    if (distanceSquared >= rangeSquared)
+        return;
 
-    if (light->GetLightType() == LightType::LIGHT_POINT)
+    lightDirection.Normalize();
+    if (lightDirection.DotProduct(normal) < 0)
+        return;
+
+    if (distanceSquared > M_EPSILON)
     {
-        const Vector3& lightPos = light->GetNode()->GetPosition();
-        Vector3 lightDirection = lightPos - pos;
-        float distanceSquared = lightDirection.LengthSquared();
-        float range = light->GetRange();
-        float rangeSquared = range * range;
-        if (distanceSquared >= rangeSquared)
-            return;
-        
-        lightDirection.Normalize();
-        if (lightDirection.DotProduct(normal) < 0)
-            return;
-
-        if (distanceSquared > M_EPSILON)
-        { 
-            Ray ray(lightPos, lightDirection);
-            PODVector<RayQueryResult> results;
-            RayOctreeQuery query(results, ray, RAY_TRIANGLE, range, DRAWABLE_GEOMETRY);
-            octree->RaycastSingle(query);
-
-            if (!query.result_.Empty())
-                return;
-
-            // Opposite cast to ensure the light is visible. Necessary?
-            /*Ray returnRay(pos, -lightDirection);
-            RayOctreeQuery backQuery(results, ray, RAY_TRIANGLE, range, DRAWABLE_GEOMETRY);
-            if (!backQuery.result_.Empty())
-                return;*/
-
-            float intensity = distanceSquared / rangeSquared;
-            Color lightColor = light->GetColor().Lerp(Color::BLACK, intensity);
-            color.r_ += lightColor.r_;
-            color.g_ += lightColor.g_;
-            color.b_ += lightColor.b_;
-        }
-        else
-        {
-            const Color& lightColor = light->GetColor();
-            color.r_ += lightColor.r_;
-            color.g_ += lightColor.g_;
-            color.b_ += lightColor.b_;
-        }
-    }
-    else
-    {
-        Vector3 lightDirection = light->GetNode()->GetWorldDirection();
-
-        float intensity = -lightDirection.DotProduct(normal);
-        if (intensity < 0)
-            return;
-
-        Vector3 origin = pos - directionalCastDistance * lightDirection;
-
-        Ray ray(origin, lightDirection);
+        Ray ray(lightPos, lightDirection);
         PODVector<RayQueryResult> results;
-        RayOctreeQuery query(results, ray, RAY_TRIANGLE, directionalCastDistance, DRAWABLE_GEOMETRY);
+        RayOctreeQuery query(results, ray, RAY_TRIANGLE, range, DRAWABLE_GEOMETRY);
         octree->RaycastSingle(query);
 
         if (!query.result_.Empty())
             return;
 
-        // Opposite cast to ensure the light is visible. Necessary?
-        /*Ray returnRay(pos, -lightDirection);
-        RayOctreeQuery backQuery(results, ray, RAY_TRIANGLE, directionalCastDistance, DRAWABLE_GEOMETRY);
-        if (!backQuery.result_.Empty())
-            return;*/
-
+        float intensity = distanceSquared / rangeSquared;
+        Color lightColor = light->GetColor().Lerp(Color::BLACK, intensity);
+        color.r_ += lightColor.r_;
+        color.g_ += lightColor.g_;
+        color.b_ += lightColor.b_;
+    }
+    else
+    {
         const Color& lightColor = light->GetColor();
-        color.r_ += intensity * lightColor.r_;
-        color.g_ += intensity * lightColor.g_;
-        color.b_ += intensity * lightColor.b_;
+        color.r_ += lightColor.r_;
+        color.g_ += lightColor.g_;
+        color.b_ += lightColor.b_;
     }
 }
 
-void StaticModelLightmapGenerator::FillInvalidPixels()
+
+void StaticModelLightmapGenerator::ApplyDirectionalLight(const Octree* octree, const Light* light, const Vector3& pos, const Vector3& normal, Color& color)
 {
-    /*
-    Vector<Pair<int, int> >::Iterator itSearchPattern;
-    for (int i = 0; i < texSize_; ++i)
+    const float directionalCastDistance = 100.0f;
+
+    Vector3 lightDirection = light->GetNode()->GetWorldDirection();
+
+    float intensity = -lightDirection.DotProduct(normal);
+    if (intensity < 0)
+        return;
+
+    Vector3 origin = pos - directionalCastDistance * lightDirection;
+
+    Ray ray(origin, lightDirection);
+    PODVector<RayQueryResult> results;
+    RayOctreeQuery query(results, ray, RAY_TRIANGLE, directionalCastDistance, DRAWABLE_GEOMETRY);
+    octree->RaycastSingle(query);
+
+    if (!query.result_.Empty())
+        return;
+
+    const Color& lightColor = light->GetColor();
+    color.r_ += intensity * lightColor.r_;
+    color.g_ += intensity * lightColor.g_;
+    color.b_ += intensity * lightColor.b_;
+}
+
+void StaticModelLightmapGenerator::FillInvalidPixels(Image* source, Image* target, int bleedRadius)
+{
+    Vector<Pair<int, int>> searchPattern;
+    BuildSearchPattern(bleedRadius, searchPattern);
+
+    int width = source->GetWidth();
+    int height = source->GetWidth();
+    Vector<Pair<int, int> >::Iterator iter;
+    for (int i = 0; i < width; ++i)
     {
-        for (int j = 0; j < texSize_; ++j)
+        for (int j = 0; j < height; ++j)
         {
-            // Invalid pixel found
-            if (image_->GetPixelInt(i, j, 1) == 0)
+            if (source->GetPixelInt(i, j, 1) == SET_PIXEL)
             {
-                for (itSearchPattern = searchPattern_.Begin(); itSearchPattern != searchPattern_.End(); ++itSearchPattern)
+                target->SetPixelInt(i, j, 0, source->GetPixelInt(i, j));
+                target->SetPixelInt(i, j, 1, SET_PIXEL);
+                continue;
+            }
+
+            // Invalid pixel found
+            for (iter = searchPattern.Begin(); iter != searchPattern.End(); ++iter)
+            {
+                int x = i + iter->first_;
+                int y = j + iter->second_;
+                if (x < 0 || x >= width)
+                    continue;
+                if (y < 0 || y >= height)
+                    continue;
+                // If search pixel is valid assign it to the invalid pixel and stop searching
+                if (source->GetPixelInt(x, y, 1) == SET_PIXEL)
                 {
-                    int x = i + itSearchPattern->first_;
-                    int y = j + itSearchPattern->second_;
-                    if (x < 0 || x >= texSize_)
-                        continue;
-                    if (y < 0 || y >= texSize_)
-                        continue;
-                    // If search pixel is valid assign it to the invalid pixel and stop searching
-                    if (image_->GetPixelInt(x, y, 1) == 1)
-                    {
-                        image_->SetPixelInt(i, j, image_->GetPixelInt(x, y));
-                        break;
-                    }
+                    target->SetPixelInt(i, j, 0, source->GetPixelInt(x, y));
+                    target->SetPixelInt(i, j, 1, SET_PIXEL);
+                    break;
                 }
             }
         }
     }
-    */
 }
 
-void StaticModelLightmapGenerator::BlurImage()
+void StaticModelLightmapGenerator::BlurImage(Image* source, Image* target)
 {
+    int width = source->GetWidth();
+    int height = source->GetHeight();
+
+    Color color;
+    float validPixels;
+    int minK, maxK, minL, maxL;
+    for (int i = 0; i < width; ++i)
+    {
+        for (int j = 0; j < height; ++j)
+        {
+            if (source->GetPixelInt(i, j, 1) == UNSET_PIXEL)
+                continue;
+
+            //blurredImage->SetPixelInt(i, j, image->GetPixelInt(i, j));
+            target->SetPixelInt(i, j, 1, SET_PIXEL);
+            color = Color::BLACK;
+            validPixels = 0;
+            
+            minK = i - 1;
+            if (minK < 0)
+                minK = 0;
+            maxK = i + 1;
+            if (maxK >= width)
+                maxK = width - 1;
+            minL = j - 1;
+            if (minL < 0)
+                minL = 0;
+            maxL = j + 1;
+            if (maxL >= height)
+                maxL = height - 1;
+
+            for (int k = minK; k <= maxK; ++k)
+            {
+                for (int l = minL - 1; l < maxL; ++l)
+                {
+                    if (source->GetPixelInt(k, l, 1) == UNSET_PIXEL)
+                        continue;
+
+                    color += source->GetPixel(k, l, 0);
+                    ++validPixels;
+                }
+            }
+            color.r_ /= validPixels;
+            color.g_ /= validPixels;
+            color.b_ /= validPixels;
+            target->SetPixel(i, j, color);
+        }
+    }
 }
 
 inline int StaticModelLightmapGenerator::GetPixelCoordinate(float textureCoord)
@@ -448,20 +518,18 @@ struct CoordDistanceComparer
     }
 };
 
-void StaticModelLightmapGenerator::BuildSearchPattern()
+void StaticModelLightmapGenerator::BuildSearchPattern(int searchSize, Vector<Pair<int, int>>& searchPattern)
 {
-    const int size = 5;
-
-    searchPattern_.Clear();
-    for (int i = -size; i <= size; ++i)
+    searchPattern.Clear();
+    for (int i = -searchSize; i <= searchSize; ++i)
     {
-        for (int j = -size; j <= size; ++j)
+        for (int j = -searchSize; j <= searchSize; ++j)
         {
             if (i == 0 && j == 0)
                 continue;
-            searchPattern_.Push(Pair<int, int>(i, j));
+            searchPattern.Push(Pair<int, int>(i, j));
         }
     }
     CoordDistanceComparer comparer;
-    Sort(searchPattern_.Begin(), searchPattern_.End(), comparer);
+    Sort(searchPattern.Begin(), searchPattern.End(), comparer);
 }

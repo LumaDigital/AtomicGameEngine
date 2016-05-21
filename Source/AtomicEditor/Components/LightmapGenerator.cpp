@@ -46,7 +46,9 @@ using namespace AtomicEditor;
 
 LightmapGenerator::LightmapGenerator(Context* context) :
     EditorComponent(context),
-    pixelsPerUnit_(64)
+    pixelsPerUnit_(64),
+    blurImage_(false),
+    bleedRadius_(5)
 {
 }
 
@@ -59,6 +61,8 @@ void LightmapGenerator::RegisterObject(Context* context)
     context->RegisterFactory<LightmapGenerator>();
 
     ATTRIBUTE("Pixels Per Unit", float, pixelsPerUnit_, 64, AM_DEFAULT);
+    ATTRIBUTE("Blur Lightmap", bool, blurImage_, false, AM_DEFAULT);
+    ATTRIBUTE("Bleed Radius", int, bleedRadius_, 5, AM_DEFAULT);
 }
 
 bool LightmapGenerator::GenerateLightmap()
@@ -104,7 +108,7 @@ bool LightmapGenerator::GenerateLightmap()
     Octree* octree = scene->GetComponent<Octree>();
     for (unsigned i = 0; i < generators.Size(); i++)
     {
-        Image* genImage = generators[i]->GenerateLightmapImageInternal(octree, lights, false);
+        Image* genImage = generators[i]->GenerateLightmapImageInternal(octree, lights, bleedRadius_, blurImage_, false);
         if (NULL == genImage)
             return false;
         images[i] = genImage;

@@ -60,19 +60,19 @@ public:
     /// Calculates transformed vertex data and determines required image size. Returns true if compatible vertex data exists on the model, false otherwise.
     bool PreprocessVertexData(LMStaticModel* model, float pixelsPerUnit, bool powerOfTwo);
     /// Generates a lightmap for the model at the specified resolution. Returns the lightmap image if successful, null otherwise.
-    SharedPtr<Image> GenerateLightmapImage(LMStaticModel* model, float pixelsPerUnit);
+    SharedPtr<Image> GenerateLightmapImage(LMStaticModel* model, float pixelsPerUnit, int bleedRadius, bool blur);
 
 protected:
-    Image* GenerateLightmapImageInternal(const Octree* octree, const PODVector<Light*>& lights, bool powerOfTwo);
+    Image* GenerateLightmapImageInternal(const Octree* octree, const PODVector<Light*>& lights, int bleedRadius, bool blur, bool powerOfTwo);
 
+    Image* CreateImage();
     void LightTriangle(
         const Octree* octree, Image* image, const PODVector<Light*>& lights,
         const Vector3& p1, const Vector3& p2, const Vector3& p3,
         const Vector3& n1, const Vector3& n2, const Vector3& n3,
         const Vector2& t1, const Vector2& t2, const Vector2& t3);
-    void ApplyLight(const Octree* octree, const Light* light, const Vector3& pos, const Vector3& normal, Color& color);
-    static void FillInvalidPixels();
-    static void BlurImage();
+    void ApplyPointLight(const Octree* octree, const Light* light, const Vector3& pos, const Vector3& normal, Color& color);
+    void ApplyDirectionalLight(const Octree* octree, const Light* light, const Vector3& pos, const Vector3& normal, Color& color);
 
     // Convert between texture coords given as real and pixel coords given as integers
     inline int GetPixelCoordinate(float textureCoord);
@@ -86,7 +86,9 @@ protected:
     static float GetTriangleArea(const Vector3& p1, const Vector3& p2, const Vector3& p3);
     static bool GetCompatibleBuffers(LMStaticModel* model, VertexBuffer** vertexBuffer, IndexBuffer** indexBuffer);
     static void FindCompatibleLights(Scene* scene, PODVector<Light*>& lights);
-    static void BuildSearchPattern();
+    static void BuildSearchPattern(int searchSize, Vector<Pair<int, int>>& searchPattern);
+    static void FillInvalidPixels(Image* source, Image* target, int bleedRadius);
+    static void BlurImage(Image* source, Image* target);
 
     SharedPtr<LMStaticModel> model_;
     PODVector<Vector3> positions_;
@@ -95,8 +97,6 @@ protected:
     PODVector<unsigned> indices_;
     unsigned imageSize_;
     float pixelsPerUnit_;
-
-    static Vector<Pair<int, int>> searchPattern_;
 };
 }
 
