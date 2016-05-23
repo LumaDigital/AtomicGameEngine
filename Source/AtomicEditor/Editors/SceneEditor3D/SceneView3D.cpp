@@ -66,6 +66,13 @@ using namespace ToolCore;
 namespace AtomicEditor
 {
 
+const int CAMERASNAP_TOP = 1;
+const int CAMERASNAP_BOTTOM = 2;
+const int CAMERASNAP_LEFT = 3;
+const int CAMERASNAP_RIGHT = 4;
+const int CAMERASNAP_FRONT = 5;
+const int CAMERASNAP_BACK = 6;
+
 SceneView3D ::SceneView3D(Context* context, SceneEditor3D *sceneEditor) :
     UISceneView(context),
     yaw_(0.0f),
@@ -80,7 +87,7 @@ SceneView3D ::SceneView3D(Context* context, SceneEditor3D *sceneEditor) :
     perspectCamPosition_(0, 0, 0),
     perspectiveYaw_(0),
     perspectivePitch_(0),
-    perspectivePositionSaved_(false)
+    fromOrthographic_(false)
 {
 
     sceneEditor_ = sceneEditor;
@@ -192,6 +199,10 @@ void SceneView3D::CheckCameraSpeedBounds()
 
 void SceneView3D::MoveCamera(float timeStep)
 {
+    // Orthographic zoom settings
+    const float ZOOM_INCREMENT = 0.1f;
+    const float DEFAULT_ZOOM = 1.0f;
+
     if (!enabled_ && !GetFocus())
         return;
 
@@ -211,11 +222,6 @@ void SceneView3D::MoveCamera(float timeStep)
     const float CAMERA_MOVE_TEMPO = 5.0f;
     // Tempo used when zooming in and out
     const float ZOOM_TEMPO = 0.6f;
-
-    // Orthographic zoom settings
-    float currCameraZoom = camera_->GetZoom();
-    const float ZOOM_INCREMENT = 0.1f;
-    const float DEFAULT_ZOOM = 1.0f;
 
     // Use this frame's mouse motion to adjust camera node yaw and pitch. Clamp the pitch between -90 and 90 degrees
     if ((mouseInView && input->GetMouseButtonDown(MOUSEB_RIGHT)) || orbitting)
@@ -328,9 +334,9 @@ void SceneView3D::MoveCamera(float timeStep)
     if (camera_->IsOrthographic() && mouseInView && !orbitting)
     {
         if (input->GetMouseMoveWheel() > 0)
-            camera_->SetZoom(currCameraZoom + ZOOM_INCREMENT);
+            camera_->SetZoom(camera_->GetZoom() + ZOOM_INCREMENT);
         if (input->GetMouseMoveWheel() < 0)
-            camera_->SetZoom(currCameraZoom - ZOOM_INCREMENT);
+            camera_->SetZoom(camera_->GetZoom() - ZOOM_INCREMENT);
     }
     else
         camera_->SetZoom(DEFAULT_ZOOM);
@@ -338,81 +344,88 @@ void SceneView3D::MoveCamera(float timeStep)
 
 void SceneView3D::SnapCameraToView(int snapView)
 {
-    Vector3 selectedNodePos(0, 0, 0);
-
     // the distance the camera snaps from the selected object
     const int DISTANCE = 5;
 
-    int xVal = 0;
-    int yVal = 0;
-    int zVal = 0;
-
-    camera_->SetOrthographic(true);
-    perspectivePositionSaved_ = true;
+    fromOrthographic_ = true;
 
     // if no object is selected will snap to view relative to camera position
     if (sceneEditor_->GetSelection()->GetNodes().Size() > 0)
     {
-        selectedNodePos = sceneEditor_->GetSelection()->GetSelectedNode(0)->GetPosition();
+        Vector3 selectedNodePos = sceneEditor_->GetSelection()->GetSelectedNode(0)->GetPosition();
 
         switch (snapView)
         {
-            case 1:
-                selectedNodePos.y_ = selectedNodePos.y_ + DISTANCE;
+            case CAMERASNAP_TOP:
+                yaw_ = 0;
+                pitch_ = 90;
+                selectedNodePos.y_ += DISTANCE;
                 break;
-            case 2:
-                selectedNodePos.y_ = selectedNodePos.y_ - DISTANCE;
+            case CAMERASNAP_BOTTOM:
+                yaw_ = 0;
+                pitch_ = -90;
+                selectedNodePos.y_ -= DISTANCE;
                 break;
-            case 3:
-                selectedNodePos.x_ = selectedNodePos.x_ + DISTANCE;
+            case CAMERASNAP_LEFT:
+                yaw_ = -90;
+                pitch_ = 0;
+                selectedNodePos.x_ += DISTANCE;
                 break;
-            case 4:
-                selectedNodePos.x_ = selectedNodePos.x_ - DISTANCE;
+            case CAMERASNAP_RIGHT:
+                yaw_ = 90;
+                pitch_ = 0;
+                selectedNodePos.x_ -= DISTANCE;
                 break;
-            case 5:
-                selectedNodePos.z_ = selectedNodePos.z_ - DISTANCE;
+            case CAMERASNAP_FRONT:
+                yaw_ = 0;
+                pitch_ = 0;
+                selectedNodePos.z_ -= DISTANCE;
                 break;
-            case 6:
-                selectedNodePos.z_ = selectedNodePos.z_ + DISTANCE;
+            case CAMERASNAP_BACK:
+                yaw_ = 180;
+                pitch_ = 0;
+                selectedNodePos.z_ += DISTANCE;
                 break;
         }
         cameraNode_->SetPosition(selectedNodePos);
+        camera_->SetOrthographic(true);
     }
-    else
-        cameraNode_->SetPosition(cameraNode_->GetPosition());
-
 
     cameraNode_->SetRotation(Quaternion(pitch_, yaw_, 0));
+
 
 }
 
 void SceneView3D::SelectView()
 {
-    Input* input = GetSubsystem<Input>();
-    Vector3 camPos(0, 0, 0);
-
-    int snapView = 0;
-
     if (MouseInView())
     {
-        if (input->GetKeyPress(KEY_1))
-            snapView = 1;
-        if (input->GetKeyPress(KEY_2))
-            snapView = 2;
-        if (input->GetKeyPress(KEY_3))
-            snapView = 3;
-        if (input->GetKeyPress(KEY_4))
-            snapView = 4;
-        if (input->GetKeyPress(KEY_5))
-            snapView = 5;
-        if (input->GetKeyPress(KEY_6))
-            snapView = 6;
+        Input* input = GetSubsystem<Input>();
 
-        SetPerspectiveCameraPosition();
+        int snapView = 0;
+
+        if (!camera_->IsOrthographic() && !fromOrthographic_)
+            SavePerspectiveCameraPosition();
+
+        if (input->GetKeyPress(KEY_1))
+            snapView = CAMERASNAP_TOP;
+        if (input->GetKeyPress(KEY_2))
+            snapView = CAMERASNAP_BOTTOM;
+        if (input->GetKeyPress(KEY_3))
+            snapView = CAMERASNAP_LEFT;
+        if (input->GetKeyPress(KEY_4))
+            snapView = CAMERASNAP_RIGHT;
+        if (input->GetKeyPress(KEY_5))
+            snapView = CAMERASNAP_FRONT;
+        if (input->GetKeyPress(KEY_6))
+            snapView = CAMERASNAP_BACK;
+
+        if (snapView != 0)
+            SnapCameraToView(snapView);
 
         if (input->GetKeyPress(KEY_P))
         {
-            perspectivePositionSaved_ = false;
+            fromOrthographic_ = false;
             camera_->SetOrthographic(false);
 
             pitch_ = perspectivePitch_;
@@ -423,69 +436,21 @@ void SceneView3D::SelectView()
 
         if (input->GetKeyPress(KEY_O))
         {
-            if (camera_->IsOrthographic())
-                perspectivePositionSaved_ = true;
-
             if (!camera_->IsOrthographic())
-                perspectivePositionSaved_ = false;
+                SavePerspectiveCameraPosition();
 
             camera_->SetOrthographic(!camera_->IsOrthographic());
         }
 
     }
 
-    switch (snapView)
-    {
-        case 1:
-            // View top
-            yaw_ = 0;
-            pitch_ = 90;
-            SnapCameraToView(snapView);
-            break;
-        case 2:
-            // View bottom
-            yaw_ = 0;
-            pitch_ = -90;
-            SnapCameraToView(snapView);
-            break;
-        case 3:
-            // View left
-            yaw_ = -90;
-            pitch_ = 0;
-            SnapCameraToView(snapView);
-            break;
-        case 4:
-            // View right
-            yaw_ = 90;
-            pitch_ = 0;
-            SnapCameraToView(snapView);
-            break;
-        case 5:
-            // View front
-            yaw_ = 0;
-            pitch_ = 0;
-            SnapCameraToView(snapView);
-            break;
-        case 6:
-            // View back
-            yaw_ = 180;
-            pitch_ = 0;
-            SnapCameraToView(snapView);
-            break;
-        }
 }
 
-void SceneView3D::SetPerspectiveCameraPosition()
+void SceneView3D::SavePerspectiveCameraPosition()
 {
-    if (perspectivePositionSaved_)
-        return;
-
-    if (!perspectivePositionSaved_ && !camera_->IsOrthographic())
-    {
-        perspectCamPosition_ = cameraNode_->GetPosition();
-        perspectivePitch_ = pitch_;
-        perspectiveYaw_ = yaw_;
-    }
+    perspectCamPosition_ = cameraNode_->GetPosition();
+    perspectivePitch_ = pitch_;
+    perspectiveYaw_ = yaw_;
 }
 
 Ray SceneView3D::GetCameraRay()
