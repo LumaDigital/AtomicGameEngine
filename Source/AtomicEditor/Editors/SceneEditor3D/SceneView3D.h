@@ -77,8 +77,6 @@ private:
 
     bool GetChangingCameraSpeed();
 
-    void ToggleGrid();
-
     void HandleMouseMove(StringHash eventType, VariantMap& eventData);
 
     void UpdateDragNode(int mouseX, int mouseY);
