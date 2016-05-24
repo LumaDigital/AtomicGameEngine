@@ -293,6 +293,13 @@ void BuildBase::ScanResourceDirectory(const String& resourceDir)
 
 void BuildBase::BuildDefaultResourceEntries()
 {
+    File file(context_, "BuildResource.log", Atomic::FILE_APPEND);
+    if (!file.IsOpen())
+    {
+        file.Open("BuildResource.log", Atomic::FILE_APPEND);
+    }
+    file.WriteLine("*********************************************************");
+
     for (unsigned i = 0; i < resourceDirs_.Size(); i++)
     {
         String resourceDir = resourceDirs_[i];
@@ -307,9 +314,12 @@ void BuildBase::BuildDefaultResourceEntries()
             if (!CheckIncludeResourceFile(resourceDir, filename))
                 continue;
 
+            String fileInfo = resourceDir + filename;
+            file.WriteLine(fileInfo.CString());
             AddToResourcePackager(filename, resourceDir);
         }
     }
+    file.Close();
 }
 
 void BuildBase::BuildProjectResourceEntries()
@@ -328,6 +338,12 @@ void BuildBase::BuildProjectResourceEntries()
 
 void BuildBase::BuildAllProjectResourceEntries()
 {
+    File file(context_, "BuildResource.log", Atomic::FILE_APPEND);
+    if (!file.IsOpen())
+    {
+        file.Open("BuildResource.log", Atomic::FILE_APPEND);
+    }
+    file.WriteLine("*********************************************************");
     for (unsigned i = 0; i < projectResourceDir_.Size(); i++)
     {
         String projectResourceDir = projectResourceDir_[i];
@@ -337,9 +353,12 @@ void BuildBase::BuildAllProjectResourceEntries()
 
         for (unsigned i = 0; i < fileNamesInProject.Size(); i++)
         {
+            String fileInfo = projectResourceDir + fileNamesInProject[i];
+            file.WriteLine(fileInfo.CString());
             AddToResourcePackager(fileNamesInProject[i], projectResourceDir);
         }
     }
+    file.Close();
 }
 
 void BuildBase::BuildFilteredProjectResourceEntries()
