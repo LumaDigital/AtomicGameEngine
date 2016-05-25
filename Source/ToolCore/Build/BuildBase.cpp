@@ -404,7 +404,6 @@ void BuildBase::BuildFilteredProjectResourceEntries()
             }
         }
     }
-
     // add the files defined using a folder in assetbuildconfig.json
     for (unsigned i = 0; i < filesInFolderToAdd.Size(); ++i)
     {
@@ -459,7 +458,7 @@ void BuildBase::BuildFilteredProjectResourceEntries()
     }
     
     // Obtain files in cache folder,
-    // Check if the file contains the guid, and add it to the resourceFilesToInclude
+    // Check if the file contains the guid, and add it to the cacheFilesToInclude
     Vector<String> filesInCacheFolder;
     Vector<String> cacheFilesToInclude;
     AssetDatabase* db = GetSubsystem<AssetDatabase>();
@@ -515,7 +514,7 @@ void BuildBase::AddToResourcePackager(const String& filename, const String& reso
 
     // Add the file to the resourceEntries_ list
     // TODO: Add additional filters
-    if (CheckIncludeResourceFile(resourceDir, filename))
+    if (!CheckIncludeResourceFile(resourceDir, filename))
         return;
 
     //if (GetExtension(filename) == ".psd")
