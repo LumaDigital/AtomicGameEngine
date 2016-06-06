@@ -53,6 +53,7 @@ public:
     // add in search order, first added is first searched
     // will warn on name conflicts
     void AddResourceDir(const String& dir);
+    void AddProjectResourceDir(const String& dir);
 
     void BuildLog(const String& message, bool sendEvent = true);
     void BuildWarn(const String& warning, bool sendEvent = true);
@@ -64,6 +65,10 @@ public:
     /// Converts subprocess output event to a buildoutput event
     void HandleSubprocessOutputEvent(StringHash eventType, VariantMap& eventData);
 
+    /// Asset build tag used by the assetbuildconfig.json file to identify the assets to that should be include
+    /// in the build. If no tag is specified, then all resources are included.
+    void SetAssetBuildTag(const String assetBuildTag) { assetBuildTag_ = assetBuildTag; }
+
 protected:
 
     bool BuildClean(const String& path);
@@ -74,7 +79,10 @@ protected:
 
     void GenerateResourcePackage(const String& resourcePackagePath);
 
-    void BuildResourceEntries();
+    void BuildDefaultResourceEntries();
+    void BuildProjectResourceEntries();
+
+    void AddToResourcePackager(const String& filename, const String& resourceDir);
 
     void GetDefaultResourcePaths(Vector<String>& paths);
     String GetSettingsDirectory();
@@ -85,7 +93,12 @@ protected:
     bool containsMDL_;
     bool buildFailed_;
 
+    // EGS: I think I added this for the assetBuildConfiguraton file
+    String assetBuildTag_;
+
 private:
+    void BuildFilteredProjectResourceEntries();
+    void BuildAllProjectResourceEntries();
 
     PlatformID platformID_;
 
@@ -98,6 +111,9 @@ private:
     SharedPtr<Project> project_;
     SharedPtr<ResourcePackager> resourcePackager_;
     Vector<String> resourceDirs_;
+    Vector<String> projectResourceDir_;
+
+    void ReadAssetBuildConfig();
 
 };
 
