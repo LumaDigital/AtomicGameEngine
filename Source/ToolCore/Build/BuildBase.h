@@ -26,6 +26,11 @@
 #include "BuildTypes.h"
 #include "../Platform/Platform.h"
 
+namespace Atomic
+{
+    class File;
+}
+
 using namespace Atomic;
 
 namespace ToolCore
@@ -93,8 +98,12 @@ protected:
     bool containsMDL_;
     bool buildFailed_;
 
-    // EGS: I think I added this for the assetBuildConfiguraton file
+    /// AssetBuildConfiguraton's asset build tag reference
     String assetBuildTag_;
+
+    /// Pointer to a file used to capture the resources included in the build
+    File *fileIncludedResourcesLog_;
+
 
 private:
     void BuildFilteredProjectResourceEntries();
@@ -105,8 +114,6 @@ private:
     Vector<String> buildLog_;
     Vector<String> buildWarnings_;
     Vector<String> buildErrors_;
-
-    void ScanResourceDirectory(const String& resourceDir);
 
     SharedPtr<Project> project_;
     SharedPtr<ResourcePackager> resourcePackager_;
