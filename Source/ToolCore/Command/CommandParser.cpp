@@ -30,6 +30,7 @@
 #include "BindCmd.h"
 #include "NETCmd.h"
 #include "ProjectCmd.h"
+#include "CacheServerCmd.h"
 
 namespace ToolCore
 {
@@ -86,7 +87,10 @@ Command* CommandParser::Parse(const Vector<String>& arguments)
             {
                 cmd = new ProjectCmd(context_);
             }
-
+            else if (argument == "cacheserver")
+            {
+                cmd = new CacheServerCmd(context_);
+            }
         }
 
         if (cmd)

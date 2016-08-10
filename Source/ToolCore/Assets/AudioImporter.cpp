@@ -32,7 +32,7 @@ namespace ToolCore
 
 AudioImporter::AudioImporter(Context* context, Asset *asset) : AssetImporter(context, asset)
 {
-
+    requiresCacheFile_ = false;
 }
 
 AudioImporter::~AudioImporter()

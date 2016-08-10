@@ -48,11 +48,6 @@ void SpriterImporter::SetDefaults()
     AssetImporter::SetDefaults();
 }
 
-bool SpriterImporter::Import()
-{
-    return true;
-}
-
 bool SpriterImporter::LoadSettingsInternal(JSONValue& jsonRoot)
 {
     if (!AssetImporter::LoadSettingsInternal(jsonRoot))

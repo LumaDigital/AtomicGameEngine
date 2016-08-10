@@ -590,6 +590,13 @@ Resource* ResourceCache::GetExistingResource(StringHash type, const String& name
     return existing;
 }
 
+JSONFile* ResourceCache::GetResourceDotAssetFile(const String& name)
+{ 
+    String dotAssetname = name + ".asset";
+
+    return GetResource<JSONFile>(dotAssetname, false);
+}
+
 Resource* ResourceCache::GetResource(StringHash type, const String& nameIn, bool sendEventOnFailure)
 {
     String name = SanitateResourceName(nameIn);
@@ -636,7 +643,34 @@ Resource* ResourceCache::GetResource(StringHash type, const String& nameIn, bool
 
     // ATOMIC BEGIN
     // Attempt to load the resource
-    SharedPtr<File> file = GetFile(name, sendEventOnFailure, type);
+    SharedPtr<File> file;
+
+    // #623 BEGIN TODO: For now try to get DDS version of textures from /DDS cache sub directory,
+    // ultimately should have per platform compressed versions saved in cache
+#ifdef ATOMIC_PLATFORM_DESKTOP
+    String ext = Atomic::GetExtension(name);
+    if (ext == ".jpg" || ext == ".png" || ext == ".tga")
+    {
+        JSONFile* dotAsset = GetResourceDotAssetFile(name);
+
+        if (dotAsset)
+        {
+            JSONValue root = dotAsset->GetRoot();
+            String guid = root.Get("guid").GetString();
+
+            String ddsName = guid + ".dds";
+            file = GetFile(ddsName, false);
+            if (file)
+                ATOMIC_LOGDEBUG("Loaded cached DDS for file [" + name + "], cached name = " + ddsName);
+        }
+    }
+    if (!file)
+        file = GetFile(name, sendEventOnFailure);
+#else
+    // #623 END TODO
+    file = GetFile(name, sendEventOnFailure);
+#endif
+
     if (!file)
         return 0;   // Error is already logged
     // ATOMIC END

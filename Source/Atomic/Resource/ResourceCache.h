@@ -34,6 +34,7 @@ namespace Atomic
 class BackgroundLoader;
 class FileWatcher;
 class PackageFile;
+class JSONFile;
 
 /// Sets to priority so that a package or file is pushed to the end of the vector.
 static const unsigned PRIORITY_LAST = 0xffffffff;
@@ -262,6 +263,8 @@ private:
     File* SearchResourceDirs(const String& nameIn);
     /// Search resource packages for file.
     File* SearchPackages(const String& nameIn);
+
+    JSONFile* GetResourceDotAssetFile(const String& name);
 
     /// Mutex for thread-safe access to the resource directories, resource packages and resource dependencies.
     mutable Mutex resourceMutex_;

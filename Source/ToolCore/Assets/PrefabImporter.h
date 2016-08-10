@@ -50,7 +50,8 @@ public:
 
 protected:
 
-    bool Import();
+    void GetRequiredCacheFiles(Vector<String>& files) override;
+    bool GenerateCacheFiles() override;
 
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);

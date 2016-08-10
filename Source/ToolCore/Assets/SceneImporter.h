@@ -49,9 +49,7 @@ public:
     const Vector3& GetSceneCamPosition() const { return sceneCamPosition_; }
 
 protected:
-
-    bool Import();
-
+    
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
 

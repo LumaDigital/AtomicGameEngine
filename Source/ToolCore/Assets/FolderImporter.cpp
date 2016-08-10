@@ -29,7 +29,7 @@ namespace ToolCore
 
 FolderImporter::FolderImporter(Context* context, Asset* asset) : AssetImporter(context, asset)
 {
-
+    requiresCacheFile_ = false;
 }
 
 FolderImporter::~FolderImporter()

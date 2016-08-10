@@ -35,6 +35,16 @@ namespace ToolCore
 
 #define ASSET_VERSION 1
 
+
+enum AssetState
+{
+    DIRTY,
+    IMPORTING,
+    IMPORT_COMPLETE, // this state is similar to 'CLEAN', it exists so that the AssetDatabase can check when an asset has finished loading and fire events based on that before marking an asset 'CLEAN'.
+    IMPORT_FAILED,
+    CLEAN,
+};
+
 class Asset : public Object
 {
     friend class AssetDatabase;
@@ -43,15 +53,18 @@ class Asset : public Object
     ATOMIC_OBJECT(Asset, Object);
 
 public:
+
     /// Construct.
     Asset(Context* context);
     virtual ~Asset();
-
-    bool Import();
+    
+    void BeginImport();
     bool Preload();
 
     // the .fbx, .png, etc path, attempts to load .asset, creates missing .asset
     bool SetPath(const String& path);
+
+    void Remove();
 
     const String& GetGUID() const { return guid_; }
     const String& GetName() const { return name_; }
@@ -71,12 +84,14 @@ public:
 
     AssetImporter* GetImporter() { return importer_; }
 
-    void PostImportError(const String& message);
+    void OnImportComplete();
+    void OnImportError(const String& message);
 
     Asset* GetParent();
 
-    void SetDirty(bool dirty) { dirty_ = dirty; }
-    bool IsDirty() const { return dirty_; }
+    void SetDirty() { SetState(AssetState::DIRTY); }
+    void SetState(AssetState newState) { assetState_ = newState; }
+    AssetState GetState() { return assetState_; }
 
     /// Get the last timestamp as seen by the AssetDatabase
     unsigned GetFileTimestamp() { return fileTimestamp_; }
@@ -111,7 +126,7 @@ private:
 
     bool CreateImporter();
 
-    bool CheckCacheFile();
+    bool CacheNeedsUpdate();
 
     String guid_;
 
@@ -119,7 +134,7 @@ private:
     String path_;
     String name_;
 
-    bool dirty_;
+    AssetState assetState_;
     bool isFolder_;
 
     // the current timestamp of the asset as seen by the asset database

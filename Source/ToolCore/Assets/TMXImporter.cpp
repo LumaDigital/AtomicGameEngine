@@ -33,7 +33,7 @@ namespace ToolCore
 
 TMXImporter::TMXImporter(Context* context, Asset *asset) : AssetImporter(context, asset)
 {
-
+    requiresCacheFile_ = false;
 }
 
 TMXImporter::~TMXImporter()
@@ -46,10 +46,6 @@ void TMXImporter::SetDefaults()
     AssetImporter::SetDefaults();
 }
 
-bool TMXImporter::Import()
-{
-    return true;
-}
 
 bool TMXImporter::LoadSettingsInternal(JSONValue& jsonRoot)
 {

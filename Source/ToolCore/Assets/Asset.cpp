@@ -54,7 +54,7 @@ namespace ToolCore
 
 Asset::Asset(Context* context) :
     Object(context),
-    dirty_(false),
+    assetState_(AssetState::CLEAN),
     isFolder_(false),
     fileTimestamp_(0xffffffff)
 {
@@ -102,40 +102,31 @@ String Asset::GetRelativePath()
 
 }
 
-bool Asset::CheckCacheFile()
+bool Asset::CacheNeedsUpdate()
 {
     if (importer_.Null())
+    {
         return true;
-
-    FileSystem* fs = GetSubsystem<FileSystem>();
-    AssetDatabase* db = GetSubsystem<AssetDatabase>();
-    String cachePath = db->GetCachePath();
-
-    String cacheFile = cachePath + guid_;
-
-    unsigned modifiedTime = fs->GetLastModifiedTime(path_);
-
-    if (importer_->RequiresCacheFile()) {
-
-        if (!fs->FileExists(cacheFile) || fs->GetLastModifiedTime(cacheFile) < modifiedTime)
-            return false;
     }
 
-    if (fs->GetLastModifiedTime(GetDotAssetFilename()) < modifiedTime)
+    if (!importer_->RequiresCacheFile())
     {
         return false;
-    }
+    }    
 
-    return true;
+    return !importer_->CheckCacheFilesUpToDate();
+    
 }
 
-bool Asset::Import()
+void Asset::BeginImport()
 {
-
     if (importer_.Null())
-        return true;
+        return;
 
-    return importer_->Import();
+    assetState_ = AssetState::IMPORTING;
+
+    //start the importer importing, it'll notify us once it's succeeded or hit an error.
+    importer_->Import();
 }
 
 bool Asset::Preload()
@@ -148,15 +139,22 @@ bool Asset::Preload()
     //return importer_->Preload();
 }
 
-void Asset::PostImportError(const String& message)
+void Asset::OnImportComplete()
 {
+    Save();
+    assetState_ = AssetState::IMPORT_COMPLETE;
+}
+
+void Asset::OnImportError(const String& message)
+{
+    assetState_ = AssetState::IMPORT_FAILED;
+
     VariantMap eventData;
     eventData[AssetImportError::P_PATH] = path_;
     eventData[AssetImportError::P_GUID] = guid_;
     eventData[AssetImportError::P_ERROR] = message;
 
     SendEvent(E_ASSETIMPORTERROR, eventData);
-
 }
 
 // load .asset
@@ -180,27 +178,22 @@ bool Asset::Load()
 
     db->RegisterGUID(guid_);
 
-    dirty_ = false;
-    if (!CheckCacheFile())
-    {
-        dirty_ = true;
-    }
-
-    // handle import
-
     if (importer_.NotNull())
         importer_->LoadSettings(root);
+    
+    if (CacheNeedsUpdate())
+    {
+        assetState_ = AssetState::DIRTY;
+    }    
 
     json_ = 0;
 
     return true;
-
 }
 
 // save .asset
 bool Asset::Save()
 {
-    FileSystem* fs = GetSubsystem<FileSystem>();
     String assetFilename = GetDotAssetFilename();
 
     json_ = new JSONFile(context_);
@@ -208,10 +201,12 @@ bool Asset::Save()
     JSONValue& root = json_->GetRoot();
 
     root.Set("version", JSONValue(ASSET_VERSION));
+    
+    //for the convenience of being able to open the .asset file and check what the guid is, we'll save it out.
+    //but we don't read it in the load function, instead we generate it from the file to make sure it hasn't changed since we saved it last.
     root.Set("guid", JSONValue(guid_));
 
     // handle import
-
     if (importer_.NotNull())
     {
         importer_->SaveSettings(root);
@@ -224,7 +219,6 @@ bool Asset::Save()
     json_ = 0;
 
     return true;
-
 }
 
 String Asset::GetDotAssetFilename()
@@ -358,14 +352,11 @@ String Asset::GetCachePath() const
 
 String Asset::GetExtension() const
 {
-
     return Atomic::GetExtension(path_);
-
 }
 
 bool Asset::SetPath(const String& path)
 {
-
     assert(!guid_.Length());
     assert(!path_.Length());
 
@@ -377,6 +368,9 @@ bool Asset::SetPath(const String& path)
 
     path_ = path;
 
+    // reset asset state to clean, code below will update it to dirty if appropriate.
+    assetState_ = AssetState::CLEAN;
+
     // create importer based on path
     if (!CreateImporter())
         return false;
@@ -385,21 +379,56 @@ bool Asset::SetPath(const String& path)
 
     if (fs->FileExists(assetFilename))
     {
-        // load the json, todo: handle fail
+        // load the json, will check if cache up to date and set dirty if not. Todo: handle fail
         Load();
     }
     else
-    {
-        dirty_ = true;
+    {   
+        //If the dot file doesn't exist, create the GUID & dot file then mark it as needing an import.
         guid_ = db->GenerateAssetGUID();
-
         Save();
+
+        if (CacheNeedsUpdate())
+        {
+            assetState_ = AssetState::DIRTY;
+        }
     }
 
     // TODO: handle failed
-
     return true;
 
+}
+
+void Asset::Remove()
+{
+    const String& resourcePath = GetPath();
+
+    FileSystem* fs = GetSubsystem<FileSystem>();
+
+    if (fs->DirExists(resourcePath))
+    {
+        fs->RemoveDir(resourcePath, true);
+    }
+    else if (fs->FileExists(resourcePath))
+    {
+        fs->Delete(resourcePath);
+    }
+
+    String dotAsset = resourcePath + ".asset";
+
+    if (fs->FileExists(dotAsset))
+    {
+        fs->Delete(dotAsset);
+    }
+
+    if (importer_)
+    {
+        importer_->ClearCacheFiles();
+    }
+
+    VariantMap eventData;
+    eventData[ResourceRemoved::P_GUID] = GetGUID();
+    SendEvent(E_RESOURCEREMOVED, eventData);
 }
 
 bool Asset::Move(const String& newPath)
@@ -410,6 +439,9 @@ bool Asset::Move(const String& newPath)
     String oldPath = path_;
 
     bool result = importer_->Move(newPath);
+
+    // load the json, will check if cache up to date and set dirty if not.
+    Load();
 
     if (result)
     {
@@ -429,6 +461,9 @@ bool Asset::Rename(const String& newName)
         return false;
 
     bool result = importer_->Rename(newName);
+
+    // load the json, will check if cache up to date and set dirty if not.
+    Load();
 
     if (result)
     {

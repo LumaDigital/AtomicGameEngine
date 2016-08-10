@@ -150,13 +150,22 @@ void PrefabImporter::HandlePrefabSave(StringHash eventType, VariantMap& eventDat
 
 }
 
-bool PrefabImporter::Import()
+void PrefabImporter::GetRequiredCacheFiles(Vector<String>& files)
+{
+    files.Push(asset_->GetGUID());
+}
+
+
+bool PrefabImporter::GenerateCacheFiles()
 {
 
     // The asset database will see the file changed, when the file watcher catches it
     // though we already loaded/imported in OnPrefabFileChanged
-    if (lastFileStamp_ == asset_->GetFileTimestamp())
-        return true;
+    // if (lastFileStamp_ == asset_->GetFileTimestamp())
+    //    return true;
+
+    if (!AssetImporter::GenerateCacheFiles())
+        return false;
 
     FileSystem* fs = GetSubsystem<FileSystem>();
 

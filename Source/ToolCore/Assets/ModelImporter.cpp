@@ -93,7 +93,7 @@ bool ModelImporter::ImportModel()
     }
     else
     {
-        asset_->PostImportError(importer->GetErrorMessage());
+        asset_->OnImportError(importer->GetErrorMessage());
     }
 
     return false;
@@ -159,7 +159,7 @@ bool ModelImporter::ImportAnimations()
 {
     if (!animationInfo_.Size())
     {
-        if (!ImportAnimation(asset_->GetPath(), "RootAnim"))
+        if (!ImportAnimation(asset_->GetPath(), GetDefaultAnimationName()))
             return false;
     }
 
@@ -225,8 +225,102 @@ bool ModelImporter::ImportAnimations()
     return true;
 }
 
-bool ModelImporter::Import()
+void ModelImporter::GetRequiredCacheFiles(Vector<String>& files)
 {
+    //In an ideal world you could do this, but only works once the cache file has already been generated, which is too late.
+    /*HashMap<String, String> assetMap;
+    GetAssetCacheMap(assetMap);
+    files.Push(assetMap.Values());*/
+
+    // This isn't a great way to get these strings, as this code mirrors what happens on import and introduces the possibility 
+    // of the two getting out of sync, but unfortunately right now it looks like we'd have to basically import the model to get 
+    // info like the animation list, which kinda defeats the purpose. May as well just go ahead and do the import, if we do that.
+    // TODO - a better way of doing this.
+
+    String ext = asset_->GetExtension();
+    String modelAssetFilename = asset_->GetPath();
+
+    files.Push(asset_->GetGUID());
+
+    if (ext == ".mdl")
+    {
+        files.Push(OpenAssetImporter::GetModelFileName( asset_->GetGUID()));
+    }
+    else
+    {
+        if (!modelAssetFilename.Contains("@"))
+        {
+            files.Push(OpenAssetImporter::GetModelFileName(asset_->GetGUID()));
+
+            if (importAnimations_)
+            {
+                if (!animationInfo_.Size())
+                {
+                    files.Push(OpenAssetImporter::GetAnimationFileName(asset_->GetGUID(), GetDefaultAnimationName()));
+                }
+
+                // embedded animations
+                for (unsigned i = 0; i < animationInfo_.Size(); i++)
+                {
+                    const SharedPtr<AnimationImportInfo>& info = animationInfo_[i];
+                    files.Push(OpenAssetImporter::GetAnimationFileName(asset_->GetGUID(), info->GetName()));
+                }
+
+                FileSystem* fs = GetSubsystem<FileSystem>();
+                String pathName, fileName, ext;
+                SplitPath(asset_->GetPath(), pathName, fileName, ext);
+
+                Vector<String> results;
+
+                fs->ScanDir(results, pathName, ext, SCAN_FILES, false);
+
+                AssetDatabase* db = GetSubsystem<AssetDatabase>();
+
+                for (unsigned i = 0; i < results.Size(); i++)
+                {
+                    const String& result = results[i];
+
+                    if (result.Contains("@"))
+                    {
+                        Vector<String> components = GetFileName(result).Split('@');
+
+                        if (components.Size() == 2 && components[1].Length() && components[0] == fileName)
+                        {
+                            String animationName = components[1];
+                            
+                            Asset* asset = db->GetAssetByPath(pathName + result);
+                            assert(asset);
+                            assert(asset->GetImporter()->GetType() == ModelImporter::GetTypeStatic());
+
+                            ModelImporter* importer = (ModelImporter*)asset->GetImporter();
+
+                            if (!importer->animationInfo_.Size())
+                            {
+                                files.Push(OpenAssetImporter::GetAnimationFileName(asset_->GetGUID(), animationName));
+                            }
+                            else
+                            {
+                                // embedded animations
+                                for (unsigned i = 0; i < importer->animationInfo_.Size(); i++)
+                                {
+                                    const SharedPtr<AnimationImportInfo>& info = importer->animationInfo_[i];
+                                    files.Push(OpenAssetImporter::GetAnimationFileName(asset_->GetGUID(), info->GetName()));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+
+bool ModelImporter::GenerateCacheFiles()
+{
+    if (!AssetImporter::GenerateCacheFiles())
+        return false;
 
     String ext = asset_->GetExtension();
     String modelAssetFilename = asset_->GetPath();

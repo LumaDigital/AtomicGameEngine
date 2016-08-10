@@ -2105,6 +2105,44 @@ void Image::FreeImageData(unsigned char* pixelData)
 }
 
 // ATOMIC BEGIN
+bool Image::CanSaveDDS() const
+{
+#if !defined(ATOMIC_PLATFORM_DESKTOP)
+    return false;
+#else
+
+    if (IsCompressed())
+    {
+        return false;
+    }
+
+    if (data_)
+    {
+        if (!width_ || !height_)
+        {
+            return false;
+        }
+
+        if (components_ != 4)
+        {
+            if (components_ != 3)
+            {
+                return false;
+            }
+        }
+
+        DDSurfaceDesc2 sdesc;
+
+        if (sizeof(sdesc) != 124)
+        {
+            return false;
+        }
+    }
+#endif
+
+    return true;
+}
+
 bool Image::SaveDDS(const String& fileName) const
 {
 #if !defined(ATOMIC_PLATFORM_DESKTOP)
@@ -2223,6 +2261,11 @@ bool Image::SaveDDS(const String& fileName) const
 #endif
 
     return false;
+}
+
+bool Image::IsPOT() const
+{
+    return IsPowerOfTwo(width_) && IsPowerOfTwo(height_);
 }
 
 bool Image::HasAlphaChannel() const

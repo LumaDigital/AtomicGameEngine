@@ -40,9 +40,7 @@ public:
     Resource* GetResource(const String& typeName);
 
 protected:
-
-    bool Import();
-
+    
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
 
