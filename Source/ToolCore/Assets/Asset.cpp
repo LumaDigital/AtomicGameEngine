@@ -176,6 +176,7 @@ bool Asset::Load()
     assert(root.Get("version").GetInt() == ASSET_VERSION);
 
     guid_ = root.Get("guid").GetString();
+    currentTimestamp_ = root.Get("timestamp").GetUInt();
 
     db->RegisterGUID(guid_);
 
@@ -209,6 +210,7 @@ bool Asset::Save()
 
     root.Set("version", JSONValue(ASSET_VERSION));
     root.Set("guid", JSONValue(guid_));
+    root.Set("timestamp", JSONValue(fileTimestamp_));
 
     // handle import
 

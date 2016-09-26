@@ -68,6 +68,8 @@ public:
 
     String GetDotAssetFilename(const String& path);
 
+    void GetModifiedAssets();
+
 private:
 
     void HandleProjectLoaded(StringHash eventType, VariantMap& eventData);
