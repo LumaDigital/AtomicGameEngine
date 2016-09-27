@@ -109,7 +109,7 @@ private:
     bool CheckCacheFile();
 
     String guid_;
-    unsigned currentTimestamp_;
+    unsigned lastCheckedTimestamp_;
 
     // can change
     String path_;

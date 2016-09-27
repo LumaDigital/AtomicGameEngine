@@ -449,24 +449,6 @@ void AssetDatabase::GetDirtyAssets(PODVector<Asset*>& assets)
     }
 }
 
-void AssetDatabase::GetModifiedAssets()
-{
-    List<SharedPtr<Asset>>::ConstIterator itr = assets_.Begin();
-
-    while (itr != assets_.End())
-    {
-        Asset* asset = itr->Get();
-
-        if (asset->fileTimestamp_ != asset->currentTimestamp_)
-        {
-            asset->SetDirty(true);
-        }
-
-        itr++;
-    }
-}
-
-
 void AssetDatabase::HandleProjectLoaded(StringHash eventType, VariantMap& eventData)
 {
     project_ = GetSubsystem<ToolSystem>()->GetProject();
@@ -482,8 +464,6 @@ void AssetDatabase::HandleProjectLoaded(StringHash eventType, VariantMap& eventD
     cache->AddResourceDir(GetCachePath());
 
     Scan();
-    GetModifiedAssets();
-    ImportDirtyAssets();
 
     SubscribeToEvent(E_FILECHANGED, HANDLER(AssetDatabase, HandleFileChanged));
 }

@@ -125,6 +125,13 @@ bool Asset::CheckCacheFile()
         return false;
     }
 
+    // comparing the current timestamp to the timestamp of the last import
+    //  - needed because the timestamp is based on the time of creation, not the time that it's copied into the project
+    if (modifiedTime != lastCheckedTimestamp_)
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -176,7 +183,7 @@ bool Asset::Load()
     assert(root.Get("version").GetInt() == ASSET_VERSION);
 
     guid_ = root.Get("guid").GetString();
-    currentTimestamp_ = root.Get("timestamp").GetUInt();
+    lastCheckedTimestamp_ = root.Get("lastCheckedTimestamp").GetUInt();
 
     db->RegisterGUID(guid_);
 
@@ -210,7 +217,7 @@ bool Asset::Save()
 
     root.Set("version", JSONValue(ASSET_VERSION));
     root.Set("guid", JSONValue(guid_));
-    root.Set("timestamp", JSONValue(fileTimestamp_));
+    root.Set("lastCheckedTimestamp", JSONValue(fileTimestamp_));
 
     // handle import
 
