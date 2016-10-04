@@ -115,8 +115,6 @@ public:
 
     bool CreateDirsRecursive(const String& directoryIn);
 
-    unsigned GetCheckSum(const String& filename);
-    
 private:
     /// Scan directory, called internally.
     void ScanDirInternal

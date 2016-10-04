@@ -960,12 +960,6 @@ bool FileSystem::CreateDirsRecursive(const String& directoryIn)
 
 }
 
-unsigned FileSystem::GetCheckSum(const String & filename)
-{
-    SharedPtr<File> srcFile(new File(context_, filename, FILE_READ));
-    return srcFile->GetChecksum();
-}
-
 bool FileSystem::CopyDir(const String& directoryIn, const String& directoryOut)
 {
     if (FileExists(directoryOut) || DirExists(directoryOut))

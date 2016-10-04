@@ -101,7 +101,7 @@ public:
     /// Instantiate a node from the asset
     Node* InstantiateNode(Node* parent, const String& name);
 
-
+    String GenerateMD5();
 private:
 
     bool CreateImporter();
@@ -109,7 +109,7 @@ private:
     bool CheckCacheFile();
 
     String guid_;
-    unsigned checksum_;
+    String checksum_;
 
     // can change
     String path_;

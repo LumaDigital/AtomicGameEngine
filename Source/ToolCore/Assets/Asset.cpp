@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 //
 
+#include <Poco\MD5Engine.h>
+
 #include <Atomic/IO/Log.h>
 #include <Atomic/IO/File.h>
 #include <Atomic/IO/FileSystem.h>
@@ -127,13 +129,40 @@ bool Asset::CheckCacheFile()
 
     // comparing the current timestamp to the timestamp of the last import
     //  - needed because the timestamp is based on the time of creation, not the time that it's copied into the project
-    if (fs->GetCheckSum(path_) != checksum_)
+    if (GenerateMD5() != checksum_)
     {
-        checksum_ = fs->GetCheckSum(path_);
+        checksum_ = GenerateMD5();
         return false;
     }
 
     return true;
+}
+
+String Asset::GenerateMD5()
+{
+    assert(path_.Length());
+
+    Poco::MD5Engine md5;
+
+    // if it's not a folder, then add the file data into the hash.
+    if (!isFolder_)
+    {
+        PODVector<unsigned> data;
+
+        File assetFile(context_, path_);
+
+        unsigned fileSize = assetFile.GetSize();
+        SharedArrayPtr<unsigned char> fileData(new unsigned char[fileSize]);
+
+        unsigned sizeRead = assetFile.Read(fileData, fileSize);
+
+        assert(sizeRead == fileSize);
+
+        md5.update(&fileData[0], fileSize * sizeof(unsigned char));
+    }
+
+    // finally, generate a guid
+    return Poco::MD5Engine::digestToHex(md5.digest()).c_str();
 }
 
 bool Asset::Import()
@@ -184,7 +213,7 @@ bool Asset::Load()
     assert(root.Get("version").GetInt() == ASSET_VERSION);
 
     guid_ = root.Get("guid").GetString();
-    checksum_ = root.Get("checksum").GetUInt();
+    checksum_ = root.Get("checksum").GetString();
 
     db->RegisterGUID(guid_);
 
