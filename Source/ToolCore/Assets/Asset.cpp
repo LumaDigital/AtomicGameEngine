@@ -127,8 +127,9 @@ bool Asset::CheckCacheFile()
 
     // comparing the current timestamp to the timestamp of the last import
     //  - needed because the timestamp is based on the time of creation, not the time that it's copied into the project
-    if (modifiedTime != lastCheckedTimestamp_)
+    if (fs->GetCheckSum(path_) != checksum_)
     {
+        checksum_ = fs->GetCheckSum(path_);
         return false;
     }
 
@@ -183,7 +184,7 @@ bool Asset::Load()
     assert(root.Get("version").GetInt() == ASSET_VERSION);
 
     guid_ = root.Get("guid").GetString();
-    lastCheckedTimestamp_ = root.Get("lastCheckedTimestamp").GetUInt();
+    checksum_ = root.Get("checksum").GetUInt();
 
     db->RegisterGUID(guid_);
 
@@ -217,7 +218,7 @@ bool Asset::Save()
 
     root.Set("version", JSONValue(ASSET_VERSION));
     root.Set("guid", JSONValue(guid_));
-    root.Set("lastCheckedTimestamp", JSONValue(fileTimestamp_));
+    root.Set("checksum", JSONValue(checksum_));
 
     // handle import
 
