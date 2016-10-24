@@ -285,8 +285,7 @@ void AssetImporter::OnCacheFilesGenerated(Vector<String>& files)
 
 bool AssetImporter::CheckCacheFilesUpToDate()
 {
-    if (md5_.Empty())
-        md5_ = GenerateMD5();
+    md5_ = GenerateMD5();
     
     if (md5_ != ReadMD5File())
     {
