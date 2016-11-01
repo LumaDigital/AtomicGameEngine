@@ -41,6 +41,7 @@
 #include "../Resource/ResourceCache.h"
 #include "../Resource/ResourceEvents.h"
 #include "../Scene/Scene.h"
+#include "../ToolCore/Assets/AssetEvents.h"
 
 #include "../DebugNew.h"
 
@@ -378,13 +379,16 @@ void AnimatedModel::SetModel(Model* model, bool createBones)
 
     // Unsubscribe from the reload event of previous model (if any), then subscribe to the new
     if (model_)
+    {
         UnsubscribeFromEvent(model_, E_RELOADFINISHED);
-
+        UnsubscribeFromEvent(ToolCore::E_RESOURCEREMOVED);
+    }
     model_ = model;
 
     if (model)
     {
         SubscribeToEvent(model, E_RELOADFINISHED, ATOMIC_HANDLER(AnimatedModel, HandleModelReloadFinished));
+        SubscribeToEvent(ToolCore::E_RESOURCEREMOVED, ATOMIC_HANDLER(AnimatedModel, HandleResourceRemoved));
 
         // Copy the subgeometry & LOD level structure
         SetNumGeometries(model->GetNumGeometries());
@@ -1520,6 +1524,19 @@ void AnimatedModel::HandleModelReloadFinished(StringHash eventType, VariantMap& 
     Model* currentModel = model_;
     model_.Reset(); // Set null to allow to be re-set
     SetModel(currentModel);
+}
+
+void AnimatedModel::HandleResourceRemoved(StringHash eventType, VariantMap & eventData)
+{
+    String name = model_->GetName();
+
+    if (name.Contains(eventData[ToolCore::ResourceRemoved::P_GUID].GetString()))
+    {
+        SetModel(nullptr);
+    }
+
+    ResourceCache* cache = GetSubsystem<ResourceCache>();
+    cache->ReleaseAllResources(true);
 }
 
 }

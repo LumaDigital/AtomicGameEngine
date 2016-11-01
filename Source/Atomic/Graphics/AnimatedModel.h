@@ -210,6 +210,8 @@ private:
         (VertexBuffer* buffer, void* destVertexData, unsigned morphRangeStart, const VertexBufferMorph& morph, float weight);
     /// Handle model reload finished.
     void HandleModelReloadFinished(StringHash eventType, VariantMap& eventData);
+    /// Handle model's fbx getting removed
+    void HandleResourceRemoved(StringHash eventType, VariantMap& eventData);
 
     /// Skeleton.
     Skeleton skeleton_;

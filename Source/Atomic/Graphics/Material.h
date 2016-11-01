@@ -280,6 +280,8 @@ private:
     void UpdateEventSubscription();
     /// Update shader parameter animations.
     void HandleAttributeAnimationUpdate(StringHash eventType, VariantMap& eventData);
+    /// Update material when a texture gets deleted.
+    void HandleResourceRemoved(StringHash eventType, VariantMap& eventData);
 
     /// Techniques.
     Vector<TechniqueEntry> techniques_;

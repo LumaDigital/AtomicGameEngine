@@ -85,6 +85,7 @@ private:
     void AddAsset(SharedPtr<Asset>& asset, bool newAsset = false);
 
     void PruneOrphanedDotAssetFiles();
+    void ClearDeletedCacheFiles(Vector<String> assetGuids);
 
     void ReadAssetCacheConfig();
 

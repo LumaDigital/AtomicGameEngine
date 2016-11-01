@@ -428,6 +428,7 @@ void Asset::Remove()
 
     VariantMap eventData;
     eventData[ResourceRemoved::P_GUID] = GetGUID();
+    eventData[ResourceRemoved::P_NAME] = GetName();
     SendEvent(E_RESOURCEREMOVED, eventData);
 }
 

@@ -257,6 +257,34 @@ void AssetDatabase::PruneOrphanedDotAssetFiles()
     }
 }
 
+void AssetDatabase::ClearDeletedCacheFiles(Vector<String> assetGuids)
+{
+    FileSystem* fs = GetSubsystem<FileSystem>();
+    Vector<String> cacheFiles;
+    fs->ScanDir(cacheFiles, GetCachePath(), "", SCAN_FILES, true);
+
+    for (int i = 0; i < cacheFiles.Size(); i++)
+    {
+        bool found = false;
+
+        for (int j = 0; j < assetGuids.Size(); j++)
+        {
+            if (cacheFiles[i].Contains(assetGuids[j]))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            // Delete from local cache
+            String cacheFileName = GetCachePath() + cacheFiles[i];
+            fs->Delete(cacheFileName);
+        }
+    }
+}
+
 String AssetDatabase::GetDotAssetFilename(const String& path)
 {
     FileSystem* fs = GetSubsystem<FileSystem>();
@@ -449,8 +477,9 @@ void AssetDatabase::Scan()
     PruneOrphanedDotAssetFiles();
 
     Vector<String> assetPaths;
-
     GetAllAssetPaths(assetPaths);
+
+    Vector<String> allAssetGuids;
 
     FileSystem* fs = GetSubsystem<FileSystem>();
     for (unsigned i = 0; i < assetPaths.Size(); i++)
@@ -487,10 +516,13 @@ void AssetDatabase::Scan()
                 AddAsset(asset);
             }
 
+            allAssetGuids.Push(guid);
         }
     }
 
     PreloadAssets();
+
+    ClearDeletedCacheFiles(allAssetGuids);
 
     if (ImportDirtyAssets())
         Scan();
