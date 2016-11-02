@@ -4,3 +4,6 @@
 [submodule "Submodules/AtomicExamples"]
 	path = Submodules/AtomicExamples
 	url = https://github.com/AtomicGameEngine/AtomicExamples
+[submodule "Source/Luma"]
+	path = Source/Luma
+	url = ../AtomicGameEngineLumaIP	
