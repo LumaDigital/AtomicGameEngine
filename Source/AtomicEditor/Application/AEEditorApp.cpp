@@ -55,6 +55,9 @@ namespace ToolCore
     extern void jsapi_init_toolcore(JSVM* vm);
 }
 
+// Luma
+extern void luma_lib_init(Context* context, JSVM* vm);
+
 using namespace ToolCore;
 
 namespace AtomicEditor
@@ -149,6 +152,9 @@ namespace AtomicEditor
 
         AppBase::Start();
 
+        //Luma
+        luma_lib_init(context_, vm_);
+
         vm_->SetModuleSearchPaths("AtomicEditor/JavaScript;AtomicEditor/EditorScripts;AtomicEditor/EditorScripts/AtomicEditor");
 
         // move UI initialization to JS
@@ -169,7 +175,6 @@ namespace AtomicEditor
         // Ensure exclusive fullscreen is disabled in Editor application
         input->SetToggleFullscreen(false);
         input->SetMouseVisible(true);
-
     }
 
     void AEEditorApp::Stop()

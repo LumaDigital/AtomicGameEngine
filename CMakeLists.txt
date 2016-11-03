@@ -73,6 +73,10 @@ if (ATOMIC_WEBVIEW)
 
 endif()
 
+# Add the Luma library
+set (ATOMIC_LINK_LIBRARIES ${ATOMIC_LINK_LIBRARIES} Luma)
+include_directories(${CMAKE_SOURCE_DIR}/Source/Luma)
+
 add_subdirectory(Source)
 
 
