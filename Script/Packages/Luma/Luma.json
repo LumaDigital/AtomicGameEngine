@@ -1,0 +1,6 @@
+{
+	"name" : "Luma",
+	"includes" : ["<AnimationBlender/AnimationBlender.h>"],
+	"sources" : ["Source/Luma/AnimationBlender"],
+	"classes" : ["BlenderController", "AnimationBlender", "BlendData", "BlendState", "AnimationBlenderImporter"]
+}
