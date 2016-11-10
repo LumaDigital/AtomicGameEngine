@@ -76,7 +76,7 @@ SceneEditor3D::SceneEditor3D(Context* context, const String &fullpath, UITabCont
     scene_ = new Scene(context_);
     SharedPtr<File> xmlFile = cache->GetFile(fullpath);
 
-    if (GetExtension(fullpath) == ".scene")
+    if (GetExtension(fullpath) == ".scene" || GetExtension(fullpath) == ".bscene")
         scene_->LoadXML(*xmlFile);
     else
         scene_->Load(*xmlFile);

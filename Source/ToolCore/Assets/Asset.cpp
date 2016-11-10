@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 //
 
+#include <AnimationBlender/AnimationBlenderImporter.h>
+
 #include <Atomic/IO/Log.h>
 #include <Atomic/IO/File.h>
 #include <Atomic/IO/FileSystem.h>
@@ -33,6 +35,7 @@
 #include "FolderImporter.h"
 #include "SceneImporter.h"
 #include "MaterialImporter.h"
+
 #include "TextureImporter.h"
 #include "PrefabImporter.h"
 #include "JavascriptImporter.h"
@@ -302,6 +305,10 @@ bool Asset::CreateImporter()
         {
             importer_ = new MaterialImporter(context_, this);
         }
+		else if (ext == ".abl")
+		{
+			importer_ = new AnimationBlenderImporter(context_, this);
+		}
         else if (ext == ".scml")
         {
             importer_ = new SpriterImporter(context_, this);

@@ -17,7 +17,8 @@
         "./AtomicEditor/**/*.ts",
         "./TypeScript/**/*.ts",
         "!./TypeScript/dist/*.ts",
-        "!./TypeScript/AtomicNET.d.ts"
+        "!./TypeScript/AtomicNET.d.ts",
+		"./TypeScript/Luma.d.ts"
     ],
     "atom": {
         "rewriteTsconfig": true
@@ -48,6 +49,7 @@
         "./AtomicEditor/ui/frames/inspector/CreateComponentButton.ts",
         "./AtomicEditor/ui/frames/inspector/CSComponentClassSelector.ts",
         "./AtomicEditor/ui/frames/inspector/InspectorFrame.ts",
+        "./AtomicEditor/ui/frames/inspector/AnimationBlenderInspector.ts",
         "./AtomicEditor/ui/frames/inspector/InspectorUtils.ts",
         "./AtomicEditor/ui/frames/inspector/InspectorWidget.ts",
         "./AtomicEditor/ui/frames/inspector/MaterialInspector.ts",
@@ -76,6 +78,7 @@
         "./AtomicEditor/ui/modal/build/BuildOutput.ts",
         "./AtomicEditor/ui/modal/build/BuildSettingsWindow.ts",
         "./AtomicEditor/ui/modal/build/BuildWindow.ts",
+        "./AtomicEditor/ui/AnimationViewer.ts",
         "./AtomicEditor/ui/modal/build/platforms/AndroidSettingsWidget.ts",
         "./AtomicEditor/ui/modal/build/platforms/IOSSettingsWidget.ts",
         "./AtomicEditor/ui/modal/build/platforms/LinuxSettingsWidget.ts",
@@ -121,6 +124,7 @@
         "./TypeScript/Editor.d.ts",
         "./TypeScript/EditorWork.d.ts",
         "./TypeScript/ToolCore.d.ts",
-        "./TypeScript/WebView.d.ts"
+        "./TypeScript/WebView.d.ts",
+		"./TypeScript/Luma.d.ts"
     ]
 }

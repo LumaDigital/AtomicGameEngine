@@ -72,7 +72,8 @@ AnimatedModel::AnimatedModel(Context* context) :
     isMaster_(true),
     loading_(false),
     assignBonesPending_(false),
-    forceAnimationUpdate_(false)
+    forceAnimationUpdate_(false),
+    boneCreationOverride_(true)
 {
 }
 
@@ -385,7 +386,8 @@ void AnimatedModel::DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
 
 void AnimatedModel::SetModel(Model* model, bool createBones)
 {
-    if (model == model_)
+
+    if (model == model_ && !createBones)
         return;
 
     if (!node_)
@@ -819,7 +821,7 @@ void AnimatedModel::SetSkeleton(const Skeleton& skeleton, bool createBones)
 
 // ATOMIC BEGIN
         // Create scene nodes for the bones
-        if (createBones && !dontCreateBonesHack)
+        if ((createBones && !dontCreateBonesHack)|| boneCreationOverride_)
         {
 // ATOMIC END
 

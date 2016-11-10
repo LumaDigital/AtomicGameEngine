@@ -291,7 +291,7 @@ class MainFrameMenu extends Atomic.ScriptObject {
                 EditorUI.getModelOps().showBuildSettings();
                 return true;
 
-            }
+            } 
 
         } else if (target.id == "menu help popup") {
             if (refid == "about atomic editor") {

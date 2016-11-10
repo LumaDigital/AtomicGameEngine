@@ -407,6 +407,57 @@ export class CreateMaterial extends ModalWindow {
 
 }
 
+export class CreateBlender extends ModalWindow {
+
+    constructor(resourcePath: string) {
+
+        super();
+
+        this.resourcePath = resourcePath;
+        this.init("New BlendFile", "AtomicEditor/editor/ui/resourcecreateresource.tb.txt");
+        this.nameField = <Atomic.UIEditField>this.getWidget("component_name");
+    }
+
+    handleWidgetEvent(ev: Atomic.UIWidgetEvent) {
+
+        if (ev.type == Atomic.UI_EVENT_TYPE_CLICK) {
+
+            var id = ev.target.id;
+
+            if (id == "create") {
+
+                var blendName = this.nameField.text;
+                var outputFile = Atomic.addTrailingSlash(this.resourcePath) + blendName;
+
+                if (outputFile.indexOf(".abl") == -1) outputFile += ".abl";
+
+                if (ResourceOps.CreateNewBlender(outputFile, blendName)) {
+
+                    this.hide();
+
+                    this.sendEvent(EditorEvents.EditResource, { path: outputFile });
+
+                }
+
+                return true;
+
+            }
+
+            if (id == "cancel") {
+
+                this.hide();
+
+                return true;
+            }
+
+        }
+
+    }
+
+    resourcePath: string;
+    nameField: Atomic.UIEditField;
+}
+
 export class RenameAsset extends ModalWindow {
 
     constructor(asset: ToolCore.Asset) {

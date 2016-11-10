@@ -256,6 +256,42 @@ export function CreateNewScene(resourcePath: string, sceneName: string, reportEr
 
 }
 
+export function CreateNewAnimationScene(reportError: boolean = true): boolean {
+
+    var title = "Animation Viewer Error";
+
+    var templateFilename = "AtomicEditor/templates/template_scene.scene";
+    var templateFile = Atomic.cache.getFile(templateFilename);
+
+
+    if (!templateFile) {
+
+        if (reportError)
+            resourceOps.sendEvent(EditorEvents.ModalError, { title: title, message: "Failed to open template scene: " + templateFile });
+        return false;
+
+    }
+
+    var animFilename = "AtomicEditor/templates/animation_viewer.scene";
+    var animFile = Atomic.cache.getFile(animFilename);
+
+    if (!animFile) {
+
+        if (reportError)
+            resourceOps.sendEvent(EditorEvents.ModalError, { title: title, message: "Failed to open animation viewer: " + animFilename });
+        return false;
+
+    }
+
+    //Reset the animation viewer scene to a blank scene
+    animFile = templateFile;
+
+    resourceOps.sendEvent(EditorEvents.EditResource, { path: animFilename });
+
+    return true;
+
+}
+
 export function CreateNewMaterial(resourcePath: string, materialName: string, reportError: boolean = true): boolean {
 
     var title = "New Material Error";
@@ -270,6 +306,46 @@ export function CreateNewMaterial(resourcePath: string, materialName: string, re
     }
 
     var templateFilename = "AtomicEditor/templates/template_material.material";
+    var file = Atomic.cache.getFile(templateFilename);
+
+    if (!file) {
+
+        if (reportError)
+            resourceOps.sendEvent(EditorEvents.ModalError, { title: title, message: "Failed to open template: " + templateFilename });
+        return false;
+
+    }
+
+    var out = new Atomic.File(resourcePath, Atomic.FILE_WRITE);
+    var success = out.copy(file);
+    out.close();
+
+    if (!success) {
+        if (reportError)
+            resourceOps.sendEvent(EditorEvents.ModalError, { title: title, message: "Failed template copy: " + templateFilename + " -> " + resourcePath });
+        return false;
+    }
+
+    ToolCore.assetDatabase.scan();
+
+    return true;
+
+}
+
+export function CreateNewBlender(resourcePath: string, blenderName: string, reportError: boolean = true): boolean {
+
+    var title = "New Blender Error";
+
+    var fs = Atomic.fileSystem;
+
+    if (fs.dirExists(resourcePath) || fs.fileExists(resourcePath)) {
+        if (reportError)
+            resourceOps.sendEvent(EditorEvents.ModalError, { title: title, message: "Already exists: " + resourcePath });
+        return false;
+
+    }
+
+    var templateFilename = "AtomicEditor/templates/template_blender.abl";
     var file = Atomic.cache.getFile(templateFilename);
 
     if (!file) {

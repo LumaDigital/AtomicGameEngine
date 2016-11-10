@@ -30,6 +30,7 @@ import ModelInspector = require("./ModelInspector");
 import PrefabInspector = require("./PrefabInspector");
 import TextureInspector = require("./TextureInspector");
 import AssemblyInspector = require("./AssemblyInspector");
+import AnimationBlenderInspector = require("./AnimationBlenderInspector");
 
 import SelectionInspector = require("./SelectionInspector");
 // make sure these are hooked in
@@ -197,6 +198,22 @@ class InspectorFrame extends ScriptWidget {
             container.addChild(materialInspector);
 
             materialInspector.inspect(asset, material);
+        }
+
+        if (asset.importerTypeName == "AnimationBlenderImporter") {
+
+            var cache = Atomic.getResourceCache();
+
+            var animationBlender = <Luma.AnimationBlender>cache.getResource("AnimationBlender", asset.path);
+
+            if (!animationBlender) {
+                return;
+            }
+
+            var animationBlenderInspector = new AnimationBlenderInspector();
+            container.addChild(animationBlenderInspector);
+
+            animationBlenderInspector.inspect(asset, animationBlender);
         }
 
         if (asset.importerTypeName == "PrefabImporter") {

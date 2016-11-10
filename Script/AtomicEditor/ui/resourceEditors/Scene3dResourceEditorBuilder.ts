@@ -25,7 +25,7 @@ export default class Scene3dResourceEditorBuilder implements Editor.Extensions.R
 
     canHandleResource(resourcePath: string) : boolean {
         var ext = Atomic.getExtension(resourcePath);
-        return ext == ".scene";
+        return ext == ".scene" || ext == ".bscene";
     }
 
     getEditor(resourceFram: Atomic.UIWidget, resourcePath: string, tabContainer: Atomic.UITabContainer) : Editor.ResourceEditor {

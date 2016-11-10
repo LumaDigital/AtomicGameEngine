@@ -125,6 +125,16 @@ class ModalOps extends Atomic.ScriptObject {
 
     }
 
+    showCreateBlender(resourcePath: string) {
+
+        if (this.show()) {
+
+            this.opWindow = new UIResourceOps.CreateBlender(resourcePath);
+
+        }
+
+    }
+
 
     showResourceDelete(asset: ToolCore.Asset) {
 
@@ -277,19 +287,19 @@ class ModalOps extends Atomic.ScriptObject {
         if (this.dimmer.parent) {
 
             console.log("WARNING: attempting to show modal while dimmer is active");
-            return false;
+           // return false;
 
         }
 
         if (this.opWindow) {
 
             console.log("WARNING: attempting to show modal while another opWindow is active");
-            return false;
+            //return false;
 
         }
 
         var view = EditorUI.getView();
-        view.addChild(this.dimmer);
+        //view.addChild(this.dimmer);
 
         return true;
 

@@ -137,6 +137,8 @@ class ModelInspector extends InspectorWidget {
 
         // apply button
         rootLayout.addChild(this.createApplyButton());
+        rootLayout.addChild(this.createPreviewAnimationButton(this.asset));
+
 
     }
 

@@ -20,11 +20,15 @@
 // THE SOFTWARE.
 //
 
+#include <AnimationBlender/BlenderController.h>
+#include <AnimationBlender/AnimationBlender.h>
+
 #include "../Precompiled.h"
 
 #include "../Graphics/AnimatedModel.h"
 #include "../Graphics/Animation.h"
 #include "../Graphics/AnimationController.h"
+
 #include "../Graphics/Camera.h"
 #include "../Graphics/CustomGeometry.h"
 #include "../Graphics/DebugRenderer.h"
@@ -301,6 +305,8 @@ void RegisterGraphicsLibrary(Context* context)
     Skybox::RegisterObject(context);
     AnimatedModel::RegisterObject(context);
     AnimationController::RegisterObject(context);
+    BlenderController::RegisterObject(context);
+    AnimationBlender::RegisterObject(context);
     BillboardSet::RegisterObject(context);
     ParticleEffect::RegisterObject(context);
     ParticleEmitter::RegisterObject(context);

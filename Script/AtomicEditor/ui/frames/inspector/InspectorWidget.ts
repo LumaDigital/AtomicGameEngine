@@ -21,6 +21,10 @@
 //
 
 import ScriptWidget = require("ui/ScriptWidget");
+import ResourceOps = require("resources/ResourceOps");
+import MainFrame = require("ui/frames/MainFrame");
+import EditorUI = require("ui/EditorUI"); 
+
 
 class InspectorWidget extends ScriptWidget {
 
@@ -47,11 +51,18 @@ class InspectorWidget extends ScriptWidget {
         this.addChild(layout);
 
         this.subscribeToEvent("WidgetEvent", (data) => this.handleWidgetEvent(data));
+        this.mainFrame = EditorUI.getMainFrame();
 
     }
 
     onApply() {
       console.log("Apply Pressed!");
+    }
+
+    onPreviewAnimation(asset: ToolCore.Asset) {
+        console.log("Preview Animation Pressed!");
+        this.mainFrame.showAnimationBlenderToolbar(asset);
+
     }
 
     createAttrName(name:string):Atomic.UITextField {
@@ -108,6 +119,22 @@ class InspectorWidget extends ScriptWidget {
 
     }
 
+    createPreviewAnimationButton(asset:ToolCore.Asset): Atomic.UIButton {
+
+        var button = new Atomic.UIButton();
+        button.fontDescription = this.attrFontDesc;
+        button.gravity = Atomic.UI_GRAVITY_RIGHT;
+        button.text = "Preview Animation";
+
+        button.onClick = function () {
+            this.onPreviewAnimation(asset);
+
+        }.bind(this);
+
+        return button;
+
+    }
+
     createAttrCheckBox(name:string, parent:Atomic.UIWidget):Atomic.UICheckBox {
 
       var attrLayout = new Atomic.UILayout();
@@ -153,7 +180,7 @@ class InspectorWidget extends ScriptWidget {
       return false;
 
     }
-
+    mainFrame: MainFrame;
     rootLayout:Atomic.UILayout;
     attrFontDesc:Atomic.UIFontDescription;
 }

@@ -43,6 +43,7 @@ var geometryCreateSource = new Atomic.UIMenuItemSource();
 geometryCreateSource.addItem(new Atomic.UIMenuItem("StaticModel", "StaticModel"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("AnimatedModel", "AnimatedModel"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("AnimationController", "AnimationController"));
+geometryCreateSource.addItem(new Atomic.UIMenuItem("BlenderController", "BlenderController"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("BillboardSet", "BillboardSet"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("CustomGeometry", "CustomGeometry"));
 geometryCreateSource.addItem(new Atomic.UIMenuItem("ParticleEmitter", "ParticleEmitter"));
@@ -58,6 +59,7 @@ var logicCreateSource = new Atomic.UIMenuItemSource();
 logicCreateSource.addItem(new Atomic.UIMenuItem("JSComponent", "JSComponent"));
 logicCreateSource.addItem(new Atomic.UIMenuItem("CSComponent", "CSComponent"));
 logicCreateSource.addItem(new Atomic.UIMenuItem("AnimationController", "AnimationController"));
+logicCreateSource.addItem(new Atomic.UIMenuItem("BlenderController", "BlenderController"));
 logicCreateSource.addItem(new Atomic.UIMenuItem("SplinePath", "SplinePath"));
 
 var navigationCreateSource = new Atomic.UIMenuItemSource();

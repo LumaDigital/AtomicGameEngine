@@ -94,6 +94,11 @@ class ProjectFrameMenus extends Atomic.ScriptObject {
                 return true;
             }
 
+            if (refid == "create_blendfile") {
+                EditorUI.getModelOps().showCreateBlender(path);
+                return true;
+            }
+
             if (refid == "reveal_folder") {
                 var utils = new Editor.FileUtils();
                 utils.revealInFinder(path);
@@ -196,6 +201,7 @@ var assetFolderContextItems = {
     "Create Script": ["create_script", undefined, "ComponentBitmap"],
     "Create Material": ["create_material", undefined, "ComponentBitmap"],
     "Create Scene": ["create_scene", undefined, "ComponentBitmap"],
+    "Create BlendFile": ["create_blendfile", undefined, "ComponentBitmap"],
     "Force Reimport": ["force_reimport_folder", undefined, ""],
     "-1": null,
     [showInFs]: ["reveal_folder", undefined, ""],
@@ -209,4 +215,5 @@ var createItems = {
     "Create Script": ["create_script", undefined, "ComponentBitmap"],
     "Create Material": ["create_material", undefined, "ComponentBitmap"],
     "Create Scene": ["create_scene", undefined, "ComponentBitmap"],
+    "Create BlendFile": ["create_blendfile", undefined, "ComponentBitmap"],
 };

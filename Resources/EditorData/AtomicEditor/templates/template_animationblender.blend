@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<animationblender>
+  <blendstate statename="Idle" defaultblendtime="0.5">
+    <blenddata animationname ="horse" startframe="1" endframe="1" syncframe="1" animationspeed="1" blendtime="1" startblendtime="1"/>
+  </blendstate>
+</animationblender>

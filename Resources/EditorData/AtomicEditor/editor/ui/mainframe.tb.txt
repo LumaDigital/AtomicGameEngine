@@ -48,6 +48,8 @@ TBLayout: distribution: gravity, axis: y
                 TBLayout: distribution: gravity, axis: y
                     TBLayout: gravity: left right, id: maintoolbarcontainer
                     TBSeparator: gravity: left right, skin: AESeparator
+                    TBLayout: gravity: left right, id: blendertoolbarcontainer
+                    TBSeparator: gravity: left right, skin: AESeparator
                     TBLayout: distribution: gravity, id: resourceviewcontainer
                     TBContainer: skin: AEContainer, gravity: left right bottom, id: consolecontainer
                         TBEditField: multiline: 1, styling: 1, gravity: left right, id: consoletext

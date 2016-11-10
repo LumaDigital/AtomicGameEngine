@@ -26,6 +26,7 @@ import WelcomeFrame = require("./WelcomeFrame");
 import InspectorFrame = require("./inspector/InspectorFrame");
 import HierarchyFrame = require("./HierarchyFrame");
 import MainToolbar = require("ui//MainToolbar");
+import AnimationViewer = require("ui//AnimationViewer");
 
 import UIEvents = require("ui/UIEvents");
 
@@ -122,6 +123,22 @@ class MainFrame extends ScriptWidget {
 
     }
 
+    showAnimationBlenderToolbar(asset: ToolCore.Asset)
+    {
+        if (this.animViewer != null) {
+           // this.animViewer.closeViewer();
+            this.animViewer = new AnimationViewer(this.getWidget("blendertoolbarcontainer"), asset);
+        }
+        else {
+            this.animViewer = new AnimationViewer(this.getWidget("blendertoolbarcontainer"), asset);
+        }
+    }
+
+    hideAnimationBlenderToolbar()
+    {
+        this.animViewer.remove();
+    }
+
     onEventClick(target: Atomic.UIWidget, refid: string): boolean {
 
         if (this.menu.handlePopupMenu(target, refid))
@@ -181,6 +198,7 @@ class MainFrame extends ScriptWidget {
     welcomeFrame: WelcomeFrame;
     inspectorlayout: Atomic.UILayout;
     mainToolbar: MainToolbar;
+    animViewer: AnimationViewer;
     menu: MainFrameMenu;
 
 }

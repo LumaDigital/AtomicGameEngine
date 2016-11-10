@@ -1,7 +1,7 @@
 
 {
   "name" : "Luma",
-  "namespace" : "Luma",
+  "namespace" : "Atomic",
   "dependencies" : ["Script/Packages/Atomic"],
   "modules" : ["Luma"],
   "platforms" : ["WINDOWS", "MACOSX", "LINUX"]
