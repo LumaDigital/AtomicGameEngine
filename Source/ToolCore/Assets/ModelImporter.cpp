@@ -70,6 +70,15 @@ void ModelImporter::SetDefaults()
 
 }
 
+void ModelImporter::SetScale(double scale)
+{
+    scale_ = scale;
+
+    // Clear outdated cache files and regenerate them
+    ClearCacheFiles();
+    GenerateCacheFiles();
+}
+
 bool ModelImporter::ImportModel()
 {
 
