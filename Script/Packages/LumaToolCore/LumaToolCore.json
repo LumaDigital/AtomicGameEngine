@@ -1,0 +1,6 @@
+{
+	"name" : "LumaToolCore",
+	"includes" : ["<ToolCore/Assets/AssetImporter.h>"],
+	"sources" : ["Source/Luma/LumaToolCore/AnimationBlender"],
+	"classes" : ["AnimationBlenderImporter"]
+}

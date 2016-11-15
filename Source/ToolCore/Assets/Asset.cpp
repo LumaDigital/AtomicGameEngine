@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 //
 
-#include <AnimationBlender/AnimationBlenderImporter.h>
+#include <LumaToolCore/AnimationBlender/AnimationBlenderImporter.h>
 
 #include <Atomic/IO/Log.h>
 #include <Atomic/IO/File.h>

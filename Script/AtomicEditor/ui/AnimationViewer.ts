@@ -164,7 +164,7 @@ class AnimationViewer extends Atomic.UIWidget {
 
         var modelNode = this.asset.instantiateNode(this.scene, this.asset.name);
 
-        var blenderComponent = new Luma.BlenderController();
+        var blenderComponent = new LumaAtomic.BlenderController();
         modelNode.addComponent(blenderComponent, 0, 0);
         this.sceneEditor.selection.addNode(modelNode, true);
         this.sceneEditor.sceneView3D.frameSelection();
@@ -231,7 +231,7 @@ class AnimationViewer extends Atomic.UIWidget {
     }
 
     animationController: Atomic.AnimationController;
-    blenderController: Luma.BlenderController;
+    blenderController: LumaAtomic.BlenderController;
     animatedModel: Atomic.AnimatedModel;
     scene: Atomic.Scene = null;
     sceneEditor: Editor.SceneEditor3D;
@@ -246,7 +246,7 @@ class AnimationViewer extends Atomic.UIWidget {
 
     leftAnim: Atomic.Animation;
     rightAnim: Atomic.Animation;
-    animationBlender: Luma.AnimationBlender;
+    animationBlender: LumaAtomic.AnimationBlender;
 
     asset: ToolCore.Asset;
     sceneAssetPath: string;

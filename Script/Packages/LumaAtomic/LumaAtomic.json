@@ -1,0 +1,6 @@
+{
+	"name" : "LumaAtomic",
+	"includes" : ["<AnimationBlender/AnimationBlender.h>"],
+	"sources" : ["Source/Luma/LumaAtomic/AnimationBlender"],
+	"classes" : ["BlenderController", "AnimationBlender", "BlendData", "BlendState"]
+}

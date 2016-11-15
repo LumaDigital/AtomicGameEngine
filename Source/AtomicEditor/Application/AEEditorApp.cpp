@@ -56,7 +56,8 @@ namespace ToolCore
 }
 
 // Luma
-extern void luma_lib_init(Context* context, JSVM* vm);
+extern void lumaatomic_lib_init(Context* context, JSVM* vm);
+extern void lumatoolcore_lib_init(Context* context, JSVM* vm);
 
 using namespace ToolCore;
 
@@ -153,7 +154,8 @@ namespace AtomicEditor
         AppBase::Start();
 
         //Luma
-        luma_lib_init(context_, vm_);
+        lumaatomic_lib_init(context_, vm_);
+        lumatoolcore_lib_init(context_, vm_);
 
         vm_->SetModuleSearchPaths("AtomicEditor/JavaScript;AtomicEditor/EditorScripts;AtomicEditor/EditorScripts/AtomicEditor");
 

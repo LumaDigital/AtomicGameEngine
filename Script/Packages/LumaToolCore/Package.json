@@ -1,0 +1,8 @@
+
+{
+  "name" : "LumaToolCore",
+  "namespace" : "ToolCore",
+  "dependencies" : ["Script/Packages/ToolCore"],
+  "modules" : ["LumaToolCore"],
+  "platforms" : ["WINDOWS", "MACOSX", "LINUX"]
+}

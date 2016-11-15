@@ -20,8 +20,8 @@
 // THE SOFTWARE.
 //
 
-#include <AnimationBlender/BlenderController.h>
-#include <AnimationBlender/AnimationBlender.h>
+#include <LumaAtomic/AnimationBlender/BlenderController.h>
+#include <LumaAtomic/AnimationBlender/AnimationBlender.h>
 
 #include "../Precompiled.h"
 

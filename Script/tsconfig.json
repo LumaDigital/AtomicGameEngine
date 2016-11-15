@@ -18,7 +18,8 @@
         "./TypeScript/**/*.ts",
         "!./TypeScript/dist/*.ts",
         "!./TypeScript/AtomicNET.d.ts",
-		"./TypeScript/Luma.d.ts"
+		"./TypeScript/LumaAtomic.d.ts",
+		"./TypeScript/LumaToolCore.d.ts"
     ],
     "atom": {
         "rewriteTsconfig": true
@@ -125,6 +126,7 @@
         "./TypeScript/EditorWork.d.ts",
         "./TypeScript/ToolCore.d.ts",
         "./TypeScript/WebView.d.ts",
-		"./TypeScript/Luma.d.ts"
+		"./TypeScript/LumaAtomic.d.ts",
+		"./TypeScript/LumaToolCore.d.ts"
     ]
 }

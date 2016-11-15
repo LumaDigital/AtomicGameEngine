@@ -204,7 +204,7 @@ class InspectorFrame extends ScriptWidget {
 
             var cache = Atomic.getResourceCache();
 
-            var animationBlender = <Luma.AnimationBlender>cache.getResource("AnimationBlender", asset.path);
+            var animationBlender = <LumaAtomic.AnimationBlender>cache.getResource("AnimationBlender", asset.path);
 
             if (!animationBlender) {
                 return;

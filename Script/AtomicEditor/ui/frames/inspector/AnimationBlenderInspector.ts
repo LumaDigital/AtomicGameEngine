@@ -40,7 +40,7 @@ class AnimationBlenderInspector extends InspectorWidget {
         return false;
     }
 
-    inspect(asset: ToolCore.Asset, animationBlender: Luma.AnimationBlender) {
+    inspect(asset: ToolCore.Asset, animationBlender: LumaAtomic.AnimationBlender) {
 
         this.asset = asset;
         this.animationBlender = animationBlender;
@@ -114,7 +114,7 @@ class AnimationBlenderInspector extends InspectorWidget {
             var blendState;
 
             if (i >= this.animationBlender.getBlendStatesSize()) {
-                blendState = new Luma.BlendState();
+                blendState = new LumaAtomic.BlendState();
             }
             else {
                 blendState = this.animationBlender.getBlendState(i);
@@ -151,7 +151,7 @@ class AnimationBlenderInspector extends InspectorWidget {
         }
     }
 
-    createAnimationDataEntries(blendState: Luma.BlendState, animationRootLayout: Atomic.UILayout, dataCountIndex: number) {
+    createAnimationDataEntries(blendState: LumaAtomic.BlendState, animationRootLayout: Atomic.UILayout, dataCountIndex: number) {
 
         this.stateWidget[dataCountIndex].clearWidgets();
 
@@ -182,7 +182,7 @@ class AnimationBlenderInspector extends InspectorWidget {
             var blendData;
 
             if (i >= blendState.getBlendDataSize()) {
-                blendData = new Luma.BlendData();
+                blendData = new LumaAtomic.BlendData();
             }
             else {
                 blendData = blendState.getBlendData(i);
@@ -255,7 +255,7 @@ class AnimationBlenderInspector extends InspectorWidget {
             var prevDataCount = this.blendStateStruct[dataCountIndex].getBlendDataSize();
 
             for (var i = 0; i < (count - prevDataCount); i++) {
-                this.blendStateStruct[dataCountIndex].addBlendData(new Luma.BlendData());
+                this.blendStateStruct[dataCountIndex].addBlendData(new LumaAtomic.BlendData());
             }
         }
         this.createAnimationStateEntries();
@@ -329,15 +329,15 @@ class AnimationBlenderInspector extends InspectorWidget {
     stateCount: number;
 
     stateCountEdit: Atomic.UIEditField;
-    blendStateStruct: Luma.BlendState[];
+    blendStateStruct: LumaAtomic.BlendState[];
     importBlendStateArray: ArrayEditWidget;
     importBlendDataArray: ArrayEditWidget[];
     animationInfoLayout: Atomic.UILayout;
     stateWidget: StateWidget[];
 
     asset: ToolCore.Asset;
-    animationBlender: Luma.AnimationBlender;
-    importer: Luma.AnimationBlenderImporter;
+    animationBlender: LumaAtomic.AnimationBlender;
+    importer: LumaToolCore.AnimationBlenderImporter;
 }
 export = AnimationBlenderInspector;
 
