@@ -78,6 +78,10 @@ protected:
     WeakPtr<Asset> asset_;
     bool requiresCacheFile_;
 
+    // LUMA Begin
+    void UpdateMD5() { md5_ = GenerateMD5(); }
+    // LUMA End
+
     virtual void GetRequiredCacheFiles(Vector<String>& files) {}
     virtual void TryFetchCacheFiles(Vector<String>& files);
     virtual bool GenerateCacheFiles();
