@@ -146,8 +146,13 @@ void PrefabImporter::HandlePrefabSave(StringHash eventType, VariantMap& eventDat
     asset_->UpdateFileTimestamp();
     lastFileStamp_ = asset_->GetFileTimestamp();
 
-    OnPrefabFileChanged();
+    // LUMA Begin
+    UpdateMD5();
+    ClearCacheFiles();
+    GenerateCacheFiles();
 
+    //OnPrefabFileChanged();
+    // LUMA End
 }
 
 void PrefabImporter::GetRequiredCacheFiles(Vector<String>& files)
