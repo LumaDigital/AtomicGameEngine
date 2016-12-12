@@ -2114,7 +2114,11 @@ private:
             if(!target) {
                 target = node->Target();
             }
-            ai_assert(node->Target() == target);
+            // LUMA Begin
+            // Disabling this, we run into it frequently because of bones with no geometry,
+            // which is actually a valid case for us
+            //ai_assert(node->Target() == target);
+            // LUMA End
         }}
 #endif
 
