@@ -1051,7 +1051,7 @@ class ResourceRefListAttributeEdit extends AttributeInfoEdit {
 
         var size = Number(this.sizeEdit.text);
 
-        if (size > 64 || size < 0)
+        if (size > 256 || size < 0)
             return;
 
         var editType = this.editType;
