@@ -340,6 +340,10 @@ namespace AtomicEngine
 
         void HandleComponentRemoved(Component component)
         {
+            /// LUMA Begin
+            if (component == null) return;
+            /// LUMA End
+
             if (component.GetType() == typeof(PhysicsWorld) || component.GetType() == typeof(PhysicsWorld2D))
             {
                 UnsubscribeFromEvent<PhysicsPreStepEvent>();

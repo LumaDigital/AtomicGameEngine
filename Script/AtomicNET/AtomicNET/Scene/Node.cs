@@ -96,7 +96,10 @@ namespace AtomicEngine
             GetComponents(components, typeof(T).Name, recursive);
             for (int i = 0; i < components.Size; i++)
             {
-                dest.Push((T)components[i]);
+                /// LUMA Begin
+                if (components[i] != null)
+                    dest.Push((T)components[i]);
+                /// LUMA End
             }
         }
 
@@ -118,8 +121,11 @@ namespace AtomicEngine
             GetComponents(components, nameof(CSComponent), recursive);
             for (int i = 0; i < components.Size; i++)
             {
-                if (components[i].GetType() == typeof(T))
+                /// LUMA Begin
+                if (components[i] != null &&
+                    components[i].GetType() == typeof(T))
                     return (T) components[i];
+                /// LUMA End
             }
 
             return null;
@@ -132,8 +138,11 @@ namespace AtomicEngine
             for (int i = 0; i < components.Size; i++)
             {
                 Component component = components[i];
-                if (component.GetType() == typeof(T))
+                /// LUMA Begin
+                if (component != null &&
+                    component.GetType() == typeof(T))
                     dest.Push((T)component);
+                /// LUMA End
             }
         }
 
