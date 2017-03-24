@@ -22,6 +22,7 @@
 
 #include "../IO/Log.h"
 
+#include "../Script/ScriptComponent.h"
 #include "../Metrics/Metrics.h"
 
 #ifdef ATOMIC_PLATFORM_WEB
@@ -55,6 +56,30 @@ void MetricsSnapshot::Clear()
     instanceMetrics_.Clear();
     nodeMetrics_.Clear();
     resourceMetrics_.Clear();
+}
+
+void MetricsSnapshot::RegisterInstance(const String& classname, InstantiationType instantiationType, int count)
+{
+    InstanceMetric *metric = &instanceMetrics_[classname];
+
+    if (!metric->classname.Length())
+        metric->classname = classname;
+
+    metric->count += count;
+
+    switch (instantiationType)
+    {
+    case INSTANTIATION_NATIVE:
+        metric->nativeInstances++;
+        break;
+    case INSTANTIATION_JAVASCRIPT:
+        metric->jsInstances++;
+        break;
+    case INSTANTIATION_NET:
+        metric->netInstances++;
+        break;
+    }
+
 }
 
 String MetricsSnapshot::PrintData(unsigned columns, unsigned minCount)
@@ -140,26 +165,41 @@ Metrics::~Metrics()
 }
 
 void Metrics::CaptureInstances(MetricsSnapshot* snapshot)
-{
-    const String unkClassName("-Unknown Class-");
+{    
+    const static String unkClassName("-Unknown Class-");
+
+    const static StringHash scriptComponentType("ScriptComponent");
+    const static StringHash jsComponentType("JSComponent");
+    const static StringHash csComponentType("CSComponent");
 
     for (unsigned i = 0; i < instances_.Size(); i++)
     {
         RefCounted* r = instances_[i];
+        Object* o = r->IsObject() ? (Object *) r : 0;
+        InstantiationType instantiationType = r->GetInstantiationType();
 
-        const String& name = r->GetTypeName();
+        // for script components, attempt to get component class name for better tracking
+        bool registered = false;
+        if (o && o->IsInstanceOf(scriptComponentType))
+        {   
+            const String& classname = ((ScriptComponent*)o)->GetComponentClassName();
 
-        MetricsSnapshot::InstanceMetric& metric = snapshot->instanceMetrics_[name];
+            if (classname.Length())
+            {                
+                if (o->GetType() == jsComponentType)
+                    snapshot->RegisterInstance(classname + " (JS)", instantiationType);
+                else
+                    snapshot->RegisterInstance(classname + " (C#)", instantiationType);
 
-        metric.classname = name;
-        metric.count++;
+                registered = true;
+            }
+        }
 
-        if (r->GetInstantiationType() == INSTANTIATION_NATIVE)
-            metric.nativeInstances++;
-        else if (r->GetInstantiationType() == INSTANTIATION_JAVASCRIPT)
-            metric.jsInstances++;
-        else if (r->GetInstantiationType() == INSTANTIATION_NET)
-            metric.netInstances++;
+        if (!registered)
+        {
+            snapshot->RegisterInstance(r->GetTypeName(), r->GetInstantiationType());
+        }
+                        
     }
 
 }

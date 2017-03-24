@@ -41,6 +41,9 @@ public:
 
     void Clear();
 
+    /// Register instance(s) of classname in metrics snapshot
+    void RegisterInstance(const String& classname, InstantiationType instantiationType, int count = 1);
+
 private:
 
     struct InstanceMetric
