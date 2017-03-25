@@ -117,6 +117,9 @@ public:
 
     void Capture(MetricsSnapshot* snapshot);
 
+    /// Prints names of registered node instances output string
+    String PrintNodeNames() const;
+
 private:    
 
     void Disable();

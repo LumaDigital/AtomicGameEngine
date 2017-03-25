@@ -22,6 +22,7 @@
 
 #include "../IO/Log.h"
 
+#include "../Scene/Node.h"
 #include "../Script/ScriptComponent.h"
 #include "../Metrics/Metrics.h"
 
@@ -251,6 +252,30 @@ void Metrics::Disable()
 
     RefCounted::RemoveRefCountedCreatedFunction(Metrics::OnRefCountedCreated);
     RefCounted::RemoveRefCountedDeletedFunction(Metrics::OnRefCountedDeleted);
+}
+
+String Metrics::PrintNodeNames() const 
+{
+    const static StringHash nodeType("Node");
+
+    String output;
+
+    for (unsigned i = 0; i < instances_.Size(); i++)
+    {
+        Object* o = instances_[i]->IsObject() ? (Object *)instances_[i] : 0;
+
+        if (!o)
+            continue;
+
+        if (o->GetType() == nodeType)
+        {
+            const String& name = ((Node*)o)->GetName();
+            output.AppendWithFormat("Node: %s\n", name.Length() ? name.CString() : "Anonymous Node");
+        }
+
+    }
+
+    return output;
 }
 
 void Metrics::OnRefCountedCreated(RefCounted* refCounted)
