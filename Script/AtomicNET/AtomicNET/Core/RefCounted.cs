@@ -5,7 +5,7 @@ namespace AtomicEngine
 {
 
     [ComVisible(true)]
-    public partial class RefCounted
+    public partial class RefCounted : IDisposable
     {
 
         public RefCounted()
@@ -15,6 +15,19 @@ namespace AtomicEngine
         protected RefCounted(IntPtr native)
         {
             nativeInstance = native;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+        }
+
+        ~RefCounted()
+        {
+            Dispose(false);
         }
 
         // This method may be called multiple times, called on instance after it is either registered as a new native created in C# (InstantiationType == InstantiationType.INSTANTIATION_NET)
