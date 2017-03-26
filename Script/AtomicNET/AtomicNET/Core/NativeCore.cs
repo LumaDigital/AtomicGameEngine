@@ -21,6 +21,9 @@ namespace AtomicEngine
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void RefCountedDeletedDelegate(IntPtr refCounted);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public delegate void ThrowManagedExceptionDelegate(string errorMsg);
+
     public class NativeType
     {
 
@@ -260,7 +263,16 @@ namespace AtomicEngine
             
         }
 
-        internal static void RemoveNative(IntPtr refCounted, bool releaseRef = true)
+        // Called to throw a managed exception from native code
+#if ATOMIC_IOS
+        [MonoPInvokeCallback(typeof(RefCountedDeletedDelegate))]
+#endif
+        public static void ThrowManagedException(string errorMsg)
+        {
+            throw new InvalidOperationException("Native Exception: " + errorMsg);
+        }
+
+        internal static void RemoveNative(IntPtr refCounted)
         {
             if (refCounted == IntPtr.Zero)
                 return;
@@ -268,9 +280,6 @@ namespace AtomicEngine
             refCountedCache.Remove(refCounted);
 
             RemoveEventSender(refCounted);
-
-            if (releaseRef)
-                csi_AtomicEngine_ReleaseRef(refCounted);
 
         }
 
@@ -293,11 +302,9 @@ namespace AtomicEngine
             }
 
             r.InstantiationType = instantiationType;
+            r.Init();
 
             refCountedCache.Add(r);
-
-            // keep native side alive
-            r.AddRef();
 
             r.PostNativeUpdate();
 
@@ -413,8 +420,19 @@ namespace AtomicEngine
         // Managed Type to NativeType lookup
         internal static Dictionary<Type, NativeType> typeToNativeType = new Dictionary<Type, NativeType>();
 
+        // Access to native reference counting not needing a managed RefCounted instance
+
+        [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        internal static extern void csi_AtomicEngine_AddRef(IntPtr refCounted);
+
+        [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        internal static extern void csi_AtomicEngine_AddRefSilent(IntPtr refCounted);
+
         [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         internal static extern void csi_AtomicEngine_ReleaseRef(IntPtr refCounted);
+
+        [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        internal static extern void csi_AtomicEngine_ReleaseSilent(IntPtr refCounted);
 
         internal struct EventSubscription
         {

@@ -1,5 +1,3 @@
-
-
 #include <Atomic/Resource/ResourceCache.h>
 #include <Atomic/Script/ScriptVariant.h>
 #include <Atomic/Script/ScriptVariantMap.h>
@@ -65,12 +63,50 @@ namespace Atomic
             return refCounted->GetClassID();
         }
 
+        ATOMIC_EXPORT_API void csi_AtomicEngine_AddRef(RefCounted* refCounted)
+        {
+            if (!NETCore::EnsureMainThread("csi_AtomicEngine_AddRef - not on main thread"))
+                return;
+
+            if (!refCounted)
+                return;
+
+            refCounted->AddRef();
+        }
+
+
+        ATOMIC_EXPORT_API void csi_AtomicEngine_AddRefSilent(RefCounted* refCounted)
+        {
+            if (!NETCore::EnsureMainThread("csi_AtomicEngine_AddRefSilent - not on main thread"))
+                return;
+
+            if (!refCounted)
+                return;
+
+            refCounted->AddRefSilent();
+        }
+
+
         ATOMIC_EXPORT_API void csi_AtomicEngine_ReleaseRef(RefCounted* refCounted)
         {
+            if (!NETCore::EnsureMainThread("csi_AtomicEngine_ReleaseRef - not on main thread"))
+                return;
+
             if (!refCounted)
                 return;
 
             refCounted->ReleaseRef();
+        }
+
+        ATOMIC_EXPORT_API void csi_AtomicEngine_ReleaseRefSilent(RefCounted* refCounted)
+        {
+            if (!NETCore::EnsureMainThread("csi_AtomicEngine_ReleaseRefSilent - not on main thread"))
+                return;
+
+            if (!refCounted)
+                return;
+
+            refCounted->ReleaseRefSilent();
         }
 
         ATOMIC_EXPORT_API const char* csi_Atomic_RefCounted_GetTypeName(RefCounted* self)
@@ -101,7 +137,10 @@ namespace Atomic
         }
 
 
-        ATOMIC_EXPORT_API ClassID csi_Atomic_NETCore_Initialize(NETCoreEventDispatchFunction eventDispatch, NETCoreUpdateDispatchFunction updateDispatch, NETCoreRefCountedDeletedFunction refCountedDeleted)
+        ATOMIC_EXPORT_API ClassID csi_Atomic_NETCore_Initialize(NETCoreEventDispatchFunction eventDispatch, 
+            NETCoreUpdateDispatchFunction updateDispatch, 
+            NETCoreRefCountedDeletedFunction refCountedDeleted,
+            NETCoreThrowManagedExceptionFunction throwManagedException)
         {
             Context* context = new Context();
 
@@ -110,6 +149,7 @@ namespace Atomic
             delegates.eventDispatch = eventDispatch;
             delegates.updateDispatch = updateDispatch;
             delegates.refCountedDeleted = refCountedDeleted;
+            delegates.throwManagedException = throwManagedException;
 
             NETCore* netCore = new NETCore(context, &delegates);
             context->RegisterSubsystem(netCore);

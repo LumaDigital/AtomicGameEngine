@@ -5,11 +5,48 @@ using System.Runtime.InteropServices;
 namespace AtomicEngine
 {
 
+    internal class RefCountedSafeFileHandle : SafeHandle
+    {
+        public RefCountedSafeFileHandle(IntPtr handle, bool ownsHandle = true)
+            : base(handle, ownsHandle)
+        {
+            if (handle == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("RefCountedSafeFileHandle - native == IntPtr.Zero");
+            }
+
+            NativeCore.csi_AtomicEngine_AddRef(handle);
+        }
+
+        override public bool IsInvalid { get { return handle == IntPtr.Zero; } }
+
+        override protected bool ReleaseHandle()
+        {
+            if (handle == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("RefCountedSafeFileHandle.ReleaseHandle - native == IntPtr.Zero");
+            }
+
+             NativeCore.csi_AtomicEngine_ReleaseRef(handle);
+            
+            lock (RefCounted.refCountedFinalizerQueue)
+            {
+                //RefCounted.refCountedFinalizerQueue.Add(handle);
+            }
+            
+
+            handle = IntPtr.Zero;
+
+            return true;
+        }
+    }
+
     [ComVisible(true)]
     public partial class RefCounted : IDisposable
     {
 
-        public bool Disposed = false;
+        // _handle is set to null to indicate disposal of this instance.
+        private RefCountedSafeFileHandle refHandle;
 
         public RefCounted()
         {
@@ -21,6 +58,11 @@ namespace AtomicEngine
             nativeInstance = native;
         }
 
+        internal void Init()
+        {            
+            refHandle = new RefCountedSafeFileHandle(nativeInstance);
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -29,29 +71,11 @@ namespace AtomicEngine
 
         protected virtual void Dispose(bool disposing)
         {
-            // guard against double explicit/using statement dispose
-            if (Disposed)
-                return;
 
-            Disposed = true;
-
-            if (nativeInstance == IntPtr.Zero)
+            if (refHandle != null && !refHandle.IsInvalid)
             {
-                throw new InvalidOperationException("RefCounted.Dispose - Invalid native instance == IntPtr.Zero, double call to Dispose?");
-            }
-
-            if (disposing)
-            {
-                // must be on main engine thread!
-
-                if (NativeCore.csi_Atomic_RefCounted_Refs(nativeInstance) < 1)
-                {
-                    throw new InvalidOperationException("RefCounted.Dispose - Native instance has less than 1 reference count");
-
-                }
-
-                NativeCore.RemoveNative(nativeInstance);
-
+                // Free the handle
+                refHandle.Dispose();
             }
 
             nativeInstance = IntPtr.Zero;
@@ -61,8 +85,8 @@ namespace AtomicEngine
         ~RefCounted()
         {
             // This can run on any thread, so queue release
-            lock (refCountedFinalizerQueue)
-                refCountedFinalizerQueue.Add(nativeInstance);
+           // lock (refCountedFinalizerQueue)
+           //     refCountedFinalizerQueue.Add(nativeInstance);
         }
 
         static internal List<IntPtr> refCountedFinalizerQueue = new List<IntPtr>();
@@ -74,6 +98,7 @@ namespace AtomicEngine
                 foreach (var native in refCountedFinalizerQueue)
                 {
                     NativeCore.RemoveNative(native);
+                    NativeCore.csi_AtomicEngine_ReleaseRef(native);
                 }
 
                 refCountedFinalizerQueue.Clear();
