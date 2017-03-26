@@ -69,12 +69,6 @@ namespace AtomicEngine
                     return;
             }
 
-            WeakReference<RefCounted> w = null;
-            if (!nativeLookup.TryGetValue(receiver.nativeInstance, out w))
-            {
-                throw new InvalidOperationException("NativeCore.SubscribeToEvent - unable to find native receiver instance");
-            }
-
             eventReceivers.Add(new EventSubscription(receiver, sender));
         }
 
@@ -113,9 +107,13 @@ namespace AtomicEngine
 
         static internal void RemoveEventSender(IntPtr sender)
         {
-            //TODO: OPTIMIZE
-
             if (sender == IntPtr.Zero)
+                return;
+
+            var refCounted = refCountedCache.Get(sender)?.Reference;
+
+            // If we're no longer registered or not an Object, early out
+            if (refCounted == null || !refCounted.IsObject())
                 return;
 
             foreach (var subList in eventReceiverLookup.Values)
@@ -140,30 +138,14 @@ namespace AtomicEngine
                 svm[i] = new ScriptVariantMap();
         }
 
-
-        static float expireDelta = 0.0f;
-
         // called ahead of E_UPDATE event
         #if ATOMIC_IOS
         [MonoPInvokeCallback(typeof(UpdateDispatchDelegate))]
         #endif
         public static void UpdateDispatch(float timeStep)
         {
-            expireDelta += timeStep;
-            if (expireDelta > 2.0f)
-            {
-                expireDelta = 0.0f;
 
-
-                // TODO: tune GC
-                /*
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                */
-
-                ExpireNatives();
-            }
+            RefCounted.ReleaseFinalized();
         }
 
         #if ATOMIC_IOS
@@ -267,31 +249,6 @@ namespace AtomicEngine
                     break;
             }
 
-            RefCounted r;
-
-            foreach (var native in nativeLookup.Keys.ToList())
-            {
-                var w = nativeLookup[native];
-
-                if (!w.TryGetTarget(out r))
-                {
-                    // expired
-                    csi_AtomicEngine_ReleaseRef(native);
-                    nativeLookup.Remove(native);
-                    //nativesRemoved++;
-                }
-
-                if (watch.ElapsedMilliseconds > 16)
-                    break;
-            }
-
-            /*
-            if (nativesRemoved != 0 || eventListenersRemoved != 0)
-            {
-                Console.WriteLine("Released {0} natives and {1} event receivers", nativesRemoved, eventListenersRemoved);
-            }
-            */
-
         }
 
         // Called from RefCounted native destructor, refCounted is not valid for any operations here
@@ -300,29 +257,52 @@ namespace AtomicEngine
         #endif
         public static void RefCountedDeleted(IntPtr refCounted)
         {
-            nativeLookup.Remove(refCounted);
+            
+        }
+
+        internal static void RemoveNative(IntPtr refCounted, bool releaseRef = true)
+        {
+            if (refCounted == IntPtr.Zero)
+                return;
+
+            refCountedCache.Remove(refCounted);
+
             RemoveEventSender(refCounted);
+
+            if (releaseRef)
+                csi_AtomicEngine_ReleaseRef(refCounted);
+
         }
 
         // register a newly created native
-        public static IntPtr RegisterNative(IntPtr native, RefCounted r)
+        public static IntPtr RegisterNative(IntPtr native, RefCounted r, InstantiationType instantiationType = InstantiationType.INSTANTIATION_NET)
         {
-            if (nativeLookup.ContainsKey(native))
+            if (native == IntPtr.Zero || r == null)
             {
-                throw new InvalidOperationException("NativeCore.RegisterNative - Duplicate IntPtr key");
+                throw new InvalidOperationException("NativeCore.RegisterNative - native == IntPtr.Zero || RefCounted instance == null");
             }
 
-            r.nativeInstance = native;
+            if (instantiationType == InstantiationType.INSTANTIATION_NET)
+            {
+                if (r.nativeInstance != IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("NativeCore.RegisterNative - NET Instantiated RefCounted with initialized nativeInstance");
+                }
+
+                r.nativeInstance = native;
+            }
+
+            r.InstantiationType = instantiationType;
+
+            refCountedCache.Add(r);
+
             // keep native side alive
             r.AddRef();
-
-            nativeLookup[native] = new WeakReference<RefCounted>(r);
-
-            r.InstantiationType = InstantiationType.INSTANTIATION_NET;
 
             r.PostNativeUpdate();
 
             return native;
+
         }
 
 
@@ -330,35 +310,15 @@ namespace AtomicEngine
         public static T WrapNative<T>(IntPtr native) where T : RefCounted
         {
             if (native == IntPtr.Zero)
-                return null;
-
-            RefCounted r;
-            WeakReference<RefCounted> w;
-
-            // first see if we're already available
-            if (nativeLookup.TryGetValue(native, out w))
             {
-
-                if (w.TryGetTarget(out r))
-                {
-                    // we're alive!
-                    return (T)r;
-                }
-                else
-                {
-                    // we were seen before, but have since been GC'd, remove!
-                    nativeLookup.Remove(native);
-
-                    if (csi_Atomic_RefCounted_Refs(native) == 1)
-                    {
-                        // only managed ref remains, so release and return null
-                        csi_AtomicEngine_ReleaseRef(native);
-                        return null;
-                    }
-
-                    csi_AtomicEngine_ReleaseRef(native);
-                }
+                throw new InvalidOperationException("NativeCore.WrapNative - Attempting to wrap native instance IntPtr.Zero");
             }
+
+            var reference = refCountedCache.Get(native)?.Reference;
+
+            // This isn't really a good test to verify right object, better to test if not a T and error?
+            if (reference is T)
+                return (T)reference;
 
             IntPtr classID = RefCounted.csi_Atomic_RefCounted_GetClassID(native);
 
@@ -378,27 +338,20 @@ namespace AtomicEngine
             if (nativeType.Type == typeof(CSComponent))
                 return null;
 
-            // and store, with downcast support for instance Component -> StaticModel
-            // we never want to hit this path for script inherited natives
+            // Construct managed instance wrapper for native instance
+            // this has downcast support for instance Component -> StaticModel
+            // note, we never want to hit this path for script inherited natives
 
-            r = nativeType.managedConstructor(native);
+            var r = nativeType.managedConstructor(native);
 
-            w = new WeakReference<RefCounted>(r);
-            NativeCore.nativeLookup[native] = w;
-
-            // store a ref, so native side will not be released while we still have a reference in managed code
-            r.AddRef();
-
-            // Note: r.InstantiationType may be INSTANTIATION_NET here is we were GC'd, native still had a reference, and we came back
-            if (r.InstantiationType == InstantiationType.INSTANTIATION_NET)
-            {
-                //Log.Warn($"Wrapped {r.GetType().Name} was originally instantiated in NET, changing to native, this is likely an error");
-                //r.InstantiationType = InstantiationType.INSTANTIATION_NATIVE;
-            }
-
-            r.PostNativeUpdate();
+            // IMPORTANT: if a RefCounted instance is created in managed code, has reference count increased in native code
+            // and managed side is GC'd, the original NET created instance will be gone and we can get it back here reported
+            // as instantiated in native code.  May want a transative boolean to be able to tell when an object has passed this "barrier"
+            // which is somewhat common
+            RegisterNative(native, r, InstantiationType.INSTANTIATION_NATIVE);
 
             return (T)r;
+
         }
 
         internal static string GetNativeTypeName(IntPtr native)
@@ -410,7 +363,7 @@ namespace AtomicEngine
         private static extern IntPtr csi_Atomic_RefCounted_GetTypeName(IntPtr self);
 
         [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        private static extern int csi_Atomic_RefCounted_Refs(IntPtr self);
+        internal static extern int csi_Atomic_RefCounted_Refs(IntPtr self);
 
         public static void RegisterNativeType(NativeType nativeType)
         {
@@ -447,8 +400,7 @@ namespace AtomicEngine
             return ancestorType;
         }
 
-        // weak references here, hold a ref native side
-        internal static Dictionary<IntPtr, WeakReference<RefCounted>> nativeLookup = new Dictionary<IntPtr, WeakReference<RefCounted>>();
+        private static RefCountedCache refCountedCache = new RefCountedCache();
 
         // weak references here, hold a ref native side
         internal static Dictionary<uint, List<EventSubscription>> eventReceiverLookup = new Dictionary<uint, List<EventSubscription>>();
@@ -462,7 +414,7 @@ namespace AtomicEngine
         internal static Dictionary<Type, NativeType> typeToNativeType = new Dictionary<Type, NativeType>();
 
         [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        private static extern void csi_AtomicEngine_ReleaseRef(IntPtr refCounted);
+        internal static extern void csi_AtomicEngine_ReleaseRef(IntPtr refCounted);
 
         internal struct EventSubscription
         {
