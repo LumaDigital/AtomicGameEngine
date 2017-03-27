@@ -23,6 +23,7 @@
 #pragma once
 
 #include "../Core/Object.h"
+#include "../Container/List.h"
 
 namespace Atomic
 {
@@ -135,7 +136,7 @@ private:
 
     bool enabled_;
 
-    Vector<RefCounted*> instances_;
+    List<RefCounted*> instances_;
 
 };
 

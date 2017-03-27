@@ -44,7 +44,10 @@ namespace AtomicEngine
 
     }
 
-    public static class NativeCore
+    /// <summary>
+    ///  Internal class for native interop 
+    /// </summary>
+    internal static class NativeCore
     {
 
         static internal void SubscribeToEvent(AObject receiver, uint eventType)
@@ -433,6 +436,10 @@ namespace AtomicEngine
 
         [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         internal static extern void csi_AtomicEngine_ReleaseSilent(IntPtr refCounted);
+
+        [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        internal static extern bool csi_AtomicEngine_IsMainThread();
 
         internal struct EventSubscription
         {

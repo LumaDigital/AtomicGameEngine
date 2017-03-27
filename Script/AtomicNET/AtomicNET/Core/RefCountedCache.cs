@@ -5,11 +5,21 @@ using System.Reflection;
 
 namespace AtomicEngine
 {
+
     /// <summary>
+    /// Holds managed instance wrappers of native RefCounted instances
     /// </summary>
     internal class RefCountedCache
     {
-        Dictionary<IntPtr, ReferenceHolder<RefCounted>> knownObjects =
+
+        internal enum RefType
+        {
+            REF_DEFAULT = 0,
+            REF_WEAK = 1,
+            REF_STRONG = 2
+        }
+
+        static Dictionary<IntPtr, ReferenceHolder<RefCounted>> knownObjects =
             new Dictionary<IntPtr, ReferenceHolder<RefCounted>>(IntPtrEqualityComparer.Instance);
 
         public int Count => knownObjects.Count;
@@ -29,7 +39,7 @@ namespace AtomicEngine
             }
         }
 
-        public void Add(RefCounted refCounted, bool strongRef = false)
+        public void Add(RefCounted refCounted, RefType refType = RefType.REF_DEFAULT)
         {
             lock (knownObjects)
             {
@@ -41,6 +51,14 @@ namespace AtomicEngine
                     // this is another check verifying correct RefCounted by using type, which isn't a good test
                     if (existingObj != null && !IsInHierarchy(existingObj.GetType(), refCounted.GetType()))
                         throw new InvalidOperationException($"NativeInstance '{refCounted.nativeInstance}' is in use by '{existingObj.GetType().Name}' (IsDeleted={existingObj.nativeInstance == IntPtr.Zero}). {refCounted.GetType()}");
+                }
+
+                // first check if explicit strong reference
+                bool strongRef = refType == RefType.REF_STRONG;
+
+                if (!strongRef)
+                {
+                    strongRef = StrongRefByDefault(refCounted);
                 }
 
                 knownObjects[refCounted.nativeInstance] = new ReferenceHolder<RefCounted>(refCounted, !strongRef);
@@ -86,16 +104,69 @@ namespace AtomicEngine
 
         int GetDisposePriority(ReferenceHolder<RefCounted> refHolder)
         {
-            const int defaulPriority = 1000;
+            const int defaultPriority = 1000;
             var obj = refHolder?.Reference;
             if (obj == null)
-                return defaulPriority;
+                return defaultPriority;
             if (obj is Scene)
                 return 1;
             if (obj is Context)
                 return int.MaxValue;
             //TODO:
-            return defaulPriority;
+            return defaultPriority;
+        }
+
+        /// <summary>
+        /// WORK IN PROGRESS: Disposes a scene, component, and nodes
+        /// </summary>
+        internal static void DisposeScene(Scene scene)
+        {
+            lock (knownObjects)
+            {
+                // first pass remove components
+                foreach (var item in knownObjects.ToList())
+                {
+                    var refCounted = item.Value.Reference;
+
+                    var component = refCounted as Component;
+
+                    if (component != null && !component.Disposed && component.Scene == scene)
+                    {
+                        knownObjects.Remove(item.Key);
+                        component.Dispose();
+                    }
+                }
+
+                // second pass remove Nodes
+                foreach (var item in knownObjects.ToList())
+                {
+                    var refCounted = item.Value.Reference;
+
+                    if (refCounted == null)
+                        continue;
+
+                    Node node = (Node)(refCounted.GetType() == typeof(Node) ? refCounted : null);
+
+                    if (node != null && !node.Disposed && node.Scene == scene)
+                    {
+                        knownObjects.Remove(item.Key);
+                        node.Dispose();
+                    }
+                }
+
+            }            
+        }
+
+        /// <summary>
+        /// Some types are stored with a StrongRef by default, to help avoid Object churn and support explicit Disposing
+        /// </summary>
+        bool StrongRefByDefault(RefCounted refCounted)
+        {
+            if (refCounted is Scene) return true;
+            if (refCounted is Node) return true;
+            if (refCounted is Context) return true;
+            if (refCounted is Component) return true;
+            return false;
         }
 
         bool IsInHierarchy(Type t1, Type t2)

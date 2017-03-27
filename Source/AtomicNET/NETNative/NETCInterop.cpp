@@ -1,3 +1,6 @@
+
+#include <Atomic/Core/Thread.h>
+
 #include <Atomic/Resource/ResourceCache.h>
 #include <Atomic/Script/ScriptVariant.h>
 #include <Atomic/Script/ScriptVariantMap.h>
@@ -107,6 +110,11 @@ namespace Atomic
                 return;
 
             refCounted->ReleaseRefSilent();
+        }
+
+        ATOMIC_EXPORT_API bool csi_AtomicEngine_IsMainThread()
+        {
+            return Thread::IsMainThread();
         }
 
         ATOMIC_EXPORT_API const char* csi_Atomic_RefCounted_GetTypeName(RefCounted* self)

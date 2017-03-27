@@ -59,6 +59,14 @@ namespace AtomicEngine
             return csi_Atomic_AtomicNET_StringToStringHash(value);
         }
 
+        /// <summary>
+        ///  Runs a GC collection and waits for any finalizers
+        /// </summary>
+        public static void RunGC()
+        {
+            NativeCore.RunGC();
+        }
+
         [DllImport(Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private static extern uint csi_Atomic_AtomicNET_StringToStringHash(string name);
 

@@ -173,9 +173,12 @@ void Metrics::CaptureInstances(MetricsSnapshot* snapshot)
     const static StringHash jsComponentType("JSComponent");
     const static StringHash csComponentType("CSComponent");
 
-    for (unsigned i = 0; i < instances_.Size(); i++)
+    List<RefCounted*>::ConstIterator itr = instances_.Begin();
+
+    for (; itr != instances_.End(); itr++)
     {
-        RefCounted* r = instances_[i];
+        RefCounted* r = *itr;
+
         Object* o = r->IsObject() ? (Object *) r : 0;
         InstantiationType instantiationType = r->GetInstantiationType();
 
@@ -260,9 +263,12 @@ String Metrics::PrintNodeNames() const
 
     String output;
 
-    for (unsigned i = 0; i < instances_.Size(); i++)
+    List<RefCounted*>::ConstIterator itr = instances_.Begin();
+    for (; itr != instances_.End(); itr++)
     {
-        Object* o = instances_[i]->IsObject() ? (Object *)instances_[i] : 0;
+        RefCounted* r = *itr;
+
+        Object* o = r->IsObject() ? (Object *)r : 0;
 
         if (!o)
             continue;
@@ -299,7 +305,7 @@ void Metrics::OnRefCountedDeleted(RefCounted* refCounted)
         return;
     }
 
-    Vector<RefCounted*>::Iterator itr = metrics_->instances_.Find(refCounted);
+    List<RefCounted*>::Iterator itr = metrics_->instances_.Find(refCounted);
 
     if (itr != metrics_->instances_.End())
     {
