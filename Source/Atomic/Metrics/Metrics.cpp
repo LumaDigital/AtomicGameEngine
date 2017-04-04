@@ -165,47 +165,131 @@ Metrics::~Metrics()
     Metrics::metrics_ = 0;
 }
 
-void Metrics::CaptureInstances(MetricsSnapshot* snapshot)
-{    
-    const static String unkClassName("-Unknown Class-");
-
+void Metrics::ProcessInstances()
+{
     const static StringHash scriptComponentType("ScriptComponent");
     const static StringHash jsComponentType("JSComponent");
     const static StringHash csComponentType("CSComponent");
 
-    List<RefCounted*>::ConstIterator itr = instances_.Begin();
+    RefCountedInfo ninfo;
+    PODVector<RefCounted*>::ConstIterator itr = processInstances_.Begin();
 
-    for (; itr != instances_.End(); itr++)
+    while (itr != processInstances_.End())
     {
         RefCounted* r = *itr;
 
-        Object* o = r->IsObject() ? (Object *) r : 0;
-        InstantiationType instantiationType = r->GetInstantiationType();
+        Object* o = r->IsObject() ? (Object *)r : 0;
 
-        // for script components, attempt to get component class name for better tracking
-        bool registered = false;
+        const String& typeName = r->GetTypeName();
+
+        ninfo.refCounted = r;
+        ninfo.instantiationType = r->GetInstantiationType();
+
+        ninfo.typeID = StringHash(typeName);
+
+        if (!names_.Contains(ninfo.typeID))
+        {
+            names_[ninfo.typeID] = typeName;
+        }
+        
+        ninfo.typeNameOverride = StringHash::ZERO;
+       
+        // for script components, setup typeNameOverride
         if (o && o->IsInstanceOf(scriptComponentType))
-        {   
+        {
             const String& classname = ((ScriptComponent*)o)->GetComponentClassName();
 
             if (classname.Length())
-            {                
-                if (o->GetType() == jsComponentType)
-                    snapshot->RegisterInstance(classname + " (JS)", instantiationType);
-                else
-                    snapshot->RegisterInstance(classname + " (C#)", instantiationType);
+            {
+                String name;
 
-                registered = true;
+                if (o->GetType() == jsComponentType)
+                {
+                    name = classname + " (JS)";
+                }                    
+                else
+                {
+                    name = classname + " (C#)";
+                }
+
+                ninfo.typeNameOverride = StringHash(name);
+
+                if (!names_.Contains(ninfo.typeNameOverride))
+                {
+                    names_[ninfo.typeNameOverride] = name;
+                }
+
             }
         }
+        
+        PODVector<RefCountedInfo>& infos = instances_[ninfo.typeID];
 
-        if (!registered)
+        RefCountedInfo* info = infos.Buffer();
+        int count = (int) infos.Size();
+
+        while (count > 0)
         {
-            snapshot->RegisterInstance(r->GetTypeName(), r->GetInstantiationType());
+            if (!info->refCounted)
+            {
+                *info = ninfo;
+                break;
+            }
+
+            count--;
+            info++;
         }
-                        
+
+        if (!count)
+        {
+            if (infos.Capacity() <= (infos.Size() + 1))
+            {
+                infos.Reserve(infos.Size() + 32768);
+            }
+
+            infos.Push(ninfo);
+        }
+
+        itr++;
     }
 
+    processInstances_.Clear();
+}
+
+void Metrics::CaptureInstances(MetricsSnapshot* snapshot)
+{    
+    ProcessInstances();
+
+    HashMap<StringHash, PODVector<RefCountedInfo>>::ConstIterator itr = instances_.Begin();
+
+    while (itr != instances_.End())
+    {
+        StringHash typeID = itr->first_;
+        String* typeName = &names_[typeID];
+
+        RefCountedInfo* info = itr->second_.Buffer();
+        int count = (int) itr->second_.Size();
+
+        while (count > 0)
+        {
+            // free spot
+            if (!info->refCounted)
+            {
+                info++;
+                count--;
+                continue;
+            }
+
+            if (info->typeNameOverride != StringHash::ZERO)
+                typeName = &names_[info->typeNameOverride];
+
+            snapshot->RegisterInstance(*typeName, info->instantiationType);
+
+            info++;
+            count--;
+        }
+
+        itr++;
+    }
 }
 
 void Metrics::Capture(MetricsSnapshot* snapshot)
@@ -238,6 +322,9 @@ bool Metrics::Enable()
 
     enabled_ = everEnabled_ = true;
 
+    ATOMIC_LOGINFO("Metrics subsystem enabled, performance will be degraded and there may be stutter while instrumenting");
+    ATOMIC_LOGINFO("IMPORTANT: Do not ship applications with performance metrics enabled");
+
     RefCounted::AddRefCountedCreatedFunction(Metrics::OnRefCountedCreated);
     RefCounted::AddRefCountedDeletedFunction(Metrics::OnRefCountedDeleted);
 
@@ -257,16 +344,23 @@ void Metrics::Disable()
     RefCounted::RemoveRefCountedDeletedFunction(Metrics::OnRefCountedDeleted);
 }
 
-String Metrics::PrintNodeNames() const 
+
+String Metrics::PrintNodeNames() const
 {
     const static StringHash nodeType("Node");
 
     String output;
 
-    List<RefCounted*>::ConstIterator itr = instances_.Begin();
-    for (; itr != instances_.End(); itr++)
+    PODVector<RefCountedInfo>& infos = instances_[nodeType];
+
+    PODVector<RefCountedInfo>::Iterator itr = infos.Begin();
+
+    for (; itr != infos.End(); itr++)
     {
-        RefCounted* r = *itr;
+        RefCounted* r = itr->refCounted;
+
+        if (!r)
+            continue;
 
         Object* o = r->IsObject() ? (Object *)r : 0;
 
@@ -284,6 +378,52 @@ String Metrics::PrintNodeNames() const
     return output;
 }
 
+void Metrics::AddRefCounted(RefCounted* refCounted)
+{
+    // We're called from the RefCounted constructor, so we don't know whether we're an object, etc
+
+    if (processInstances_.Capacity() <= (processInstances_.Size() + 1))
+    {
+        processInstances_.Reserve(processInstances_.Size() + 32768);
+    }
+
+    processInstances_.Push(refCounted);
+
+}
+
+void Metrics::RemoveRefCounted(RefCounted* refCounted)
+{
+    processInstances_.Remove(refCounted);
+
+    // this is called from RefCounted destructor, so can't access refCounted though pointer address is still valid
+    // we also don't want to hash every RefCounted ptr due to possible collisions, so need to search:
+
+    HashMap<StringHash, PODVector<RefCountedInfo>>::Iterator itr = instances_.Begin();
+
+    while (itr != instances_.End())
+    {
+        RefCountedInfo* info = itr->second_.Buffer();
+        int count = (int)itr->second_.Size();
+
+        while (count > 0)
+        {
+            if (info->refCounted == refCounted)
+            {
+                info->refCounted = 0;
+                break;
+            }
+
+            info++;
+            count--;
+        }
+
+        if (count)
+            break;
+
+        itr++;
+    }
+}
+
 void Metrics::OnRefCountedCreated(RefCounted* refCounted)
 {
     if (!metrics_)
@@ -292,9 +432,7 @@ void Metrics::OnRefCountedCreated(RefCounted* refCounted)
         return;
     }
 
-    // We're called from the RefCounted constructor, so we don't know whether we're an object, etc
-    metrics_->instances_.Push(refCounted);
-
+    metrics_->AddRefCounted(refCounted);
 }
 
 void Metrics::OnRefCountedDeleted(RefCounted* refCounted)
@@ -305,12 +443,7 @@ void Metrics::OnRefCountedDeleted(RefCounted* refCounted)
         return;
     }
 
-    List<RefCounted*>::Iterator itr = metrics_->instances_.Find(refCounted);
-
-    if (itr != metrics_->instances_.End())
-    {
-        metrics_->instances_.Erase(itr);
-    }
+    metrics_->RemoveRefCounted(refCounted);    
 }
 
 
