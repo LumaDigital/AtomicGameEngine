@@ -123,38 +123,47 @@ namespace AtomicEngine
         {
             lock (knownObjects)
             {
-                // first pass remove components
-                foreach (var item in knownObjects.ToList())
+                List<Component> disposeComponents = new List<Component>();
+                List<Node> disposeNodes = new List<Node>();
+
+                // Gather nodes/components first as disposing them can remove from scene and children 
+                // won't pass scene test, and thus won't be disposed
+                foreach (var item in knownObjects.Values)
                 {
-                    var refCounted = item.Value.Reference;
+                    var refCounted = item.Reference;
 
                     var component = refCounted as Component;
 
                     if (component != null && !component.Disposed && component.Scene == scene)
                     {
-                        knownObjects.Remove(item.Key);
-                        component.Dispose();
+                        disposeComponents.Add(component);
                     }
-                }
 
-                // second pass remove Nodes
-                foreach (var item in knownObjects.ToList())
-                {
-                    var refCounted = item.Value.Reference;
-
-                    if (refCounted == null)
+                    if (component != null)
                         continue;
 
-                    Node node = (Node)(refCounted.GetType() == typeof(Node) ? refCounted : null);
+                    var node = (Node)(refCounted.GetType() == typeof(Node) ? refCounted : null);
 
                     if (node != null && !node.Disposed && node.Scene == scene)
                     {
-                        knownObjects.Remove(item.Key);
-                        node.Dispose();
+                        disposeNodes.Add(node);
                     }
+
                 }
 
-            }            
+                foreach (var component in disposeComponents)
+                {
+                    knownObjects.Remove(component);
+                    component.Dispose();
+                }
+
+                foreach (var node in disposeNodes)
+                {
+                    knownObjects.Remove(node);
+                    node.Dispose();
+                }
+
+            }
         }
 
         /// <summary>
