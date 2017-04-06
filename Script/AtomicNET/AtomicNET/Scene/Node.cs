@@ -155,18 +155,11 @@ namespace AtomicEngine
         }
 
         // Reuse vectors to avoid churn, but don't have one on every referenced node
-        private Vector<Component> ComponentVector
-        {
-            get
-            {
-                if (componentVector == null)
-                {
-                    componentVector = new Vector<Component>();
-                }
-                return componentVector;
-            }
-        }
-        private Vector<Component> componentVector;
+        // Wrapping in a static property, instead of just immediate static allocation,
+        // Because Runtime isn't ready at time of static initialization: 
+        // https://github.com/AtomicGameEngine/AtomicGameEngine/issues/1512
+        private static Vector<Component> ComponentVector => lazyComponentVector.Value;
+        private static Lazy<Vector<Component>> lazyComponentVector = new Lazy<Vector<Component>>();
     }
 
 }
