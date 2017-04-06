@@ -132,6 +132,14 @@ namespace AtomicEngine
                 {
                     var refCounted = item.Reference;
 
+                    if (refCounted == null)
+                    {
+                        // This is relatively infrequent and could be the result of a weakref going away, keeping a 
+                        // warning as it needs to be looked into...
+                        Log.Warn("RefCountedCache.DisposeScene, null RefCounted in known objects");
+                        continue;
+                    }
+
                     var component = refCounted as Component;
 
                     if (component != null && !component.Disposed && component.Scene == scene)
