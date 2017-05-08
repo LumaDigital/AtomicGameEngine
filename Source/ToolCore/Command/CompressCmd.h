@@ -59,7 +59,7 @@ namespace ToolCore
         SharedPtr<Asset> asset_;
 
         String compressDirectory_;
-        String cachePath_;
+        String cacheDirectory_;
     };
 
 }
