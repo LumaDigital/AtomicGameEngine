@@ -47,7 +47,8 @@ namespace ToolCore
     bool CompressCmd::ParseInternal(const Vector<String>& arguments, unsigned startIndex, String& errorMsg)
     {
         String argument = arguments[startIndex].ToLower();
-        String value = startIndex + 1 < arguments.Size() ? arguments[startIndex + 1] : String::EMPTY;
+        compressDirectory_ = startIndex + 1 < arguments.Size() ? arguments[startIndex + 1].ToLower() : String::EMPTY;
+        cacheDirectory_ = startIndex + 2 < arguments.Size() ? arguments[startIndex + 2].ToLower() : String::EMPTY;
 
         if (argument != "compress")
         {
@@ -55,13 +56,17 @@ namespace ToolCore
             return false;
         }
 
-        if (!value.Length())
+        if (!compressDirectory_.Length())
         {
-            errorMsg = "Unable to parse compress platform";
+            errorMsg = "Unable to parse compress source directory";
             return false;
         }
-
-        compressDirectory_ = value.ToLower();
+        
+        if (!cacheDirectory_.Length())
+        {
+            cacheDirectory_ = compressDirectory_ + "/Cache";
+        }
+        cacheDirectory_ = AddTrailingSlash(cacheDirectory_);
 
         return true;
     }
@@ -73,8 +78,6 @@ namespace ToolCore
         db_ = GetSubsystem<AssetDatabase>();
         cache_ = GetSubsystem<ResourceCache>();
         cache_->AddResourceDir(compressDirectory_);
-
-        cachePath_ = db_->GetCachePath();
 
         fileSystem_ = GetSubsystem<FileSystem>();
 
@@ -98,20 +101,19 @@ namespace ToolCore
         asset_ = new Asset(context_);
         asset_->SetPath(file->GetName());
 
-        // TODO: Handle other compression formats
-        String compressedPath = compressDirectory_ + "/Cache/DDS/" + file->GetName() + ".dds";
-        if (fileSystem_->FileExists(compressedPath))
-            fileSystem_->Delete(compressedPath);
-
         SharedPtr<Image> image = cache_->GetTempResource<Image>(asset_->GetPath());
 
         if (!image->IsCompressed())
         {
-            fileSystem_->CreateDirs(compressDirectory_, "/Cache/DDS/" + Atomic::GetPath(file->GetName()));
+            // TODO: Handle other compression formats
+            String compressedPath = cacheDirectory_ + "DDS/" + file->GetName() + ".dds";
+            if (fileSystem_->FileExists(compressedPath))
+                fileSystem_->Delete(compressedPath);
+            fileSystem_->CreateDirs(cacheDirectory_, "DDS/" + Atomic::GetPath(file->GetName()));
             image->SaveDDS(compressedPath);
         }
 
-        image->SavePNG(compressDirectory_ + "/Cache/" + asset_->GetGUID());
-        image->SavePNG(compressDirectory_ + "/Cache/" + asset_->GetGUID() + "_thumbnail.png");
+        image->SavePNG(cacheDirectory_ + asset_->GetGUID());
+        image->SavePNG(cacheDirectory_ + asset_->GetGUID() + "_thumbnail.png");
     }
 }
