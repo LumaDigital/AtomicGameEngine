@@ -220,9 +220,18 @@ bool Engine::Initialize(const VariantMap& parameters)
     // Set maximally accurate low res timer
     GetSubsystem<Time>()->SetTimerPeriod(1);
 
-    // Configure max FPS
+    // Configure FPS limits
     if (GetParameter(parameters, "FrameLimiter", true) == false)
+    {
         SetMaxFps(0);
+    }
+    else
+    {
+        if (HasParameter(parameters, "MaxFps"))
+            SetMaxFps(GetParameter(parameters, "MaxFps").GetInt());
+        if (HasParameter(parameters, "MinFps"))
+            SetMinFps(GetParameter(parameters, "MinFps").GetInt());
+    }
 
     // Set amount of worker threads according to the available physical CPU cores. Using also hyperthreaded cores results in
     // unpredictable extra synchronization overhead. Also reserve one core for the main thread
@@ -846,6 +855,16 @@ VariantMap Engine::ParseParameters(const Vector<String>& arguments)
                 ret["Headless"] = true;
             else if (argument == "nolimit")
                 ret["FrameLimiter"] = false;
+            else if (argument == "maxfps" && !value.Empty())
+            {
+                ret["MaxFps"] = ToInt(value);
+                i++;
+            }
+            else if (argument == "minfps" && !value.Empty())
+            {
+                ret["MinFps"] = ToInt(value);
+                i++;
+            }
             else if (argument == "flushgpu")
                 ret["FlushGPU"] = true;
             else if (argument == "gl2")
