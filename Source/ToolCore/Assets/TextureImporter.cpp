@@ -42,6 +42,8 @@ namespace ToolCore
     requiresCacheFile_ = true;
 
     ApplyProjectImportConfig();
+
+    SetDefaults();
 }
 
 TextureImporter::~TextureImporter()
@@ -54,7 +56,16 @@ void TextureImporter::SetDefaults()
     AssetImporter::SetDefaults();
 
     compressedSize_ = 0;
+    useCompression_ = true;
+}
 
+void TextureImporter::SetUseCompression(bool useCompression)
+{
+    useCompression_ = useCompression;
+
+    // Clear outdated cache files and regenerate them
+    ClearCacheFiles();
+    GenerateCacheFiles();
 }
 
 void TextureImporter::GetRequiredCacheFiles(Vector<String>& files)
@@ -62,7 +73,7 @@ void TextureImporter::GetRequiredCacheFiles(Vector<String>& files)
     ResourceCache* resourceCache = GetSubsystem<ResourceCache>();
     SharedPtr<Image> image = resourceCache->GetTempResource<Image>(asset_->GetPath());
 
-    if (compressTextures_ &&
+    if (useCompression_ && compressTextures_ &&
         image->CanSaveDDS())
     {
         String fileName = asset_->GetGUID() + ".dds";
@@ -93,7 +104,7 @@ bool TextureImporter::GenerateCacheFiles()
     if (image.Null())
         return false;
 
-    if (compressTextures_ &&
+    if (useCompression_ && compressTextures_ &&
         image->CanSaveDDS())
     {
         float resizefactor;
@@ -163,6 +174,9 @@ bool TextureImporter::LoadSettingsInternal(JSONValue& jsonRoot)
     if (import.Get("compressionSize").IsNumber())
         compressedSize_ = (CompressedFormat)import.Get("compressionSize").GetInt();
 
+    if (import.Get("useCompression").IsBool())
+        useCompression_ = import.Get("useCompression").GetBool();
+
     return true;
 }
 
@@ -173,6 +187,8 @@ bool TextureImporter::SaveSettingsInternal(JSONValue& jsonRoot)
 
     JSONValue import(JSONValue::emptyObject);
     import.Set("compressionSize", compressedSize_);
+
+    import.Set("useCompression", useCompression_);
 
     jsonRoot.Set("TextureImporter", import);
 
