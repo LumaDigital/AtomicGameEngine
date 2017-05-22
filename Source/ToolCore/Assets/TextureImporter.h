@@ -38,6 +38,9 @@ public:
 
     virtual void SetDefaults();
 
+    bool GetUseCompression() { return useCompression_; }
+    void SetUseCompression(bool useCompression);
+
     Resource* GetResource(const String& typeName = String::EMPTY);
     Node* InstantiateNode(Node* parent, const String& name);
 
@@ -54,6 +57,7 @@ protected:
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
 
+    bool useCompression_;
     bool compressTextures_;
 
     unsigned int compressedSize_;

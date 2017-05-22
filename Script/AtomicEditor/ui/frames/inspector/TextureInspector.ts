@@ -160,13 +160,22 @@ class TextureInspector extends InspectorWidget {
 
         attrsVerticalLayout.addChild(nameLayout);
 
-        var maxSizeLayout = new Atomic.UILayout();
+		// USE COMPRESSION		
+		var useCompressionLayout = new Atomic.UILayout();
+        useCompressionLayout.layoutDistribution = Atomic.UI_LAYOUT_DISTRIBUTION.UI_LAYOUT_DISTRIBUTION_GRAVITY;		
+		
+		this.useCompressionBox = this.createAttrCheckBox("Use Compression", useCompressionLayout);
+        this.useCompressionBox.value = this.importer.getUseCompression() ? 1 : 0;
+		
+		attrsVerticalLayout.addChild(useCompressionLayout);		
+        
+        //COMPRESSION SIZE
+		var maxSizeLayout = new Atomic.UILayout();
         maxSizeLayout.layoutDistribution = Atomic.UI_LAYOUT_DISTRIBUTION.UI_LAYOUT_DISTRIBUTION_GRAVITY;
 
-        //COMPRESSION SIZE
         var maxSize = InspectorUtils.createAttrName("Max Size");
         this.populateCompressionSizeList();
-
+		
         maxSizeLayout.addChild(maxSize);
         maxSizeLayout.addChild(this.compressionSize);
 
@@ -184,6 +193,7 @@ class TextureInspector extends InspectorWidget {
     onApply() {
 
         this.importer.setCompressedImageSize(Number(this.compressionSize.text));
+		this.importer.setUseCompression(this.useCompressionBox.value ? true : false);
         this.asset.beginImport();
 
     }
@@ -216,6 +226,7 @@ class TextureInspector extends InspectorWidget {
     nameTextField: Atomic.UITextField;
     compressionSize: Atomic.UISelectDropdown;
     compressionSizeSource: Atomic.UISelectItemSource;
+	useCompressionBox: Atomic.UICheckBox;
     fd: Atomic.UIFontDescription = new Atomic.UIFontDescription();
     importer: ToolCore.TextureImporter;
     compressionSizes: number[] = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192];
