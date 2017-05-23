@@ -185,6 +185,14 @@ public:
 
     // ATOMIC END
 
+    // LUMA BEGIN
+
+    /// Return position of an animation track's keyframe at index.
+    Vector3 GetKeyFramePositionAtIndex(const String& name, unsigned keyIndex);
+
+    // LUMA END
+
+
 private:
     /// Animation name.
     String animationName_;

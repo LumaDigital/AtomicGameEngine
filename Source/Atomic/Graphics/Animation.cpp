@@ -412,5 +412,22 @@ void Animation::SetTracks(const Vector<AnimationTrack>& tracks)
 
 // ATOMIC END
 
+// LUMA BEGIN
 
+Vector3 Animation::GetKeyFramePositionAtIndex(const String & name, unsigned keyIndex)
+{
+    for (HashMap<StringHash, AnimationTrack>::ConstIterator i = tracks_.Begin(); i != tracks_.End(); ++i)
+    {
+        const AnimationTrack& track = i->second_;
+
+        if (track.name_ == name)
+        {
+            const AnimationKeyFrame& key = track.keyFrames_.At(keyIndex);
+            return key.position_;
+        }
+    }
+    return Vector3();
+}
+
+// LUMA END
 }
