@@ -35,7 +35,7 @@ add_library(AtomicNETNative SHARED ${SOURCE_FILES} ${CSHARP_BINDINGS_SOURCE})
 
 add_dependencies(AtomicNETNative AtomicToolCheckScripts)
 
-target_link_libraries(AtomicNETNative AtomicApp AtomicNETScriptBindings AtomicNETScript AtomicJS AtomicPlayerLib AtomicPlayerJS ${ATOMIC_LINK_LIBRARIES})
+target_link_libraries(AtomicNETNative AtomicApp AtomicNETScriptBindings AtomicNETScript AtomicJS AtomicPlayerLib AtomicPlayerJS ToolCore Poco Iphlpapi ${ATOMIC_LINK_LIBRARIES})
 
 if (LINUX)
 
