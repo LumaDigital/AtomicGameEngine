@@ -31,7 +31,10 @@
 #include "NETCmd.h"
 #include "ProjectCmd.h"
 #include "CacheCmd.h"
+// LUMA Begin
 #include "CacheServerCmd.h"
+#include "CompressCmd.h"
+// LUMA End
 
 namespace ToolCore
 {
@@ -92,10 +95,16 @@ Command* CommandParser::Parse(const Vector<String>& arguments)
             {
                 cmd = new CacheCmd(context_);
             }
+            // LUMA Begin
             else if (argument == "cacheserver")
             {
                 cmd = new CacheServerCmd(context_);
             }
+            else if (argument == "compress")
+            {
+                cmd = new CompressCmd(context_);
+            }
+            // LUMA End
         }
 
         if (cmd)
