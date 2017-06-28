@@ -116,8 +116,11 @@ bool TextureImporter::GenerateCacheFiles()
 
         if (image->SaveDDS(compressedPath))
         {            
-            Renderer * renderer = GetSubsystem<Renderer>();
-            renderer->ReloadTextures();
+            Renderer* renderer = GetSubsystem<Renderer>();
+            // LUMA START
+            if (renderer != NULL) // May be importing through headless process
+                renderer->ReloadTextures();
+            // LUMA END
         }
     }
 
