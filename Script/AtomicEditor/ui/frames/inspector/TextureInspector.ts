@@ -184,8 +184,7 @@ class TextureInspector extends InspectorWidget {
     onApply() {
 
         this.importer.setCompressedImageSize(Number(this.compressionSize.text));
-        this.asset.import();
-        this.asset.save();
+        this.asset.beginImport();
 
     }
 

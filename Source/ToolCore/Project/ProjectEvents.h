@@ -43,6 +43,15 @@ ATOMIC_EVENT(E_PROJECTLOADED, ProjectLoaded)
     ATOMIC_PARAM(P_RESULT, Result);             // bool (whether the project loaded successfully)
 }
 
+ATOMIC_EVENT(E_PROJECTBASELOADED, ProjectPreloaded)
+{
+}
+
+ATOMIC_EVENT(E_PROJECTASSETSLOADED, ProjectAssetsLoaded)
+{
+}
+
+
 ATOMIC_EVENT(E_PROJECTUNLOADED, ProjectUnloaded)
 {
 }

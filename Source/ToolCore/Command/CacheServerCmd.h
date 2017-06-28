@@ -22,29 +22,41 @@
 
 #pragma once
 
-#include "AssetImporter.h"
+#include "../Assets/AssetCacheServer.h"
+
+#include "Command.h"
+
+using namespace Atomic;
 
 namespace ToolCore
 {
 
-class ParticleEffectImporter : public AssetImporter
-{
-    ATOMIC_OBJECT(ParticleEffectImporter, AssetImporter);
+    class CacheServerCmd : public Command
+    {
+        ATOMIC_OBJECT(CacheServerCmd, Command);
 
-public:
-    /// Construct.
-    ParticleEffectImporter(Context* context, Asset* asset);
-    virtual ~ParticleEffectImporter();
+    public:
 
-    virtual void SetDefaults();
+        CacheServerCmd(Context* context);
+        virtual ~CacheServerCmd();
 
-    Resource* GetResource(const String& typeName);
+        void Run();
 
-protected:
+        bool RequiresProjectLoad() { return false; }
 
-    virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
-    virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
+    protected:
+        virtual bool ParseInternal(const Vector<String>& arguments, unsigned startIndex, String& errorMsg);
 
-};
+    private:
+
+
+        String cacheFolderPath_;
+        int port_;
+        int diskSpaceLimitMB_;
+
+        SharedPtr<AssetCacheServer> cacheServer_;
+
+
+    };
 
 }

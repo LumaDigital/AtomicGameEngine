@@ -38,6 +38,19 @@ static const unsigned SCAN_DIRS = 0x2;
 /// Return also hidden files.
 static const unsigned SCAN_HIDDEN = 0x4;
 
+/// %File entry within the package file.
+struct FileInfo
+{
+    /// Full native file path.
+    String fullPath_;
+    /// Whether the file exists.
+    bool exists_;
+    /// File size if it exists.
+    unsigned size_;
+    /// Last modified time as seconds since 1.1.1970 if the file exists.
+    unsigned long lastModified_;
+};
+
 /// Subsystem for file and directory operations and access control.
 class ATOMIC_API FileSystem : public Object
 {
@@ -89,6 +102,8 @@ public:
     bool CheckAccess(const String& pathName) const;
     /// Returns the file's last modified time as seconds since 1.1.1970, or 0 if can not be accessed.
     unsigned GetLastModifiedTime(const String& fileName) const;
+    /// Returns information about the file
+    FileInfo GetFileInfo(const String& fileName) const;
     /// Check if a file exists.
     bool FileExists(const String& fileName) const;
     /// Check if a directory exists.
@@ -169,6 +184,10 @@ ATOMIC_API String GetSanitizedPath(const String& path);
 /// Given two absolute directory paths, get the relative path from one to the other
 /// Returns false if either path isn't absolute, or if they are unrelated
 ATOMIC_API bool GetRelativePath(const String& fromPath, const String& toPath, String& output);
+/// Return whether the lastModified_ of lhs is greater than that of rhs
+ATOMIC_API bool CompareFileInfoByLastModifiedDescending(const FileInfo& lhs, const FileInfo& rhs);
+/// Return whether the lastModified_ of lhs is less than that of rhs
+ATOMIC_API bool CompareFileInfoByLastModifiedAscending(const FileInfo& lhs, const FileInfo& rhs);
 // ATOMIC END
 
 }

@@ -20,11 +20,15 @@
 // THE SOFTWARE.
 //
 
+#include <Poco/MD5Engine.h>
+
 #include <Atomic/IO/Log.h>
 #include <Atomic/IO/File.h>
 #include <Atomic/IO/FileSystem.h>
 #include "AssetDatabase.h"
 #include "AssetImporter.h"
+#include "AssetCacheManager.h"
+#include "AssetCacheEvents.h"
 
 namespace ToolCore
 {
@@ -34,6 +38,9 @@ AssetImporter::AssetImporter(Context* context, Asset *asset) : Object(context),
     requiresCacheFile_(false)
 {
     SetDefaults();
+
+    SubscribeToEvent(E_ASSETCACHE_FETCH_SUCCESS, ATOMIC_HANDLER(AssetImporter, HandleAssetCacheFetchSuccess));
+    SubscribeToEvent(E_ASSETCACHE_FETCH_FAIL, ATOMIC_HANDLER(AssetImporter, HandleAssetCacheFetchFail));
 }
 
 AssetImporter::~AssetImporter()
@@ -112,6 +119,24 @@ bool AssetImporter::Move(const String& newPath)
     return true;
 }
 
+void AssetImporter::ClearCacheFiles()
+{
+    FileSystem* fs = GetSubsystem<FileSystem>();
+    AssetDatabase* db = GetSubsystem<AssetDatabase>();
+    String cachePath = db->GetCachePath();
+
+    fs->Delete(GetDotMD5FilePath());
+
+    Vector<String> filesToRequest;
+    GetRequiredCacheFiles(filesToRequest);
+
+    for (int i = 0; i < filesToRequest.Size(); i++)
+    {
+        String cacheFile = cachePath + filesToRequest[i];
+        fs->Delete(cacheFile);
+    }
+}
+
 bool AssetImporter::Rename(const String& newName)
 {
     String pathName, fileName, ext;
@@ -129,5 +154,221 @@ bool AssetImporter::Rename(const String& newName)
 
 }
 
+
+bool AssetImporter::Import()
+{
+    // Import may be called directly by reimporting the asset
+    if (!requiresCacheFile_)
+        return true;
+
+    cacheFetchFilesPending_.Clear();
+    cacheFetchFilesFailed_.Clear();
+
+    Vector<String> filesToRequest;
+    GetRequiredCacheFiles(filesToRequest);
+
+    // if we got here but we're in an importer that does require a cache file, assert. Should be at least one file in the list
+    assert(filesToRequest.Size() > 0);
+
+    for (int i = 0; i < filesToRequest.Size(); i++)
+    {
+        ATOMIC_LOGDEBUGF("AssetImporter::Import - cache file requested[%d] - %s", i, filesToRequest[i].CString());
+    }
+
+    if (md5_.Empty())
+        md5_ = GenerateMD5();
+
+    // try to fetch the cache files from the asset cache manager
+    TryFetchCacheFiles(filesToRequest);
+    
+    return true;
+}
+
+void AssetImporter::TryFetchCacheFiles(Vector<String>& files)
+{
+    assert(md5_.Length());
+
+    AssetDatabase* db = GetSubsystem<AssetDatabase>();
+
+    SharedPtr<AssetCacheManager> cacheManager = db->GetCacheManager();
+
+    assert(cacheManager.NotNull());
+
+    // must add all the files to the pending list first, before calling fetch on each one individually.
+    cacheFetchFilesPending_.Push(files);
+
+    Vector<String>::ConstIterator itr = files.Begin();
+    while (itr != files.End())
+    {        
+        cacheManager->FetchCacheFile(*itr, md5_);
+        itr++;
+    }   
+}
+
+bool AssetImporter::GenerateCacheFiles()
+{
+    assert(requiresCacheFile_);
+
+    return WriteMD5File();
+}
+
+void AssetImporter::HandleAssetCacheFetchSuccess(StringHash eventType, VariantMap& eventData)
+{
+    if (!requiresCacheFile_)
+        return;
+
+    using namespace AssetCacheFetchSuccess;
+
+    const String& fileName = eventData[P_CACHEFILENAME].GetString();
+    const String& md5 = eventData[P_CACHEMD5].GetString();
+
+    if (md5 == md5_ &&
+        cacheFetchFilesPending_.Contains(fileName))
+    {
+        cacheFetchFilesPending_.Remove(fileName);
+        
+        if (cacheFetchFilesPending_.Empty())
+        {
+            if (cacheFetchFilesFailed_.Empty())
+            {
+                WriteMD5File();
+                asset_->OnImportComplete();
+            }
+            else if (GenerateCacheFiles())
+            {
+                OnCacheFilesGenerated(cacheFetchFilesFailed_);
+                asset_->OnImportComplete();
+            }
+        }
+    }
+}
+
+void AssetImporter::HandleAssetCacheFetchFail(StringHash eventType, VariantMap& eventData)
+{
+    if (!requiresCacheFile_)
+        return;
+
+    using namespace AssetCacheFetchFail;
+
+    const String& fileName = eventData[P_CACHEFILENAME].GetString();
+    const String& md5 = eventData[P_CACHEMD5].GetString();
+
+    if (md5 == md5_ &&
+        cacheFetchFilesPending_.Contains(fileName))
+    {
+        cacheFetchFilesPending_.Remove(fileName);
+        cacheFetchFilesFailed_.Push(fileName);
+        
+        // we'll only try to generate the files once we're fetched all the files we can from the manager,
+        // so that we generate the cache files only once.
+        if (cacheFetchFilesPending_.Empty() && GenerateCacheFiles())
+        {
+            OnCacheFilesGenerated(cacheFetchFilesFailed_);
+            asset_->OnImportComplete();
+        }
+    }
+}
+
+void AssetImporter::OnCacheFilesGenerated(Vector<String>& files)
+{
+    AssetDatabase* db = GetSubsystem<AssetDatabase>();
+    SharedPtr<AssetCacheManager> cacheManager = db->GetCacheManager();
+
+    Vector<String>::ConstIterator itr = files.Begin();
+
+    while (itr != files.End())
+    {
+        cacheManager->OnFileAddedToCache(*itr, md5_);
+        itr++;
+    }
+}
+
+bool AssetImporter::CheckCacheFilesUpToDate()
+{
+    md5_ = GenerateMD5();
+    
+    if (md5_ != ReadMD5File())
+    {
+        ClearCacheFiles();
+        return false;
+    }
+
+    FileSystem* fs = GetSubsystem<FileSystem>();
+    AssetDatabase* db = GetSubsystem<AssetDatabase>();
+    String cachePath = db->GetCachePath();
+
+    Vector<String> filesToRequest;
+    GetRequiredCacheFiles(filesToRequest);
+
+    for (int i = 0; i < filesToRequest.Size(); i++)
+    {
+        String cacheFile = cachePath + filesToRequest[i];
+
+        if (!fs->FileExists(cacheFile))
+            return false;
+    }
+
+    return true;
+}
+
+String AssetImporter::GetDotMD5FilePath()
+{
+    AssetDatabase* db = GetSubsystem<AssetDatabase>();
+    String cachePath = db->GetCachePath();
+    return cachePath + asset_->guid_ + ".md5";
+}
+
+String AssetImporter::ReadMD5File()
+{
+    FileSystem* fs = GetSubsystem<FileSystem>();
+
+    String md5FilePath = GetDotMD5FilePath();
+    if (!fs->Exists(md5FilePath))
+        return String::EMPTY;
+
+    SharedPtr<File> file(new File(context_, md5FilePath, FILE_READ));
+    return file->ReadString();
+}
+
+bool AssetImporter::WriteMD5File()
+{
+    if (!md5_.Length())
+        md5_ = GenerateMD5();
+
+    String md5FilePath = GetDotMD5FilePath();
+    FileSystem* fs = GetSubsystem<FileSystem>();
+    if (fs->Exists(md5FilePath))
+        fs->Delete(md5FilePath);
+
+    SharedPtr<File> file(new File(context_, md5FilePath, FILE_WRITE));
+    return file->WriteString(md5_);
+}
+
+String AssetImporter::GenerateMD5()
+{
+    assert(asset_->path_.Length());
+
+    Poco::MD5Engine md5;
+
+    // if it's not a folder, then add the file data into the hash.
+    if (!asset_->isFolder_)
+    {
+        PODVector<unsigned> data;
+
+        File assetFile(context_, asset_->path_);
+
+        unsigned fileSize = assetFile.GetSize();
+        SharedArrayPtr<unsigned char> fileData(new unsigned char[fileSize]);
+
+        unsigned sizeRead = assetFile.Read(fileData, fileSize);
+
+        assert(sizeRead == fileSize);
+
+        md5.update(&fileData[0], fileSize * sizeof(unsigned char));
+    }
+
+    // finally, generate a guid
+    return Poco::MD5Engine::digestToHex(md5.digest()).c_str();
+}
 
 }

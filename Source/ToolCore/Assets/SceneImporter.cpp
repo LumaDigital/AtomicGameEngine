@@ -31,7 +31,7 @@ namespace ToolCore
 
 SceneImporter::SceneImporter(Context* context, Asset* asset) : AssetImporter(context, asset)
 {
-
+    requiresCacheFile_ = false;
 }
 
 SceneImporter::~SceneImporter()
@@ -47,10 +47,6 @@ void SceneImporter::SetDefaults()
     sceneCamPosition_ = Vector3::ZERO;
 }
 
-bool SceneImporter::Import()
-{
-    return true;
-}
 
 bool SceneImporter::LoadSettingsInternal(JSONValue& jsonRoot)
 {

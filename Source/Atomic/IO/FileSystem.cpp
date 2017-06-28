@@ -595,6 +595,35 @@ unsigned FileSystem::GetLastModifiedTime(const String& fileName) const
 #endif
 }
 
+
+FileInfo FileSystem::GetFileInfo(const String& fileName) const
+{
+    FileInfo fileInfo;
+    fileInfo.fullPath_ = fileName;
+    fileInfo.exists_ = false;
+    fileInfo.size_ = 0;
+    fileInfo.lastModified_ = 0;
+
+    if (fileName.Empty() || !CheckAccess(fileName))
+        return fileInfo;
+
+#ifdef WIN32
+    struct _stat st;
+    if (!_stat(fileName.CString(), &st))
+#else
+    struct stat st;
+    if (!stat(fileName.CString(), &st))
+#endif
+    {
+        fileInfo.exists_ = true;
+        fileInfo.size_ = st.st_size;
+        fileInfo.lastModified_ = (unsigned long) st.st_mtime;
+    }
+
+    return fileInfo;
+}
+
+
 bool FileSystem::FileExists(const String& fileName) const
 {
     if (!CheckAccess(GetPath(fileName)))
@@ -1326,6 +1355,17 @@ bool GetRelativePath(const String& fromPath, const String& toPath, String& outpu
     return true;
 
 }
+
+bool CompareFileInfoByLastModifiedDescending(const FileInfo& lhs, const FileInfo& rhs)
+{
+    return lhs.lastModified_ > rhs.lastModified_;
+}
+
+bool CompareFileInfoByLastModifiedAscending(const FileInfo& lhs, const FileInfo& rhs)
+{
+    return lhs.lastModified_ < rhs.lastModified_;
+}
+
 
 // ATOMIC END
 

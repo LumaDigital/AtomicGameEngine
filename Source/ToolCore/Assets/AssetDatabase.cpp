@@ -26,6 +26,7 @@
 #include <Atomic/IO/File.h>
 #include <Atomic/IO/FileSystem.h>
 #include <Atomic/Math/Random.h>
+#include <Atomic/Core/CoreEvents.h>
 
 #include <Atomic/Resource/ResourceEvents.h>
 #include <Atomic/Resource/ResourceCache.h>
@@ -37,19 +38,28 @@
 #include "../Project/ProjectEvents.h"
 #include "AssetEvents.h"
 #include "AssetDatabase.h"
+#include "AssetCacheConfig.h"
+#include "AssetCacheManagerLocal.h"
+#include "AssetCacheManagerNetwork.h"
+
 
 
 namespace ToolCore
 {
 
-AssetDatabase::AssetDatabase(Context* context) : Object(context),
+AssetDatabase::AssetDatabase(Context* context) : 
+    Object(context), 
     assetScanDepth_(0),
-    assetScanImport_(false),
-    cacheEnabled_(true)
+    cacheEnabled_(true),
+    assetCacheMapDirty_(false),
+    doingImport_(false),
+    doingProjectLoad_(false),
+    cacheManager_(nullptr)
 {
     SubscribeToEvent(E_LOADFAILED, ATOMIC_HANDLER(AssetDatabase, HandleResourceLoadFailed));
-    SubscribeToEvent(E_PROJECTLOADED, ATOMIC_HANDLER(AssetDatabase, HandleProjectLoaded));
+    SubscribeToEvent(E_PROJECTBASELOADED, ATOMIC_HANDLER(AssetDatabase, HandleProjectBaseLoaded));
     SubscribeToEvent(E_PROJECTUNLOADED, ATOMIC_HANDLER(AssetDatabase, HandleProjectUnloaded));
+    SubscribeToEvent(E_BEGINFRAME, ATOMIC_HANDLER(AssetDatabase, HandleBeginFrame));    
 }
 
 AssetDatabase::~AssetDatabase()
@@ -104,6 +114,24 @@ void AssetDatabase::RegisterGUID(const String& guid)
     }
 
     usedGUID_.Push(guid);
+}
+
+void AssetDatabase::ReadAssetCacheConfig()
+{
+    AssetCacheConfig::Clear();
+
+    ToolSystem* tsystem = GetSubsystem<ToolSystem>();
+    Project* project = tsystem->GetProject();
+
+    String projectPath = project->GetProjectPath();
+
+    String filename = projectPath + "Settings/AssetCache.json";
+
+    FileSystem* fileSystem = GetSubsystem<FileSystem>();
+    if (!fileSystem->FileExists(filename))
+        return;
+
+    AssetCacheConfig::LoadFromFile(context_, filename);
 }
 
 void AssetDatabase::ReadImportConfig()
@@ -174,7 +202,8 @@ Asset* AssetDatabase::GetAssetByPath(const String& path)
 
     while (itr != assets_.End())
     {
-        if (path == (*itr)->GetPath())
+        SharedPtr<Asset> asset = *itr;
+        if (path == asset->GetPath())
             return *itr;
 
         itr++;
@@ -182,6 +211,18 @@ Asset* AssetDatabase::GetAssetByPath(const String& path)
 
     return 0;
 
+}
+
+Asset* AssetDatabase::GetAssetByResourcePath(const String& path)
+{
+    if (project_)
+    {
+        return GetAssetByPath(project_->GetResourcePath() + path);
+    }
+    else
+    {
+        return GetAssetByPath(path);
+    }
 }
 
 void AssetDatabase::PruneOrphanedDotAssetFiles()
@@ -234,26 +275,27 @@ String AssetDatabase::GetDotAssetFilename(const String& path)
 
 void AssetDatabase::AddAsset(SharedPtr<Asset>& asset, bool newAsset)
 {
-
     assert(asset->GetGUID().Length());
-
     assert(!GetAssetByGUID(asset->GetGUID()));
 
     assets_.Push(asset);
 
-    // set to the current timestamp
-    asset->UpdateFileTimestamp();
+    // only send the event now if the asset isn't dirty (ie isn't in the process of being imported)
+    // if it is dirty, the event will be sent when the import completes and the asset is ready to be used.
+    if (asset->GetState() == AssetState::CLEAN)
+    {
+        VariantMap& eventData = GetEventDataMap();
 
-    VariantMap eventData;
+        if (newAsset)
+        {        
+            eventData[AssetNew::P_GUID] = asset->GetGUID();
+            SendEvent(E_ASSETNEW, eventData);
+        }
 
-    if (newAsset)
-    {        
-        eventData[AssetNew::P_GUID] = asset->GetGUID();
-        SendEvent(E_ASSETNEW, eventData);
+        
+        eventData[ResourceAdded::P_GUID] = asset->GetGUID();
+        SendEvent(E_RESOURCEADDED, eventData);
     }
-
-    eventData[ResourceAdded::P_GUID] = asset->GetGUID();
-    SendEvent(E_RESOURCEADDED, eventData);
 }
 
 void AssetDatabase::DeleteAsset(Asset* asset)
@@ -267,59 +309,67 @@ void AssetDatabase::DeleteAsset(Asset* asset)
 
     assets_.Erase(itr);
 
-    const String& resourcePath = asset->GetPath();
-
-    FileSystem* fs = GetSubsystem<FileSystem>();
-
-    if (fs->DirExists(resourcePath))
-    {
-        fs->RemoveDir(resourcePath, true);
-    }
-    else if (fs->FileExists(resourcePath))
-    {
-        fs->Delete(resourcePath);
-    }
-
-    String dotAsset = resourcePath + ".asset";
-
-    if (fs->FileExists(dotAsset))
-    {
-        fs->Delete(dotAsset);
-    }
-
-    VariantMap eventData;
-    eventData[ResourceRemoved::P_GUID] = asset->GetGUID();
-    SendEvent(E_RESOURCEREMOVED, eventData);
+    asset->Remove();
 }
 
 bool AssetDatabase::ImportDirtyAssets()
 {
-
     PODVector<Asset*> assets;
     GetDirtyAssets(assets);
 
     for (unsigned i = 0; i < assets.Size(); i++)
     {
-        assetScanImport_ = true;
-        assets[i]->Import();
-        assets[i]->Save();
-        assets[i]->dirty_ = false;
-        assets[i]->UpdateFileTimestamp();
+        assets[i]->BeginImport();
     }
+        
+    bool startedAnyImports = (assets.Size() != 0);
 
-    return assets.Size() != 0;
+    // note - since imports can take time, even if no files were set to import in this call, some files can still be importing that were set to import previously.
+    // Hence, we xor the flag.
+    doingImport_ |= startedAnyImports;
+    assetCacheMapDirty_ |= startedAnyImports;
 
+    return startedAnyImports;
 }
 
 void AssetDatabase::PreloadAssets()
 {
-
     List<SharedPtr<Asset>>::ConstIterator itr = assets_.Begin();
 
     while (itr != assets_.End())
     {
         (*itr)->Preload();
         itr++;
+    }
+
+}
+
+void AssetDatabase::GetAllAssetPaths(Vector<String>& assetPaths)
+{
+    FileSystem* fs = GetSubsystem<FileSystem>();
+    const String& resourcePath = project_->GetResourcePath();
+
+    Vector<String> allResults;
+
+    fs->ScanDir(allResults, resourcePath, "", SCAN_FILES | SCAN_DIRS, true);
+
+    assetPaths.Push(RemoveTrailingSlash(resourcePath));
+
+    for (unsigned i = 0; i < allResults.Size(); i++)
+    {
+        allResults[i] = resourcePath + allResults[i];
+
+        const String& path = allResults[i];
+
+        if (path.StartsWith(".") || path.EndsWith("."))
+            continue;
+
+        String ext = GetExtension(path);
+
+        if (ext == ".asset")
+            continue;
+
+        assetPaths.Push(path);
     }
 
 }
@@ -331,8 +381,8 @@ void AssetDatabase::UpdateAssetCacheMap()
     if (project_.Null())
         return;
 
-    bool gen = assetScanImport_;
-    assetScanImport_ = false;
+    bool gen = assetCacheMapDirty_;
+    assetCacheMapDirty_ = false;
 
     String cachepath = project_->GetProjectPath() + "Cache/__atomic_ResourceCacheMap.json";
 
@@ -379,11 +429,19 @@ void AssetDatabase::UpdateAssetCacheMap()
 
 }
 
+
+
+
+
+// 1) Remove all orphaned dot asset files
+// 2) Find all asset files and add them to our asset list (if they are valid assets and aren't in the list already).
+// 3) Create or init all assets
+// 4) Preload all assets.
+// 5) Import any assets that are dirty.
 void AssetDatabase::Scan()
-{
+{   
     if (!assetScanDepth_)
     {
-        assert(!assetScanImport_);
         SendEvent(E_ASSETSCANBEGIN);
     }
 
@@ -391,37 +449,14 @@ void AssetDatabase::Scan()
 
     PruneOrphanedDotAssetFiles();
 
+    Vector<String> assetPaths;
+
+    GetAllAssetPaths(assetPaths);
+
     FileSystem* fs = GetSubsystem<FileSystem>();
-    const String& resourcePath = project_->GetResourcePath();
-
-    Vector<String> allResults;
-
-    fs->ScanDir(allResults, resourcePath, "", SCAN_FILES | SCAN_DIRS, true);
-
-    Vector<String> filteredResults;
-
-    filteredResults.Push(RemoveTrailingSlash(resourcePath));
-
-    for (unsigned i = 0; i < allResults.Size(); i++)
+    for (unsigned i = 0; i < assetPaths.Size(); i++)
     {
-        allResults[i] = resourcePath + allResults[i];
-
-        const String& path = allResults[i];
-
-        if (path.StartsWith(".") || path.EndsWith("."))
-            continue;
-
-        String ext = GetExtension(path);
-
-        if (ext == ".asset")
-            continue;
-
-        filteredResults.Push(path);
-    }
-
-    for (unsigned i = 0; i < filteredResults.Size(); i++)
-    {
-        const String& path = filteredResults[i];
+        const String& path = assetPaths[i];
 
         String dotAssetFilename = GetDotAssetFilename(path);
 
@@ -431,9 +466,7 @@ void AssetDatabase::Scan()
             SharedPtr<Asset> asset(new Asset(context_));
 
             if (asset->SetPath(path))
-            {
-                AddAsset(asset, true);
-            }
+                AddAsset(asset);
         }
         else
         {
@@ -456,7 +489,6 @@ void AssetDatabase::Scan()
             }
 
         }
-
     }
 
     PreloadAssets();
@@ -467,8 +499,7 @@ void AssetDatabase::Scan()
     assetScanDepth_--;
 
     if (!assetScanDepth_)
-    {
-        UpdateAssetCacheMap();
+    {   
         SendEvent(E_ASSETSCANEND);        
     }
 }
@@ -525,17 +556,32 @@ void AssetDatabase::GetDirtyAssets(PODVector<Asset*>& assets)
 
     while (itr != assets_.End())
     {
-        if ((*itr)->IsDirty())
+        Asset* asset = *itr;
+        if ((*itr)->GetState() == AssetState::DIRTY)
             assets.Push(*itr);
         itr++;
     }
 }
 
-void AssetDatabase::HandleProjectLoaded(StringHash eventType, VariantMap& eventData)
+void AssetDatabase::HandleProjectBaseLoaded(StringHash eventType, VariantMap& eventData)
 {
     project_ = GetSubsystem<ToolSystem>()->GetProject();
 
     ReadImportConfig();
+    ReadAssetCacheConfig();
+    
+    VariantMap assetCacheMap;
+    AssetCacheConfig::ApplyConfig(assetCacheMap);
+
+    if (assetCacheMap["UseServer"].GetBool())
+    {
+        cacheManager_ = SharedPtr<AssetCacheManager>(new AssetCacheManagerNetwork(context_));
+    }
+    else
+    {
+        cacheManager_ = SharedPtr<AssetCacheManager>(new AssetCacheManagerLocal(context_));
+    }
+
 
     if (cacheEnabled_)
     {
@@ -627,9 +673,9 @@ void AssetDatabase::HandleFileChanged(StringHash eventType, VariantMap& eventDat
         }
         else
         {
-            if (asset->GetFileTimestamp() != fs->GetLastModifiedTime(asset->GetPath()))
+            if (asset->CacheNeedsUpdate())
             {
-                asset->SetDirty(true);
+                asset->SetState(AssetState::DIRTY);
                 Scan();
             }
         }
@@ -673,12 +719,11 @@ void AssetDatabase::ReimportAllAssets()
 
     while (itr != assets_.End())
     {
-        (*itr)->SetDirty(true);
+        (*itr)->SetState(AssetState::DIRTY);
         itr++;
     }
 
     Scan();
-
 }
 
 void AssetDatabase::ReimportAllAssetsInDirectory(const String& directoryPath)
@@ -689,7 +734,7 @@ void AssetDatabase::ReimportAllAssetsInDirectory(const String& directoryPath)
     {
         if ((*itr)->GetPath().StartsWith(directoryPath))
         {
-            (*itr)->SetDirty(true);
+            (*itr)->SetState(AssetState::DIRTY);
         }
         itr++;
     }
@@ -697,7 +742,6 @@ void AssetDatabase::ReimportAllAssetsInDirectory(const String& directoryPath)
     Scan();
 
 }
-
 
 bool AssetDatabase::InitCache()
 {
@@ -709,7 +753,17 @@ bool AssetDatabase::InitCache()
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     cache->AddResourceDir(GetCachePath());
 
+    // must set this before the scan!
+    doingProjectLoad_ = true;
+
+    ATOMIC_LOGDEBUG("AssetDatabase - scanning assets on project load.");
+
     Scan();
+
+    if (!doingImport_ && doingProjectLoad_)
+    {
+        CompleteProjectAssetsLoad();
+    }
 
     return true;
 }
@@ -768,4 +822,76 @@ void AssetDatabase::SetCacheEnabled(bool cacheEnabled)
     cacheEnabled_ = cacheEnabled;
 }
 
+void AssetDatabase::HandleBeginFrame(StringHash eventType, VariantMap& eventData)
+{
+    using namespace BeginFrame;
+
+    Update(eventData[P_TIMESTEP].GetFloat());
 }
+
+void AssetDatabase::Update(float timeStep)
+{
+    if (!doingImport_)
+    {
+        return;
+    }
+
+    List<SharedPtr<Asset>>::ConstIterator itr = assets_.Begin();
+
+    bool allAssetsClean = true;
+
+    while (itr != assets_.End())
+    {
+        SharedPtr<Asset> asset = (*itr);
+
+        if (asset->GetState() == AssetState::IMPORT_COMPLETE)
+        {
+            asset->SetState(AssetState::CLEAN);
+
+            // notify the editor UI etc
+            VariantMap eventData;
+            eventData[ResourceAdded::P_GUID] = asset->GetGUID();
+            SendEvent(E_RESOURCEADDED, eventData);
+        }
+        else if (
+            asset->GetState() == AssetState::IMPORTING ||
+            asset->GetState() == AssetState::DIRTY
+            )
+        {
+            allAssetsClean = false;
+        }
+
+        itr++;
+    }
+
+    if (doingProjectLoad_ && allAssetsClean)
+    {
+        CompleteProjectAssetsLoad();
+    }
+
+    if (allAssetsClean)
+    {
+        doingImport_ = false;
+    }
+}
+
+void AssetDatabase::CompleteProjectAssetsLoad()
+{
+    ATOMIC_LOGDEBUG("AssetDatabase - All project assets finished loading.");
+
+    // gotta do this here when all the assets are finished loading.
+    UpdateAssetCacheMap();
+
+    doingProjectLoad_ = false;
+    VariantMap data;
+    SendEvent(E_PROJECTASSETSLOADED, data);
+
+}
+
+    
+}
+
+
+
+
+

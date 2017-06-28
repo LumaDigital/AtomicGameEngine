@@ -51,7 +51,7 @@ bool TypeScriptImporter::Import()
 {
     isComponentFile_ = false;
 
-    return true;
+    return AssetImporter::Import();
 }
 
 bool TypeScriptImporter::LoadSettingsInternal(JSONValue& jsonRoot)

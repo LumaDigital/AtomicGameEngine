@@ -203,8 +203,12 @@ public:
     void PrecalculateLevels();
 
     // ATOMIC BEGIN
+    /// Whether this texture has power of two dimensions
+    bool IsPOT() const;
     /// Whether this texture has an alpha channel
     bool HasAlphaChannel() const;
+    /// Check whether can save in DDS format.
+    bool CanSaveDDS() const;
     /// Copy contents of the image into the defined rect, scaling if necessary. This image should already be large enough to include the rect. Compressed and 3D images are not supported.
     bool SetSubimage(const Image* image, const IntRect& rect);
     // ATOMIC END

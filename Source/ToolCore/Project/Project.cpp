@@ -50,7 +50,9 @@ Project::Project(Context* context) :
 
     projectSettings_ = new ProjectSettings(context_);
     userPrefs_ = new ProjectUserPrefs(context_);
-    buildSettings_ = new ProjectBuildSettings(context_);    
+    buildSettings_ = new ProjectBuildSettings(context_);
+
+    SubscribeToEvent(E_PROJECTASSETSLOADED, ATOMIC_HANDLER(Project, HandleAssetLoadComplete));
 }
 
 Project::~Project()
@@ -180,15 +182,24 @@ bool Project::Load(const String& fullpath)
     LoadBuildSettings();
     LoadUserPrefs();
 
-    if ( true /*result*/) {
+    if ( true /*result*/) 
+    {
         VariantMap data;
         data[ProjectLoaded::P_PROJECTPATH] = projectFilePath_;
-        data[ProjectLoaded::P_PROJECT] = this;
-        data[ProjectLoaded::P_RESULT] = result;
-        SendEvent(E_PROJECTLOADED, data);
+        SendEvent(E_PROJECTBASELOADED, data);
     }
 
     return result;
+}
+
+void Project::HandleAssetLoadComplete(StringHash eventType, VariantMap& eventData)
+{
+    VariantMap data;
+    data[ProjectLoaded::P_PROJECTPATH] = projectFilePath_;
+    data[ProjectLoaded::P_PROJECT] = this;
+    // TODO: Determine import success/failure
+    data[ProjectLoaded::P_RESULT] = true;
+    SendEvent(E_PROJECTLOADED, data);
 }
 
 String Project::GetBuildSettingsFullPath()

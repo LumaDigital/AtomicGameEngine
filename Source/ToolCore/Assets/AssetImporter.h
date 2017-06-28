@@ -60,6 +60,8 @@ public:
 
     bool RequiresCacheFile() const { return requiresCacheFile_; }
 
+    void ClearCacheFiles();
+
     /// Instantiate a node from the asset
     virtual Node* InstantiateNode(Node* parent, const String& name) { return 0; }
 
@@ -68,18 +70,40 @@ public:
 
 protected:
 
-    // Get a mapping of the assets path to cache file representations, by type
+	// Get a mapping of the assets path to cache file representations, by type
     virtual void GetAssetCacheMap(HashMap<String, String>& assetMap) {}
 
-    virtual bool Import() { return true; }
+    virtual bool Import();
 
     WeakPtr<Asset> asset_;
     bool requiresCacheFile_;
 
+    virtual void GetRequiredCacheFiles(Vector<String>& files) {}
+    virtual void TryFetchCacheFiles(Vector<String>& files);
+    virtual bool GenerateCacheFiles();
+    virtual void OnCacheFilesGenerated(Vector<String>& files);
+    virtual bool CheckCacheFilesUpToDate();
 
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
 
+    virtual void HandleAssetCacheFetchSuccess(StringHash eventType, VariantMap& eventData);
+    virtual void HandleAssetCacheFetchFail(StringHash eventType, VariantMap& eventData);
+
+    Vector<String> cacheFetchFilesPending_;
+    Vector<String> cacheFetchFilesFailed_;
+
+private:
+    /// get the path to the file containing the MD5 in last import
+    String GetDotMD5FilePath();
+    /// Read the MD5 of the asset on last import
+    String ReadMD5File();
+    /// Write the MD5 of the asset to file
+    bool WriteMD5File();
+    /// Generate an MD5 hash from the asset file
+    String GenerateMD5();
+
+    String md5_;
 };
 
 }

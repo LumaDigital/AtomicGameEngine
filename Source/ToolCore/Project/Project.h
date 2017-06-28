@@ -91,6 +91,8 @@ public:
     void SaveUserPrefs();
     bool LoadUserPrefs();
 
+    void HandleAssetLoadComplete(StringHash eventType, VariantMap& eventData);
+
 private:
 
 

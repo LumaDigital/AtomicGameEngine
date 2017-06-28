@@ -32,7 +32,7 @@ namespace ToolCore
 
 TextImporter::TextImporter(Context* context, Asset *asset) : AssetImporter(context, asset)
 {
-
+    requiresCacheFile_ = false;
 }
 
 TextImporter::~TextImporter()
@@ -43,11 +43,6 @@ TextImporter::~TextImporter()
 void TextImporter::SetDefaults()
 {
     AssetImporter::SetDefaults();
-}
-
-bool TextImporter::Import()
-{
-    return true;
 }
 
 bool TextImporter::LoadSettingsInternal(JSONValue& jsonRoot)

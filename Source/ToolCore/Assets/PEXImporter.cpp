@@ -33,7 +33,7 @@ namespace ToolCore
 
 PEXImporter::PEXImporter(Context* context, Asset *asset) : AssetImporter(context, asset)
 {
-
+    requiresCacheFile_ = false;
 }
 
 PEXImporter::~PEXImporter()
@@ -46,10 +46,6 @@ void PEXImporter::SetDefaults()
     AssetImporter::SetDefaults();
 }
 
-bool PEXImporter::Import()
-{
-    return true;
-}
 
 bool PEXImporter::LoadSettingsInternal(JSONValue& jsonRoot)
 {
