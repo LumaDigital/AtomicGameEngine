@@ -428,6 +428,9 @@ void Asset::Remove()
 
     VariantMap eventData;
     eventData[ResourceRemoved::P_GUID] = GetGUID();
+    // LUMA BEGIN
+    eventData[ResourceRemoved::P_NAME] = GetName();
+    // LUMA END
     SendEvent(E_RESOURCEREMOVED, eventData);
 }
 

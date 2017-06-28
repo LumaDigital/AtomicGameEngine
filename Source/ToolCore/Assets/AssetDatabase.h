@@ -97,6 +97,9 @@ private:
     void AddAsset(SharedPtr<Asset>& asset, bool newAsset = false);
 
     void PruneOrphanedDotAssetFiles();
+    // LUMA BEGIN
+    void ClearDeletedCacheFiles(Vector<String> assetGuids);
+    // LUMA END
 
     void ReadAssetCacheConfig();
 

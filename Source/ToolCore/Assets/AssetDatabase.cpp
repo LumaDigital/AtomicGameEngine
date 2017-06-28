@@ -450,8 +450,11 @@ void AssetDatabase::Scan()
     PruneOrphanedDotAssetFiles();
 
     Vector<String> assetPaths;
-
     GetAllAssetPaths(assetPaths);
+
+    // LUMA BEGIN
+    Vector<String> allAssetGuids;
+    // LUMA END
 
     FileSystem* fs = GetSubsystem<FileSystem>();
     for (unsigned i = 0; i < assetPaths.Size(); i++)
@@ -488,10 +491,17 @@ void AssetDatabase::Scan()
                 AddAsset(asset);
             }
 
+            // LUMA BEGIN
+            allAssetGuids.Push(guid);
+            // LUMA END
         }
     }
 
     PreloadAssets();
+
+    // LUMA BEGIN
+    ClearDeletedCacheFiles(allAssetGuids);
+    // LUMA END
 
     if (ImportDirtyAssets())
         Scan();
@@ -888,7 +898,44 @@ void AssetDatabase::CompleteProjectAssetsLoad()
 
 }
 
-    
+// LUMA BEGIN
+void AssetDatabase::ClearDeletedCacheFiles(Vector<String> assetGuids)
+{
+    const String atomicPrefix = "__atomic_";
+
+    FileSystem* fs = GetSubsystem<FileSystem>();
+    Vector<String> cacheFiles;
+    fs->ScanDir(cacheFiles, GetCachePath(), "", SCAN_FILES, true);
+
+    for (int i = 0; i < cacheFiles.Size(); i++)
+    {
+        String& cacheFile = cacheFiles[i];
+        if (cacheFile.StartsWith(atomicPrefix))
+        {
+            continue;
+        }
+
+        bool found = false;
+
+        for (int j = 0; j < assetGuids.Size(); j++)
+        {
+            if (cacheFile.Contains(assetGuids[j]))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            // Delete from local cache
+            String cacheFileName = GetCachePath() + cacheFiles[i];
+            fs->Delete(cacheFileName);
+        }
+    }
+}
+// LUMA END
+
 }
 
 

@@ -285,6 +285,10 @@ private:
     void UpdateEventSubscription();
     /// Update shader parameter animations.
     void HandleAttributeAnimationUpdate(StringHash eventType, VariantMap& eventData);
+    // LUMA BEGIN
+    /// Update material when a texture gets deleted.
+    void HandleResourceRemoved(StringHash eventType, VariantMap& eventData);
+    // LUMA END
 
     /// Techniques.
     Vector<TechniqueEntry> techniques_;

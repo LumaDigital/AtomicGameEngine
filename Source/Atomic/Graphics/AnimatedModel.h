@@ -218,6 +218,10 @@ private:
         (VertexBuffer* buffer, void* destVertexData, unsigned morphRangeStart, const VertexBufferMorph& morph, float weight);
     /// Handle model reload finished.
     void HandleModelReloadFinished(StringHash eventType, VariantMap& eventData);
+    // LUMA BEGIN
+    /// Handle a resource being removed
+    void HandleResourceRemoved(StringHash eventType, VariantMap& eventData);
+    // LUMA END
 
     /// Skeleton.
     Skeleton skeleton_;
