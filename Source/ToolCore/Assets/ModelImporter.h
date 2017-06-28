@@ -77,7 +77,7 @@ public:
     virtual void SetDefaults();
 
     double GetScale() { return scale_; }
-    void SetScale(double scale) {scale_ = scale; }
+    void SetScale(double scale);
 
     bool GetImportAnimations() { return importAnimations_; }
     void SetImportAnimations(bool importAnimations) { importAnimations_ = importAnimations; }
