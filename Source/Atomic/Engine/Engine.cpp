@@ -129,8 +129,12 @@ Engine::Engine(Context* context) :
     runNextPausedFrame_(false),
     fpsTimeSinceUpdate_(ENGINE_FPS_UPDATE_INTERVAL),
     fpsFramesSinceUpdate_(0),
-    fps_(0)
+    fps_(0),
     // ATOMIC END
+    // LUMA BEGIN
+    logArchiveHours_(12),
+    lastLogArchiveHours_(0)
+    // LUMA END
 {
     // Register self as a subsystem
     context_->RegisterSubsystem(this);
@@ -223,6 +227,12 @@ bool Engine::Initialize(const VariantMap& parameters)
             log->SetLevel(GetParameter(parameters, EP_LOG_LEVEL).GetInt());
         log->SetQuiet(GetParameter(parameters, EP_LOG_QUIET, false).GetBool());
         log->Open(GetParameter(parameters, EP_LOG_NAME, "Atomic.log").GetString());
+        
+        // LUMA BEGIN
+        logArchiveTimestamp_ = GetSubsystem<Time>()->GetTimeStamp();
+        logArchiveTimestamp_.Replace(":", "");
+        logArchiveTimestamp_.Replace(" ", "_");
+        // LUMA END
     }
 
     // Set maximally accurate low res timer
@@ -536,6 +546,34 @@ void Engine::RunFrame()
     Time* time = GetSubsystem<Time>();
     Input* input = GetSubsystem<Input>();
     Audio* audio = GetSubsystem<Audio>();
+
+    // LUMA BEGIN
+    if (logArchiveHours_)
+    {
+        // Archive and clear the log
+        unsigned elapsedHours = time->GetElapsedTime() / 3600;
+        if (elapsedHours - lastLogArchiveHours_ >= logArchiveHours_)
+        {
+            Log* log = GetSubsystem<Log>();
+            if (log && log->GetLogFile())
+            {
+                FileSystem* fileSystem = GetSubsystem<FileSystem>();
+                String logName = log->GetLogFile()->GetName();
+                String pathName, fileName, extension;
+                SplitPath(logName, pathName, fileName, extension);
+                String archiveName = pathName + fileName + logArchiveTimestamp_ + extension;
+                fileSystem->Copy(logName, archiveName);
+                log->Close();
+                log->Open(logName);
+            }
+
+            logArchiveTimestamp_ = GetSubsystem<Time>()->GetTimeStamp();
+            logArchiveTimestamp_.Replace(":", "");
+            logArchiveTimestamp_.Replace(" ", "_");
+            lastLogArchiveHours_ = elapsedHours;
+        }
+    }
+    // LUMA END
 
 #ifdef ATOMIC_PROFILING
     if (EventProfiler::IsActive())
@@ -931,6 +969,13 @@ VariantMap Engine::ParseParameters(const Vector<String>& arguments)
                     ++i;
                 }
             }
+            /// LUMA BEGIN
+            else if (argument == "logarchivehours" && !value.Empty())
+            {
+                ret["LogArchiveHours"] = ToInt(value);
+                ++i;
+            }
+            /// LUMA END
             else if (argument == "x" && !value.Empty())
             {
                 ret[EP_WINDOW_WIDTH] = ToInt(value);
@@ -1064,6 +1109,12 @@ void Engine::DoExit()
     Graphics* graphics = GetSubsystem<Graphics>();
     if (graphics)
         graphics->Close();
+
+    /// LUMA BEGIN
+    Log* log = GetSubsystem<Log>();
+    if (log)
+        log->Close();
+    /// LUMA END
 
     exiting_ = true;
 #if defined(__EMSCRIPTEN__) && defined(ATOMIC_TESTING)

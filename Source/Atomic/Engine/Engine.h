@@ -197,6 +197,16 @@ private:
 
     // ATOMIC END
    
+    // LUMA BEGIN
+
+    /// Timestamp indicating when log started or last archived
+    String logArchiveTimestamp_;
+    /// Hours between log archives
+    unsigned logArchiveHours_;
+    /// Hours since last log archive
+    unsigned lastLogArchiveHours_;
+
+    // LUMA END
 };
 
 }
