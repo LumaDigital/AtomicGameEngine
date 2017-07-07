@@ -23,6 +23,7 @@
 #include <Atomic/Core/Variant.h>
 #include <Atomic/IO/Log.h>
 #include <Atomic/IO/File.h>
+#include <Atomic/IO/FileSystem.h>
 #include <Atomic/Resource/ResourceCache.h>
 #include <Atomic/Resource/Image.h>
 
@@ -123,7 +124,8 @@ namespace ToolCore
 
     void NETAssemblyImporter::GetRequiredCacheFiles(Vector<String>& files)
     {
-        files.Push(asset_->GetCachePath());
+        String cacheFilename = GetFileNameAndExtension(asset_->GetCachePath());
+        files.Push(cacheFilename);
     }
 
 
