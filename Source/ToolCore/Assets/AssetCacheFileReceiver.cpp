@@ -95,7 +95,11 @@ void AssetCacheFileReceiver::HandleClientMessage(StringHash eventType, VariantMa
 
     if (msgId != (int)AssetCacheServer::MessageID::FILE_TRANSFER_FRAGMENT)
     {
-        ATOMIC_LOGERRORF("AssetCacheFileReceiver received an invalid message id %d", msgId);
+        // Will get registered for network messages while the FILE_TRANSFER_START is still being processed
+        if (msgId != (int)AssetCacheServer::MessageID::FILE_TRANSFER_START)
+        {
+            ATOMIC_LOGERRORF("AssetCacheFileReceiver received an invalid message id %d", msgId);
+        }
         return;
     }
 

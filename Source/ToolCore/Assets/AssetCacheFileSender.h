@@ -41,6 +41,7 @@ namespace ToolCore
         Status status_;
 
         unsigned fileSize_;
+        unsigned fragmentSize_;
         unsigned bytesSent_;
         unsigned nextFragmentID_;
 

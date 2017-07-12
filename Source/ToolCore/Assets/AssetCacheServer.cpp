@@ -57,7 +57,7 @@ bool AssetCacheServer::Start()
 
     Network* network = GetSubsystem<Network>();
 
-    network->StartServer(port_);
+    network->StartServer(port_, kNet::SocketOverTCP);
 
     if (network->IsServerRunning())
     {

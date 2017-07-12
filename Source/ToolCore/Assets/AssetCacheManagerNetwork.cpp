@@ -267,7 +267,7 @@ bool AssetCacheManagerNetwork::ConnectToCacheServer()
 
     identityVMap["id"] = assetCacheClientIdentifier;
 
-    if (network_->Connect(serverIP_, serverPort_, nullptr, identityVMap))
+    if (network_->Connect(serverIP_, serverPort_, kNet::SocketOverTCP, nullptr, identityVMap))
     {
         ATOMIC_LOGINFOF("AssetCacheManagerNetwork - connecting to address[%s] port [%d] as [%s] ", serverIP_.CString(), serverPort_, identityVMap["id"].GetString().CString());
 
@@ -433,7 +433,6 @@ void AssetCacheManagerNetwork::StartDownload(VariantMap& fileTransferData)
     unsigned fileSize = fileTransferData[P_FILESIZE].GetUInt();
     unsigned numFragments = fileTransferData[P_NUMFRAGMENTS].GetUInt();
 
-    assert(md5FileName == currentFileProcessing_);
     assert(!md5FileName.Empty());
     assert(fileSize > 0);
     assert(numFragments > 0);
@@ -441,7 +440,7 @@ void AssetCacheManagerNetwork::StartDownload(VariantMap& fileTransferData)
     AssetDatabase* db = GetSubsystem<AssetDatabase>();
     String fileName;
     String md5;
-    SplitMD5FileName(currentFileProcessing_, fileName, md5);
+    SplitMD5FileName(md5FileName, fileName, md5);
     String filePath = db->GetCachePath() + fileName;
 
     AssetCacheFileReceiver* newReceiveManager = new AssetCacheFileReceiver(

@@ -9,7 +9,7 @@
 using namespace Atomic;
 using namespace ToolCore;
 
-const unsigned fragmentSize = 450;
+const unsigned maxFragmentSize = 1024 * 1024;
 const unsigned outboundMsgQueueSize = 1000;
 
 
@@ -82,13 +82,21 @@ bool AssetCacheFileSender::StartSend()
     {
         sendFile_ = SharedPtr<File>(new File(context_, filePath_));
         fileSize_ = sendFile_->GetSize();
+
+        if (fileSize_ == 0)
+        {
+            ATOMIC_LOGINFOF("AssetCacheFileSender - skipping 0b file [%s]", fileName_.CString());
+            return false;
+        }
+
         bytesSent_ = 0;
         nextFragmentID_ = 0;
 
         VariantMap map;
         using namespace AssetCacheFileTransferStart;
 
-        const unsigned numFragments = (fileSize_ + fragmentSize - 1) / fragmentSize;
+        fragmentSize_ = min(maxFragmentSize, fileSize_);
+        const unsigned numFragments = (fileSize_ + fragmentSize_ - 1) / fragmentSize_;
 
         map[P_FILENAME] = fileName_;
         map[P_NUMFRAGMENTS] = numFragments;
@@ -115,25 +123,25 @@ bool AssetCacheFileSender::StartSend()
 bool AssetCacheFileSender::SendFileFragments()
 {
     // Add new data fragments into the queue.        
-    unsigned char readBuffer[fragmentSize];
+    PODVector<unsigned char> readBuffer(fragmentSize_);
     unsigned i = outboundMsgQueueSize - connection_->GetMessageConnection()->NumOutboundMessagesPending();
 
     while (i-- > 0 && bytesSent_ < fileSize_)
     {
-        unsigned bytesInThisFragment = min((int)fragmentSize, fileSize_ - bytesSent_);
+        unsigned bytesInThisFragment = min((int)fragmentSize_, fileSize_ - bytesSent_);
 
         VariantMap map;
 
         using namespace AssetCacheFileFragment;
 
-        unsigned readSize = sendFile_->Read(readBuffer, bytesInThisFragment);
+        unsigned readSize = sendFile_->Read(readBuffer.Buffer(), bytesInThisFragment);
 
         if (readSize != bytesInThisFragment)
         {
             return false;
         }
 
-        VectorBuffer dataBuff(readBuffer, bytesInThisFragment);
+        VectorBuffer dataBuff(readBuffer.Buffer(), bytesInThisFragment);
 
         map[P_DATA] = dataBuff;
         map[P_FRAGMENTID] = nextFragmentID_;
