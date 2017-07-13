@@ -828,6 +828,9 @@ bool AssetDatabase::GenerateCache(bool clean)
         }
     }
 
+    // Required to ensure completion event is sent
+    doingProjectLoad_ = true;
+
     ReimportAllAssets();
 
     ATOMIC_LOGINFO("Cache generated");

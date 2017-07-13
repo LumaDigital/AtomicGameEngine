@@ -56,6 +56,8 @@ protected:
 
 private:
 
+    void HandleProjectAssetsLoaded(StringHash eventType, VariantMap& eventData);
+
     bool CreateCacheDirectory() const;
     bool RemoveCacheDirectory() const;
 

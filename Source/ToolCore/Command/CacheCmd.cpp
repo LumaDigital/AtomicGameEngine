@@ -30,6 +30,7 @@
 #include "../Project/Project.h"
 #include "../Build/BuildEvents.h"
 #include "../Build/BuildSystem.h"
+#include "../Project/ProjectEvents.h"
 
 #include "CacheCmd.h"
 
@@ -90,7 +91,9 @@ void CacheCmd::Run()
     
     if (generateCache_)
     {
+        SubscribeToEvent(E_PROJECTASSETSLOADED, ATOMIC_HANDLER(CacheCmd, HandleProjectAssetsLoaded));
         database->GenerateCache(cleanCache_);
+        return;
     }
     else if (cleanCache_)
     {
@@ -99,5 +102,11 @@ void CacheCmd::Run()
 
     Finished();
 }
+
+void CacheCmd::HandleProjectAssetsLoaded(StringHash eventType, VariantMap& eventData)
+{
+    Finished();
+}
+
 
 }

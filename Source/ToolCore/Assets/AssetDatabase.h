@@ -63,6 +63,7 @@ public:
     bool CleanCache();
 
     /// Regenerates the asset cache, clean removes the Cache folder before generating
+	/// waitForImports blocks until all assets have been fully imported
     bool GenerateCache(bool clean = true);
 
     void DeleteAsset(Asset* asset);
