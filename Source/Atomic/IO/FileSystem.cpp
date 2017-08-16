@@ -1102,6 +1102,8 @@ bool IsAbsolutePath(const String& pathName)
 }
 
 // ATOMIC BEGIN
+
+
 bool FileSystem::CreateDirs(const String& root, const String& subdirectory)
 {
     String folder = AddTrailingSlash(GetInternalPath(root));
@@ -1365,6 +1367,37 @@ bool CompareFileInfoByLastModifiedAscending(const FileInfo& lhs, const FileInfo&
 {
     return lhs.lastModified_ < rhs.lastModified_;
 }
+
+FileNameIterator::FileNameIterator()
+{
+    Reset();
+}
+
+const String& FileNameIterator::GetCurrent()
+{
+    return (index_ < filenames_.Size()) ?
+        filenames_[index_] :
+        String::EMPTY;
+}
+
+bool FileNameIterator::MoveNext()
+{
+    return ++index_ < filenames_.Size();
+}
+
+void FileNameIterator::Reset()
+{
+    index_ = -1;
+}
+
+SharedPtr<FileNameIterator> FileSystem::ScanDir(const String& pathName, const String& filter, unsigned flags, bool recursive) const
+{
+    SharedPtr<FileNameIterator> enumerator(new FileNameIterator());
+    ScanDir(enumerator->filenames_, pathName, filter, flags, recursive);
+
+    return enumerator;
+}
+
 
 
 // ATOMIC END
