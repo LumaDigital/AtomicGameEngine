@@ -190,8 +190,13 @@ public:
 
     // LUMA BEGIN
 
+    /// Set apply root motion.
+    void SetApplyRootTransform(bool apply);
+
     /// Return position of an animation track's keyframe at index.
     Vector3 GetKeyFramePositionAtIndex(const String& name, unsigned keyIndex);
+    /// Return animation name.
+    bool GetApplyRootTransform() const { return applyRootTransform_; }
 
     // LUMA END
 
@@ -207,6 +212,13 @@ private:
     HashMap<StringHash, AnimationTrack> tracks_;
     /// Animation trigger points.
     Vector<AnimationTriggerPoint> triggers_;
+
+    // LUMA BEGIN
+
+    /// Whether to apply the root transform.
+    bool applyRootTransform_;
+
+    // LUMA END
 };
 
 }

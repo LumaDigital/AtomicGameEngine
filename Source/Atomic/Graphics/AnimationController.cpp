@@ -251,11 +251,11 @@ bool AnimationController::Play(const String& name, unsigned char layer, bool loo
 bool AnimationController::PlayExclusive(const String& name, unsigned char layer, bool looped, float fadeTime)
 {
     bool success = Play(name, layer, looped, fadeTime);
-    
+
     // Fade other animations only if successfully started the new one
     if (success)
         FadeOthers(name, 0.0f, fadeTime);
-    
+
     return success;
 }
 
@@ -725,9 +725,9 @@ void AnimationController::SetNetAnimationsAttr(const PODVector<unsigned char>& v
             animations_[index].autoFadeTime_ = (float)buf.ReadUByte() / 64.0f; // 6 bits of decimal precision, max. 4 seconds fade
         else
             animations_[index].autoFadeTime_ = 0.0f;
-        
+
         animations_[index].removeOnCompletion_ = (ctrl & CTRL_REMOVEONCOMPLETION) != 0;
-        
+
         if (ctrl & CTRL_SETTIME)
         {
             unsigned char setTimeRev = buf.ReadUByte();
@@ -919,6 +919,10 @@ void AnimationController::RemoveAnimationState(AnimationState* state)
     if (!state)
         return;
 
+    // LUMA BEGIN
+    state->OnRemove();
+    // LUMA END
+
     // Model mode
     AnimatedModel* model = GetComponent<AnimatedModel>();
     if (model)
@@ -957,7 +961,7 @@ void AnimationController::FindAnimation(const String& name, unsigned& index, Ani
             // Check whether the animation resource isn't loaded
             if (animationResources_[i] == NULL)
                 continue;
-            // ATOMIC END        
+            // ATOMIC END
 
             if (name == animationResources_[i]->GetAnimationName())
             {

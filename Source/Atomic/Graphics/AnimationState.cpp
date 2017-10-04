@@ -57,6 +57,15 @@ AnimationState::AnimationState(AnimatedModel* model, Animation* animation) :
 {
     // Set default start bone (use all tracks.)
     SetStartBone(0);
+
+    // LUMA BEGIN
+
+    ResetRootMotionOffset();
+    Bone* rootBone = model_->GetSkeleton().GetRootBone();
+    WeakPtr<Node> rootBoneNode = rootBone->node_;
+    transformRoot_ = WeakPtr<Node>(rootBoneNode->GetChild("IHP_Master_01:EXP_J_Origin", true));
+
+    // LUMA END
 }
 
 AnimationState::AnimationState(Node* node, Animation* animation) :
@@ -203,6 +212,15 @@ void AnimationState::SetTime(float time)
         time_ = time;
         if (model_)
             model_->MarkAnimationDirty();
+
+        // LUMA BEGIN
+
+        if (time == 0.0f)
+        {
+            ResetRootMotionOffset();
+        }
+
+        // LUMA END
     }
 }
 
@@ -272,6 +290,11 @@ void AnimationState::AddTime(float delta)
         while (time >= length)
         {
             time -= length;
+
+            // LUMA BEGIN
+            ResetRootMotionOffset();
+            // LUMA END
+
             sendFinishEvent = true;
         }
         while (time < 0.0f)
@@ -286,7 +309,9 @@ void AnimationState::AddTime(float delta)
     if (!looped_)
     {
         if (delta > 0.0f && oldTime < length && GetTime() == length)
+        {
             sendFinishEvent = true;
+        }
         else if (delta < 0.0f && oldTime > 0.0f && GetTime() == 0.0f)
             sendFinishEvent = true;
     }
@@ -466,8 +491,17 @@ void AnimationState::ApplyToModel()
         // Do not apply if zero effective weight or the bone has animation disabled
         if (Equals(finalWeight, 0.0f) || !stateTrack.bone_->animated_)
             continue;
-            
-        ApplyTrack(stateTrack, finalWeight, true);
+
+        // LUMA BEGIN
+        if (animation_->GetApplyRootTransform() && transformRoot_ != NULL && stateTrack.node_ == transformRoot_)
+        {
+            ApplyRootMotion(stateTrack, finalWeight);
+        }
+        else
+        {
+            ApplyTrack(stateTrack, finalWeight, true);
+        }
+        // LUMA END
     }
 }
 
@@ -534,7 +568,7 @@ void AnimationState::ApplyTrack(AnimationStateTrack& stateTrack, float weight, b
         if (channelMask & CHANNEL_SCALE)
             newScale = keyFrame->scale_;
     }
-    
+
     if (blendingMode_ == ABM_ADDITIVE) // not ABM_LERP
     {
         if (channelMask & CHANNEL_POSITION)
@@ -567,7 +601,7 @@ void AnimationState::ApplyTrack(AnimationStateTrack& stateTrack, float weight, b
                 newScale = node->GetScale().Lerp(newScale, weight);
         }
     }
-    
+
     if (silent)
     {
         if (channelMask & CHANNEL_POSITION)
@@ -587,5 +621,117 @@ void AnimationState::ApplyTrack(AnimationStateTrack& stateTrack, float weight, b
             node->SetScale(newScale);
     }
 }
+
+// LUMA BEGIN
+
+void AnimationState::ApplyRootMotion(AnimationStateTrack& stateTrack, float weight)
+{
+    if (transformRoot_ == NULL)
+    {
+        return;
+    }
+
+    const AnimationTrack* track = stateTrack.track_;
+    Node* node = stateTrack.node_;
+
+    if (track->keyFrames_.Empty() || !node)
+        return;
+
+    unsigned& frame = stateTrack.keyFrame_;
+    track->GetKeyFrameIndex(time_, frame);
+
+    // Check if next frame to interpolate to is valid, or if wrapping is needed (looping animation only)
+    unsigned nextFrame = frame + 1;
+    bool interpolate = true;
+    if (nextFrame >= track->keyFrames_.Size())
+    {
+        if (!looped_)
+        {
+            nextFrame = frame;
+            interpolate = false;
+        }
+        else
+            nextFrame = 0;
+    }
+
+    const AnimationKeyFrame* keyFrame = &track->keyFrames_[frame];
+    unsigned char channelMask = track->channelMask_;
+
+    Vector3 newPosition;
+    Quaternion newRotation;
+    Vector3 newScale;
+
+    if (interpolate)
+    {
+        const AnimationKeyFrame* nextKeyFrame = &track->keyFrames_[nextFrame];
+        float timeInterval = nextKeyFrame->time_ - keyFrame->time_;
+        if (timeInterval < 0.0f)
+            timeInterval += animation_->GetLength();
+        float t = timeInterval > 0.0f ? (time_ - keyFrame->time_) / timeInterval : 1.0f;
+
+        if (channelMask & CHANNEL_POSITION)
+            newPosition = keyFrame->position_.Lerp(nextKeyFrame->position_, t);
+        if (channelMask & CHANNEL_ROTATION)
+            newRotation = keyFrame->rotation_.Slerp(nextKeyFrame->rotation_, t);
+    }
+    else
+    {
+        if (channelMask & CHANNEL_POSITION)
+            newPosition = keyFrame->position_;
+        if (channelMask & CHANNEL_ROTATION)
+            newRotation = keyFrame->rotation_;
+    }
+
+    Vector3 offsetRotation = rootNodeRotationOffset_.EulerAngles();
+
+    // TODO - remve these commented out debug messages when we're happy that it all works as desired.
+    /*ATOMIC_LOGDEBUG("**************");
+    ATOMIC_LOGDEBUGF("Root Motion [%s] time - %f / %f - weight %f", animation_->GetAnimationName().CString(), time_, animation_->GetLength(), weight);
+    ATOMIC_LOGDEBUGF("Start - OffsetPos - (%f, %f, %f)", rootNodePositionOffset_.x_, rootNodePositionOffset_.y_, rootNodePositionOffset_.z_);
+    ATOMIC_LOGDEBUGF("Start - OffsetRot - (%f, %f, %f)", offsetRotation.x_, offsetRotation.y_, offsetRotation.z_);*/
+
+    Vector3 deltaPos = newPosition - rootNodePositionOffset_;
+
+    //ATOMIC_LOGDEBUGF("Delta Pos - (%f, %f, %f)", deltaPos.x_, deltaPos.y_, deltaPos.z_);
+
+    // to get this right, first cancel out the rotation caused by this animation track, then apply the translation LOCALLY so
+    // that any non-animation related animation still applies to the translation, then finally apply the latest animation.
+    model_->node_->Rotate(rootNodeRotationOffset_.Inverse(), Atomic::TS_WORLD);
+    model_->node_->Translate(deltaPos, Atomic::TS_LOCAL);
+    model_->node_->Rotate(newRotation, Atomic::TS_WORLD);
+
+    rootNodePositionOffset_ = newPosition;
+    rootNodeRotationOffset_ = newRotation;
+
+    offsetRotation = rootNodeRotationOffset_.EulerAngles();
+
+    Vector3 modelPosition = model_->node_->GetWorldPosition();
+    Vector3 modelRotation = model_->node_->GetWorldRotation().EulerAngles();
+
+    Vector3 transformRootPosition = transformRoot_->GetPosition();
+    Vector3 transformRootRotation = transformRoot_->GetRotation().EulerAngles();
+
+    /*ATOMIC_LOGDEBUGF("ModelPos - (%f, %f, %f)", modelPosition.x_, modelPosition.y_, modelPosition.z_);
+    ATOMIC_LOGDEBUGF("ModelRot - (%f, %f, %f)", modelRotation.x_, modelRotation.y_, modelRotation.z_);
+
+    ATOMIC_LOGDEBUGF("TransPos - (%f, %f, %f)", transformRootPosition.x_, transformRootPosition.y_, transformRootPosition.z_);
+    ATOMIC_LOGDEBUGF("TransRot - (%f, %f, %f)", transformRootRotation.x_, transformRootRotation.y_, transformRootRotation.z_);
+
+    ATOMIC_LOGDEBUGF("OffsetPos - (%f, %f, %f)", rootNodePositionOffset_.x_, rootNodePositionOffset_.y_, rootNodePositionOffset_.z_);
+    ATOMIC_LOGDEBUGF("OffsetRot - (%f, %f, %f)", offsetRotation.x_, offsetRotation.y_, offsetRotation.z_);*/
+}
+
+void AnimationState::OnRemove()
+{
+    ResetRootMotionOffset();
+}
+
+void AnimationState::ResetRootMotionOffset()
+{
+    rootNodePositionOffset_ = Vector3(0.0f, 0.0f, 0.0f);
+    rootNodeRotationOffset_ = Quaternion(0.0f, 0.0f, 0.0f);
+}
+
+// LUMA END
 
 }

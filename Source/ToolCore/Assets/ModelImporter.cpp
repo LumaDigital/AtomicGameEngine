@@ -73,10 +73,6 @@ void ModelImporter::SetDefaults()
 void ModelImporter::SetScale(double scale)
 {
     scale_ = scale;
-
-    // Clear outdated cache files and regenerate them
-    ClearCacheFiles();
-    GenerateCacheFiles();
 }
 
 bool ModelImporter::ImportModel()
@@ -115,7 +111,7 @@ bool ModelImporter::ImportModel()
     importer->SetImportMaterials(importMat);
 }*/
 
-bool ModelImporter::ImportAnimation(const String& filename, const String& name, float startTime, float endTime)
+bool ModelImporter::ImportAnimation(const String& filename, const String& name, float startTime, float endTime, bool applyRootTransform)
 {
     SharedPtr<OpenAssetImporter> importer(new OpenAssetImporter(context_));
 
@@ -125,6 +121,10 @@ bool ModelImporter::ImportAnimation(const String& filename, const String& name, 
     importer->SetExportAnimations(true);
     importer->SetStartTime(startTime);
     importer->SetEndTime(endTime);
+    // LUMA BEGIN
+    importer->SetApplyRootTransform(applyRootTransform);
+    // LUMA END
+
 
     if (importer->Load(filename))
     {
@@ -152,7 +152,13 @@ bool ModelImporter::ImportAnimation(const String& filename, const String& name, 
             SharedPtr<Animation> animation = cache->GetTempResource<Animation>(fileName + extension);
 
             if (animation)
+            {
+                //LUMA BEGIN
+                animation->SetApplyRootTransform(applyRootTransform);
+                //LUMA END
+
                 controller->AddAnimationResource(animation);
+            }
 
             ATOMIC_LOGINFOF("Import Info: %s : %s", info.name_.CString(), fileName.CString());
         }
@@ -176,7 +182,7 @@ bool ModelImporter::ImportAnimations()
     for (unsigned i = 0; i < animationInfo_.Size(); i++)
     {
         const SharedPtr<AnimationImportInfo>& info = animationInfo_[i];
-        if (!ImportAnimation(asset_->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime()))
+        if (!ImportAnimation(asset_->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime(), info->GetApplyRootTransform()))
             return false;
     }
 
@@ -219,7 +225,7 @@ bool ModelImporter::ImportAnimations()
                     for (unsigned i = 0; i < importer->animationInfo_.Size(); i++)
                     {
                         const SharedPtr<AnimationImportInfo>& info = importer->animationInfo_[i];
-                        if (!ImportAnimation(asset->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime()))
+                        if (!ImportAnimation(asset->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime(), info->GetApplyRootTransform()))
                             return false;
                     }
                 }
@@ -241,8 +247,8 @@ void ModelImporter::GetRequiredCacheFiles(Vector<String>& files)
     GetAssetCacheMap(assetMap);
     files.Push(assetMap.Values());*/
 
-    // This isn't a great way to get these strings, as this code mirrors what happens on import and introduces the possibility 
-    // of the two getting out of sync, but unfortunately right now it looks like we'd have to basically import the model to get 
+    // This isn't a great way to get these strings, as this code mirrors what happens on import and introduces the possibility
+    // of the two getting out of sync, but unfortunately right now it looks like we'd have to basically import the model to get
     // info like the animation list, which kinda defeats the purpose. May as well just go ahead and do the import, if we do that.
     // TODO - a better way of doing this.
 
@@ -296,7 +302,7 @@ void ModelImporter::GetRequiredCacheFiles(Vector<String>& files)
                         if (components.Size() == 2 && components[1].Length() && components[0] == fileName)
                         {
                             String animationName = components[1];
-                            
+
                             Asset* asset = db->GetAssetByPath(pathName + result);
                             assert(asset);
                             assert(asset->GetImporter()->GetType() == ModelImporter::GetTypeStatic());
@@ -506,6 +512,9 @@ bool ModelImporter::LoadSettingsInternal(JSONValue& jsonRoot)
             info->name_ = anim.Get("name").GetString();
             info->SetStartTime(anim.Get("startTime").GetFloat());
             info->SetEndTime(anim.Get("endTime").GetFloat());
+            // LUMA BEGIN
+            info->SetApplyRootTransform(anim.Get("applyRootTransform").GetBool());
+            // LUMA END
 
             animationInfo_.Push(info);
 
@@ -534,6 +543,9 @@ bool ModelImporter::SaveSettingsInternal(JSONValue& jsonRoot)
         jinfo.Set("name", info->GetName());
         jinfo.Set("startTime", info->GetStartTime());
         jinfo.Set("endTime", info->GetEndTime());
+        // LUMA BEGIN
+        jinfo.Set("applyRootTransform", info->GetApplyRootTransform());
+        // LUMA END
         animInfo.Push(jinfo);
     }
 

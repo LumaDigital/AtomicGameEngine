@@ -74,6 +74,11 @@ public:
     static String GetModelFileName(const String& name);
     static String GetAnimationFileName(const String& baseName, const String& animName);
 
+    // LUMA BEGIN
+    void SetApplyRootTransform(bool apply) { applyRootTransform_ = apply; }
+
+    // LUMA END
+
 private:
 
     void ApplyScale();
@@ -156,6 +161,12 @@ private:
 
     float startTime_;
     float endTime_;
+
+    //LUMA BEGIN
+
+    float applyRootTransform_;
+
+    //LUMA END
 
 };
 

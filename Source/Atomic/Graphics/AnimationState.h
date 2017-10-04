@@ -147,6 +147,12 @@ public:
     /// Apply the animation at the current time position.
     void Apply();
 
+    // LUMA BEGIN
+
+    void OnRemove();
+
+    // LUMA END
+
 private:
     /// Apply animation to a skeleton. Transform changes are applied silently, so the model needs to dirty its root model afterward.
     void ApplyToModel();
@@ -154,6 +160,15 @@ private:
     void ApplyToNodes();
     /// Apply track.
     void ApplyTrack(AnimationStateTrack& stateTrack, float weight, bool silent);
+
+    // LUMA BEGIN
+
+    /// Apply a track's translation to the root model's node.
+    void ApplyRootMotion(AnimationStateTrack& stateTrack, float weight);
+    /// Reset the root motion offset, called when the animation is complete or loops
+    void ResetRootMotionOffset();
+
+    // LUMA END
 
     /// Animated model (model mode.)
     WeakPtr<AnimatedModel> model_;
@@ -175,6 +190,14 @@ private:
     unsigned char layer_;
     /// Blending mode.
     AnimationBlendMode blendingMode_;
+
+    // LUMA BEGIN
+
+    Vector3 rootNodePositionOffset_;
+    Quaternion rootNodeRotationOffset_;
+    WeakPtr<Node> transformRoot_;
+
+    // LUMA END
 };
 
 }
