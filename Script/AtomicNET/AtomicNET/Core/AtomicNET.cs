@@ -9,7 +9,9 @@ namespace AtomicEngine
 
     public static class AtomicNET
     {
-        public static Context Context => context;        
+        public static Context Context => context;
+
+        public static string GetCacheStatus() => NativeCore.GetCacheStatus();
 
         public static T GetSubsystem<T>() where T : AObject
         {
@@ -28,7 +30,7 @@ namespace AtomicEngine
                 throw new System.InvalidOperationException($"AtomicNET.GetSubsystem<T> - Attempting to get null subsystem: {type.Name}");
             }
 
-            // Look up possible native subsystem 
+            // Look up possible native subsystem
             subsystem = AtomicNET.Context.GetSubsystem(type.Name);
 
             // If we didn't find one, this is an error
@@ -123,7 +125,7 @@ namespace AtomicEngine
             if (core != null)
                 AtomicNET.RegisterSubsystem(core);
 
-            context = core.Context;            
+            context = core.Context;
 
             NativeCore.Initialize();
             CSComponentCore.Initialize();
