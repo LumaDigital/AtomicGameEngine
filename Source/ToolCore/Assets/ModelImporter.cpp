@@ -48,6 +48,7 @@ namespace ToolCore
 ModelImporter::ModelImporter(Context* context, Asset *asset) : AssetImporter(context, asset)
 {
     requiresCacheFile_ = true;
+    requiresDotAssetMd5_ = true;
 
     SetDefaults();
 }

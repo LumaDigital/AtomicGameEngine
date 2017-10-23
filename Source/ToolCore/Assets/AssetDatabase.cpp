@@ -47,8 +47,8 @@
 namespace ToolCore
 {
 
-AssetDatabase::AssetDatabase(Context* context) : 
-    Object(context), 
+AssetDatabase::AssetDatabase(Context* context) :
+    Object(context),
     assetScanDepth_(0),
     cacheEnabled_(true),
     assetCacheMapDirty_(false),
@@ -59,7 +59,7 @@ AssetDatabase::AssetDatabase(Context* context) :
     SubscribeToEvent(E_LOADFAILED, ATOMIC_HANDLER(AssetDatabase, HandleResourceLoadFailed));
     SubscribeToEvent(E_PROJECTBASELOADED, ATOMIC_HANDLER(AssetDatabase, HandleProjectBaseLoaded));
     SubscribeToEvent(E_PROJECTUNLOADED, ATOMIC_HANDLER(AssetDatabase, HandleProjectUnloaded));
-    SubscribeToEvent(E_BEGINFRAME, ATOMIC_HANDLER(AssetDatabase, HandleBeginFrame));    
+    SubscribeToEvent(E_BEGINFRAME, ATOMIC_HANDLER(AssetDatabase, HandleBeginFrame));
 }
 
 AssetDatabase::~AssetDatabase()
@@ -287,12 +287,12 @@ void AssetDatabase::AddAsset(SharedPtr<Asset>& asset, bool newAsset)
         VariantMap& eventData = GetEventDataMap();
 
         if (newAsset)
-        {        
+        {
             eventData[AssetNew::P_GUID] = asset->GetGUID();
             SendEvent(E_ASSETNEW, eventData);
         }
 
-        
+
         eventData[ResourceAdded::P_GUID] = asset->GetGUID();
         SendEvent(E_RESOURCEADDED, eventData);
     }
@@ -321,7 +321,7 @@ bool AssetDatabase::ImportDirtyAssets()
     {
         assets[i]->BeginImport();
     }
-        
+
     bool startedAnyImports = (assets.Size() != 0);
 
     // note - since imports can take time, even if no files were set to import in this call, some files can still be importing that were set to import previously.
@@ -439,7 +439,7 @@ void AssetDatabase::UpdateAssetCacheMap()
 // 4) Preload all assets.
 // 5) Import any assets that are dirty.
 void AssetDatabase::Scan()
-{   
+{
     if (!assetScanDepth_)
     {
         SendEvent(E_ASSETSCANBEGIN);
@@ -509,8 +509,8 @@ void AssetDatabase::Scan()
     assetScanDepth_--;
 
     if (!assetScanDepth_)
-    {   
-        SendEvent(E_ASSETSCANEND);        
+    {
+        SendEvent(E_ASSETSCANEND);
     }
 }
 
@@ -579,7 +579,7 @@ void AssetDatabase::HandleProjectBaseLoaded(StringHash eventType, VariantMap& ev
 
     ReadImportConfig();
     ReadAssetCacheConfig();
-    
+
     VariantMap assetCacheMap;
     AssetCacheConfig::ApplyConfig(assetCacheMap);
 
@@ -651,7 +651,7 @@ void AssetDatabase::HandleResourceLoadFailed(StringHash eventType, VariantMap& e
 void AssetDatabase::HandleFileChanged(StringHash eventType, VariantMap& eventData)
 {
     using namespace FileChanged;
-    const String& fullPath = eventData[P_FILENAME].GetString();
+    String fullPath = eventData[P_FILENAME].GetString();
 
     FileSystem* fs = GetSubsystem<FileSystem>();
 
@@ -663,15 +663,26 @@ void AssetDatabase::HandleFileChanged(StringHash eventType, VariantMap& eventDat
     if (fullPath == GetCachePath() || pathName.StartsWith(GetCachePath()))
         return;
 
-    // don't care about directories and asset file changes
-    if (fs->DirExists(fullPath) || ext == ".asset")
+    // don't care about directories
+    if (fs->DirExists(fullPath))
         return;
+
+    // for .asset changes, need to check if corresponding asset's importer depends on .asset
+    if (ext == ".asset")
+    {
+        fullPath = pathName + fileName;
+    }
 
     Asset* asset = GetAssetByPath(fullPath);
 
     if (!asset && fs->FileExists(fullPath))
     {
         Scan();
+        return;
+    }
+
+    if (ext == ".asset" && !asset->GetImporter()->GetRequiresDotAsset())
+    {
         return;
     }
 

@@ -22,6 +22,7 @@
 
 #include <Atomic/IO/Log.h>
 #include <Atomic/IO/File.h>
+#include <Atomic/IO/VectorBuffer.h>
 #include <Atomic/IO/FileSystem.h>
 
 #include "../ToolSystem.h"
@@ -109,13 +110,13 @@ bool Asset::CacheNeedsUpdate()
         return true;
     }
 
-    if (!importer_->RequiresCacheFile())
+    if (!importer_->GetRequiresCacheFile())
     {
         return false;
-    }    
+    }
 
     return !importer_->CheckCacheFilesUpToDate();
-    
+
 }
 
 void Asset::BeginImport()
@@ -124,6 +125,14 @@ void Asset::BeginImport()
         return;
 
     assetState_ = AssetState::IMPORTING;
+
+    // refresh .asset settings if import depends on them
+    if (importer_->GetRequiresDotAsset())
+    {
+        LoadDotAssetJson();
+        importer_->LoadSettings(json_->GetRoot());
+        json_ = 0;
+    }
 
     //start the importer importing, it'll notify us once it's succeeded or hit an error.
     importer_->Import();
@@ -157,11 +166,9 @@ void Asset::OnImportError(const String& message)
     SendEvent(E_ASSETIMPORTERROR, eventData);
 }
 
-// load .asset
-bool Asset::Load()
+bool Asset::LoadDotAssetJson()
 {
     FileSystem* fs = GetSubsystem<FileSystem>();
-    AssetDatabase* db = GetSubsystem<AssetDatabase>();
 
     String assetFilename = GetDotAssetFilename();
 
@@ -170,21 +177,32 @@ bool Asset::Load()
     json_->Load(*file);
     file->Close();
 
+    return true;
+}
+
+
+// load .asset
+bool Asset::Load()
+{
+    if (!LoadDotAssetJson())
+        return false;
+
     JSONValue& root = json_->GetRoot();
 
     assert(root.Get("version").GetInt() == ASSET_VERSION);
 
     guid_ = root.Get("guid").GetString();
 
+    AssetDatabase* db = GetSubsystem<AssetDatabase>();
     db->RegisterGUID(guid_);
 
     if (importer_.NotNull())
         importer_->LoadSettings(root);
-    
+
     if (CacheNeedsUpdate())
     {
         assetState_ = AssetState::DIRTY;
-    }    
+    }
 
     json_ = 0;
 
@@ -201,19 +219,38 @@ bool Asset::Save()
     JSONValue& root = json_->GetRoot();
 
     root.Set("version", JSONValue(ASSET_VERSION));
-    
+
     //for the convenience of being able to open the .asset file and check what the guid is, we'll save it out.
     //but we don't read it in the load function, instead we generate it from the file to make sure it hasn't changed since we saved it last.
     root.Set("guid", JSONValue(guid_));
 
-    // handle import
+    // handle importer settings
     if (importer_.NotNull())
     {
         importer_->SaveSettings(root);
 
-        SharedPtr<File> file(new File(context_, assetFilename, FILE_WRITE));
-        json_->Save(*file);
-        file->Close();
+        if (importer_->GetRequiresDotAsset())
+        {
+            // prevent unnecessary detection of .asset file changes
+            // when that would lead to reloading of the asset and repeated resaving of the .asset
+            VectorBuffer buffer;
+            json_->Save(buffer);
+
+            if (!importer_->CheckDotAssetMD5(buffer))
+            {
+                SharedPtr<File> file(new File(context_, assetFilename, FILE_WRITE));
+                file->Write(buffer.GetData(), buffer.GetSize());
+                file->Close();
+                importer_->WriteMD5File();
+            }
+        }
+        else
+        {
+            SharedPtr<File> file(new File(context_, assetFilename, FILE_WRITE));
+            json_->Save(*file);
+            file->Close();
+            importer_->WriteMD5File();
+        }
     }
 
     json_ = 0;
@@ -383,7 +420,7 @@ bool Asset::SetPath(const String& path)
         Load();
     }
     else
-    {   
+    {
         //If the dot file doesn't exist, create the GUID & dot file then mark it as needing an import.
         guid_ = db->GenerateAssetGUID();
         Save();

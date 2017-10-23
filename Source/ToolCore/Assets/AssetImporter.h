@@ -58,7 +58,10 @@ public:
 
     virtual Resource* GetResource(const String& typeName = String::EMPTY) { return 0; }
 
-    bool RequiresCacheFile() const { return requiresCacheFile_; }
+    bool GetRequiresCacheFile() const { return requiresCacheFile_; }
+
+    // Whether changes to .asset files affect generated cache files
+    bool GetRequiresDotAsset() const { return requiresDotAssetMd5_; }
 
     void ClearCacheFiles();
 
@@ -70,16 +73,17 @@ public:
 
 protected:
 
-	// Get a mapping of the assets path to cache file representations, by type
+    // Get a mapping of the assets path to cache file representations, by type
     virtual void GetAssetCacheMap(HashMap<String, String>& assetMap) {}
 
     virtual bool Import();
 
     WeakPtr<Asset> asset_;
     bool requiresCacheFile_;
+    bool requiresDotAssetMd5_;
 
     // LUMA Begin
-    void UpdateMD5() { md5_ = GenerateMD5(); }
+    void UpdateMD5();
     // LUMA End
 
     virtual void GetRequiredCacheFiles(Vector<String>& files) {}
@@ -104,10 +108,16 @@ private:
     String ReadMD5File();
     /// Write the MD5 of the asset to file
     bool WriteMD5File();
-    /// Generate an MD5 hash from the asset file
-    String GenerateMD5();
+    /// Generate an MD5 hash from a deserializer
+    static String GenerateDeserializerMD5(Deserializer& deserializer);
+    /// Generate an MD5 hash from a file at path
+    String GenerateFileMD5(String& path);
+    /// Compares the md5 of the current .asset file with 
+    /// that corresponding to the provided stream
+    bool CheckDotAssetMD5(Deserializer& deserializer);
 
     String md5_;
+    String dotAssetMd5_;
 };
 
 }

@@ -57,7 +57,7 @@ public:
     /// Construct.
     Asset(Context* context);
     virtual ~Asset();
-    
+
     void BeginImport();
     bool Preload();
 
@@ -123,6 +123,8 @@ public:
 
 
 private:
+
+    bool LoadDotAssetJson();
 
     bool CreateImporter();
 

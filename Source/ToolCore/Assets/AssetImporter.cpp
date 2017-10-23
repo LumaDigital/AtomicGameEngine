@@ -35,7 +35,8 @@ namespace ToolCore
 
 AssetImporter::AssetImporter(Context* context, Asset *asset) : Object(context),
     asset_(asset),
-    requiresCacheFile_(false)
+    requiresCacheFile_(false),
+    requiresDotAssetMd5_(false)
 {
     SetDefaults();
 
@@ -67,6 +68,7 @@ bool AssetImporter::LoadSettingsInternal(JSONValue& jsonRoot)
 bool AssetImporter::SaveSettings(JSONValue& root)
 {
     SaveSettingsInternal(root);
+
     return true;
 }
 
@@ -176,11 +178,13 @@ bool AssetImporter::Import()
     }
 
     if (md5_.Empty())
-        md5_ = GenerateMD5();
+        md5_ = GenerateFileMD5(asset_->path_);
+    if (requiresDotAssetMd5_ && dotAssetMd5_.Empty())
+        dotAssetMd5_ = GenerateFileMD5(asset_->GetDotAssetFilename());
 
     // try to fetch the cache files from the asset cache manager
     TryFetchCacheFiles(filesToRequest);
-    
+
     return true;
 }
 
@@ -199,10 +203,10 @@ void AssetImporter::TryFetchCacheFiles(Vector<String>& files)
 
     Vector<String>::ConstIterator itr = files.Begin();
     while (itr != files.End())
-    {        
+    {
         cacheManager->FetchCacheFile(*itr, md5_);
         itr++;
-    }   
+    }
 }
 
 bool AssetImporter::GenerateCacheFiles()
@@ -226,12 +230,11 @@ void AssetImporter::HandleAssetCacheFetchSuccess(StringHash eventType, VariantMa
         cacheFetchFilesPending_.Contains(fileName))
     {
         cacheFetchFilesPending_.Remove(fileName);
-        
+
         if (cacheFetchFilesPending_.Empty())
         {
             if (cacheFetchFilesFailed_.Empty())
             {
-                WriteMD5File();
                 asset_->OnImportComplete();
             }
             else if (GenerateCacheFiles())
@@ -258,7 +261,7 @@ void AssetImporter::HandleAssetCacheFetchFail(StringHash eventType, VariantMap& 
     {
         cacheFetchFilesPending_.Remove(fileName);
         cacheFetchFilesFailed_.Push(fileName);
-        
+
         // we'll only try to generate the files once we're fetched all the files we can from the manager,
         // so that we generate the cache files only once.
         if (cacheFetchFilesPending_.Empty() && GenerateCacheFiles())
@@ -285,9 +288,11 @@ void AssetImporter::OnCacheFilesGenerated(Vector<String>& files)
 
 bool AssetImporter::CheckCacheFilesUpToDate()
 {
-    md5_ = GenerateMD5();
-    
-    if (md5_ != ReadMD5File())
+    md5_ = GenerateFileMD5(asset_->path_);
+    if (requiresDotAssetMd5_)
+        dotAssetMd5_ = GenerateFileMD5(asset_->GetDotAssetFilename());
+
+    if (md5_ + dotAssetMd5_ != ReadMD5File())
     {
         ClearCacheFiles();
         return false;
@@ -332,8 +337,10 @@ String AssetImporter::ReadMD5File()
 
 bool AssetImporter::WriteMD5File()
 {
-    if (!md5_.Length())
-        md5_ = GenerateMD5();
+    // Ensure md5 is current
+    md5_ = GenerateFileMD5(asset_->path_);
+    if (requiresDotAssetMd5_)
+        dotAssetMd5_ = GenerateFileMD5(asset_->GetDotAssetFilename());
 
     String md5FilePath = GetDotMD5FilePath();
     FileSystem* fs = GetSubsystem<FileSystem>();
@@ -341,34 +348,55 @@ bool AssetImporter::WriteMD5File()
         fs->Delete(md5FilePath);
 
     SharedPtr<File> file(new File(context_, md5FilePath, FILE_WRITE));
-    return file->WriteString(md5_);
+    return file->WriteString(md5_ + dotAssetMd5_);
 }
 
-String AssetImporter::GenerateMD5()
+String AssetImporter::GenerateDeserializerMD5(Deserializer& stream)
 {
-    assert(asset_->path_.Length());
-
     Poco::MD5Engine md5;
 
-    // if it's not a folder, then add the file data into the hash.
-    if (!asset_->isFolder_)
-    {
-        PODVector<unsigned> data;
+    // add stream data into the hash
+    unsigned streamSize = stream.GetSize();
+    SharedArrayPtr<unsigned char> streamData(new unsigned char[streamSize]);
 
-        File assetFile(context_, asset_->path_);
+    unsigned sizeRead = stream.Read(streamData, streamSize);
 
-        unsigned fileSize = assetFile.GetSize();
-        SharedArrayPtr<unsigned char> fileData(new unsigned char[fileSize]);
+    assert(sizeRead == streamSize);
 
-        unsigned sizeRead = assetFile.Read(fileData, fileSize);
+    md5.update(&streamData[0], streamSize * sizeof(unsigned char));
 
-        assert(sizeRead == fileSize);
-
-        md5.update(&fileData[0], fileSize * sizeof(unsigned char));
-    }
-
-    // finally, generate a guid
+    // generate a guid
     return Poco::MD5Engine::digestToHex(md5.digest()).c_str();
 }
 
+String AssetImporter::GenerateFileMD5(String& path)
+{
+    assert(path.Length());
+
+    if (asset_->isFolder_)
+    {
+        return Poco::MD5Engine::digestToHex(Poco::MD5Engine().digest()).c_str();
+    }
+
+    File assetFile(context_, path);
+
+    return GenerateDeserializerMD5(assetFile);
+}
+
+void AssetImporter::UpdateMD5()
+{
+    md5_ = GenerateFileMD5(asset_->path_);
+    if (requiresDotAssetMd5_)
+        dotAssetMd5_ = GenerateFileMD5(asset_->GetDotAssetFilename());
+}
+
+bool AssetImporter::CheckDotAssetMD5(Deserializer& deserializer)
+{
+    UpdateMD5();
+
+    deserializer.Seek(0);
+    String streamMD5 = GenerateDeserializerMD5(deserializer);
+
+    return streamMD5 == dotAssetMd5_;
+}
 }

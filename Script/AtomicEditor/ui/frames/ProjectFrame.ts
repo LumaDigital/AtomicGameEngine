@@ -163,10 +163,17 @@ class ProjectFrame extends ScriptWidget {
         } else if (parent == this.currentFolder) {
 
             var container: Atomic.UILayout = <Atomic.UILayout>this.getWidget("contentcontainer");
+
+            for (var widget = container.firstChild; widget; widget = widget.next) {
+
+                if (widget.id == ev.guid) {
+
+                    return;
+                }
+            }
+
             container.addChild(this.createButtonLayout(asset));
-
         }
-
     }
 
     handleWidgetEvent(data: Atomic.UIWidgetEvent): boolean {

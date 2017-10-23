@@ -54,10 +54,10 @@ class ModelInspector extends InspectorWidget {
           var nameEdit = this.nameEdits[i];
           var startEdit = this.startEdits[i];
           var endEdit = this.endEdits[i];
-		  
-		  //LUMA BEGIN
-		  var applyRootTransformEdit = this.applyRootTransformEdits[i];
-		  //LUMA END
+          
+          //LUMA BEGIN
+          var applyRootTransformEdit = this.applyRootTransformEdits[i];
+          //LUMA END
 
           info.name = nameEdit.text;
 
@@ -70,19 +70,19 @@ class ModelInspector extends InspectorWidget {
 
           info.startTime = _startTime;
           info.endTime = _endTime;
-		  
-		  // LUMA BEGIN
+          
+          // LUMA BEGIN
           info.setApplyRootTransform(applyRootTransformEdit.checkBox.value ? true : false);
-		  // LUMA END
+          // LUMA END
 
         }
 
-		// LUMA BEGIN		
-		this.importer.clearCacheFiles();
-		// LUMA END
-		
-        this.asset.beginImport();
+        // LUMA BEGIN        
+        this.importer.clearCacheFiles();
+        // LUMA END
+        
         this.asset.save();
+        this.asset.beginImport();
 
     }
 
@@ -164,10 +164,10 @@ class ModelInspector extends InspectorWidget {
         this.nameEdits = [];
         this.startEdits = [];
         this.endEdits = [];
-		
-		//LUMA BEGIN
+        
+        //LUMA BEGIN
         this.applyRootTransformEdits = [];
-		//LUMA END
+        //LUMA END
 
         for (var i = 0; i < count; i++) {
 
@@ -185,18 +185,18 @@ class ModelInspector extends InspectorWidget {
             var endEdit = InspectorUtils.createAttrEditField("End", layout);
             endEdit.text = animInfo.endTime.toString();
 
-			// LUMA BEGIN
+            // LUMA BEGIN
             var applyRootTransformEdit = InspectorUtils.createAttrCheckBox("Apply Root Tranform", layout);
             applyRootTransformEdit.checkBox.value = animInfo.getApplyRootTransform() ? 1 : 0;
-			// LUMA END
+            // LUMA END
 
             this.nameEdits.push(nameEdit);
             this.startEdits.push(startEdit);
             this.endEdits.push(endEdit);
-			
-			//LUMA BEGIN
+            
+            //LUMA BEGIN
             this.applyRootTransformEdits.push(applyRootTransformEdit);
-			//LUMA END
+            //LUMA END
 
             InspectorUtils.createSeparator(layout);
 
@@ -228,10 +228,10 @@ class ModelInspector extends InspectorWidget {
     nameEdits: Atomic.UIEditField[];
     startEdits: Atomic.UIEditField[];
     endEdits: Atomic.UIEditField[];
-	
-	// LUMA BEGIN
+    
+    // LUMA BEGIN
     applyRootTransformEdits: { textField: Atomic.UITextField, checkBox: Atomic.UICheckBox }[];
-	// LUMA END
+    // LUMA END
 
     asset: ToolCore.Asset;
     importer: ToolCore.ModelImporter;
