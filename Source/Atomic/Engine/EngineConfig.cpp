@@ -49,6 +49,12 @@ bool EngineConfig::LoadEngineConfig(const JSONValue& jengine)
             valueMap_["LogQuiet"] = GetBoolValue(jvalue, false);
         else if (key == "loglevel")
             valueMap_["LogLevel"] = GetIntValue(jvalue, 1);
+        // LUMA BEGIN
+        else if (key == "logname")
+            valueMap_["LogName"] = GetStringValue(jvalue, "Atomic.log");
+        else if (key == "logarchivehours")
+            valueMap_["LogArchiveHours"] = GetIntValue(jvalue, 0);
+        // LUMA END
     }
 
     return true;
