@@ -55,6 +55,10 @@ class ModelInspector extends InspectorWidget {
           var startEdit = this.startEdits[i];
           var endEdit = this.endEdits[i];
 
+		  //LUMA BEGIN
+		  var applyRootTransformEdit = this.applyRootTransformEdits[i];
+		  //LUMA END
+
           info.name = nameEdit.text;
 
           // guard against NAN
@@ -67,7 +71,15 @@ class ModelInspector extends InspectorWidget {
           info.startTime = _startTime;
           info.endTime = _endTime;
 
+		  // LUMA BEGIN
+          info.setApplyRootTransform(applyRootTransformEdit.checkBox.value ? true : false);
+		  // LUMA END
+
         }
+
+		// LUMA BEGIN
+		this.importer.clearCacheFiles();
+		// LUMA END
 
         this.asset.save();
         this.asset.beginImport();
@@ -153,6 +165,10 @@ class ModelInspector extends InspectorWidget {
         this.startEdits = [];
         this.endEdits = [];
 
+		//LUMA BEGIN
+        this.applyRootTransformEdits = [];
+		//LUMA END
+
         for (var i = 0; i < count; i++) {
 
             var animInfo = this.importer.getAnimationInfo(i);
@@ -169,9 +185,18 @@ class ModelInspector extends InspectorWidget {
             var endEdit = InspectorUtils.createAttrEditField("End", layout);
             endEdit.text = animInfo.endTime.toString();
 
+			// LUMA BEGIN
+            var applyRootTransformEdit = InspectorUtils.createAttrCheckBox("Apply Root Tranform", layout);
+            applyRootTransformEdit.checkBox.value = animInfo.getApplyRootTransform() ? 1 : 0;
+			// LUMA END
+
             this.nameEdits.push(nameEdit);
             this.startEdits.push(startEdit);
             this.endEdits.push(endEdit);
+
+			//LUMA BEGIN
+            this.applyRootTransformEdits.push(applyRootTransformEdit);
+			//LUMA END
 
             InspectorUtils.createSeparator(layout);
 
@@ -203,6 +228,10 @@ class ModelInspector extends InspectorWidget {
     nameEdits: Atomic.UIEditField[];
     startEdits: Atomic.UIEditField[];
     endEdits: Atomic.UIEditField[];
+
+	// LUMA BEGIN
+    applyRootTransformEdits: { textField: Atomic.UITextField, checkBox: Atomic.UICheckBox }[];
+	// LUMA END
 
     asset: ToolCore.Asset;
     importer: ToolCore.ModelImporter;

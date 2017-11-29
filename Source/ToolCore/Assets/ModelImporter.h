@@ -43,7 +43,7 @@ class AnimationImportInfo : public Object
 
 public:    
 
-    AnimationImportInfo(Context* context) : Object(context), startTime_(-1.0f), endTime_(-1.0f)
+    AnimationImportInfo(Context* context) : Object(context), startTime_(-1.0f), endTime_(-1.0f), applyRootTransform_(false)
     {
 
     }
@@ -56,11 +56,20 @@ public:
     void SetStartTime(float time) { startTime_ = time; }
     void SetEndTime(float time) { endTime_ = time; }
 
+    // LUMA BEGIN
+    bool GetApplyRootTransform() const { return applyRootTransform_; }
+    void SetApplyRootTransform(bool apply) { applyRootTransform_ = apply; }
+    // LUMA END
+
 private:
 
     String name_;
     float startTime_;
     float endTime_;
+
+    // LUMA BEGIN
+    bool applyRootTransform_;
+    // LUMA END
 };
 
 
@@ -100,7 +109,7 @@ protected:
 
     bool ImportModel();
     bool ImportAnimations();
-    bool ImportAnimation(const String &filename, const String& name, float startTime=-1.0f, float endTime=-1.0f);
+    bool ImportAnimation(const String &filename, const String& name, float startTime=-1.0f, float endTime=-1.0f, bool applyRootTransform=false);
 
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);

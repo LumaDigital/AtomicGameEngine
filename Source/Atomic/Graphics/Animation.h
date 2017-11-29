@@ -191,6 +191,16 @@ public:
 
     // ATOMIC END
 
+    // LUMA BEGIN
+
+    /// Set apply root motion.
+    void SetApplyRootTransform(bool apply);
+
+    /// Return animation name.
+    bool GetApplyRootTransform() const { return applyRootTransform_; }
+
+    // LUMA END
+
 
 private:
     /// Animation name.
@@ -203,6 +213,13 @@ private:
     HashMap<StringHash, AnimationTrack> tracks_;
     /// Animation trigger points.
     Vector<AnimationTriggerPoint> triggers_;
+
+    // LUMA BEGIN
+
+    /// Whether to apply the root transform.
+    bool applyRootTransform_;
+
+    // LUMA END
 };
 
 }

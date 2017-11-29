@@ -1019,6 +1019,10 @@ bool OpenAssetImporter::BuildAndSaveAnimations(OutModel* model, const String &an
         outAnim->SetAnimationName(!animNameOverride.Length() ? animName : animNameOverride);
         outAnim->SetLength(duration * tickConversion);
 
+        //LUMA BEGIN
+        outAnim->SetApplyRootTransform(applyRootTransform_);
+        //LUMA END
+
         //PrintLine("Writing animation " + animName + " length " + String(outAnim->GetLength()));
         Vector<AnimationTrack> tracks;
         for (unsigned j = 0; j < anim->mNumChannels; ++j)
@@ -1412,8 +1416,8 @@ void OpenAssetImporter::DumpNodes(aiNode* rootNode, unsigned level)
 }
 
 String OpenAssetImporter::GetModelFileName(const String& name)
-{ 
-    return name + ".mdl"; 
+{
+    return name + ".mdl";
 }
 
 String OpenAssetImporter::GetAnimationFileName(const String& baseName, const String& animName)

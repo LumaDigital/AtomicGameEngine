@@ -108,7 +108,8 @@ void AnimationTrack::GetKeyFrameIndex(float time, unsigned& index) const
 
 Animation::Animation(Context* context) :
     ResourceWithMetadata(context),
-    length_(0.f)
+    length_(0.f),
+    applyRootTransform_(false)
 {
 }
 
@@ -164,6 +165,12 @@ bool Animation::BeginLoad(Deserializer& source)
                 newKeyFrame.scale_ = source.ReadVector3();
         }
     }
+
+    // LUMA BEGIN
+
+    applyRootTransform_ = source.ReadBool();
+
+    // LUMA END
 
     // Optionally read triggers from an XML file
     ResourceCache* cache = GetSubsystem<ResourceCache>();
@@ -252,6 +259,12 @@ bool Animation::Save(Serializer& dest) const
                 dest.WriteVector3(keyFrame.scale_);
         }
     }
+
+    // LUMA BEGIN
+
+    dest.WriteBool(applyRootTransform_);
+
+    // LUMA END
 
     // If triggers have been defined, write an XML file for them
     if (!triggers_.Empty() || HasMetadata())
@@ -380,6 +393,10 @@ SharedPtr<Animation> Animation::Clone(const String& cloneName) const
     ret->CopyMetadata(*this);
     ret->SetMemoryUse(GetMemoryUse());
 
+    // LUMA BEGIN
+    ret->SetApplyRootTransform(GetApplyRootTransform());
+    // LUMA END
+
     return ret;
 }
 
@@ -449,4 +466,13 @@ Vector3 Animation::GetKeyFramePositionAtIndex(const String & name, unsigned keyI
 }
 
 // ATOMIC END
+
+// LUMA BEGIN
+
+void Animation::SetApplyRootTransform(bool apply)
+{
+    applyRootTransform_ = apply;
+}
+
+// LUMA END
 }
