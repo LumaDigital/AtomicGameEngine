@@ -31,6 +31,7 @@
 #include "NETCmd.h"
 #include "ProjectCmd.h"
 #include "CacheCmd.h"
+#include "CacheServerCmd.h"
 
 namespace ToolCore
 {
@@ -91,7 +92,10 @@ Command* CommandParser::Parse(const Vector<String>& arguments)
             {
                 cmd = new CacheCmd(context_);
             }
-
+            else if (argument == "cacheserver")
+            {
+                cmd = new CacheServerCmd(context_);
+            }
         }
 
         if (cmd)

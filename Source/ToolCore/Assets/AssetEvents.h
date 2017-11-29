@@ -34,6 +34,9 @@ ATOMIC_EVENT(E_RESOURCEADDED, ResourceAdded)
 ATOMIC_EVENT(E_RESOURCEREMOVED, ResourceRemoved)
 {
     ATOMIC_PARAM(P_GUID, GUID);                  // string
+// LUMA BEGIN
+    ATOMIC_PARAM(P_NAME, NAME);                 // string
+// LUMA END
 }
 
 ATOMIC_EVENT(E_ASSETIMPORTERROR, AssetImportError)

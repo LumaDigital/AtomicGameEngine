@@ -58,7 +58,12 @@ public:
 
     virtual Resource* GetResource(const String& typeName = String::EMPTY) { return 0; }
 
-    bool RequiresCacheFile() const { return requiresCacheFile_; }
+    bool GetRequiresCacheFile() const { return requiresCacheFile_; }
+
+    // Whether changes to .asset files affect generated cache files
+    bool GetRequiresDotAsset() const { return requiresDotAssetMd5_; }
+
+    void ClearCacheFiles();
 
     /// Instantiate a node from the asset
     virtual Node* InstantiateNode(Node* parent, const String& name) { return 0; }
@@ -71,15 +76,48 @@ protected:
     // Get a mapping of the assets path to cache file representations, by type
     virtual void GetAssetCacheMap(HashMap<String, String>& assetMap) {}
 
-    virtual bool Import() { return true; }
+    virtual bool Import();
 
     WeakPtr<Asset> asset_;
     bool requiresCacheFile_;
+    bool requiresDotAssetMd5_;
 
+    // LUMA Begin
+    void UpdateMD5();
+    // LUMA End
+
+    virtual void GetRequiredCacheFiles(Vector<String>& files) {}
+    virtual void TryFetchCacheFiles(Vector<String>& files);
+    virtual bool GenerateCacheFiles();
+    virtual void OnCacheFilesGenerated(Vector<String>& files);
+    virtual bool CheckCacheFilesUpToDate();
 
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
 
+    virtual void HandleAssetCacheFetchSuccess(StringHash eventType, VariantMap& eventData);
+    virtual void HandleAssetCacheFetchFail(StringHash eventType, VariantMap& eventData);
+
+    Vector<String> cacheFetchFilesPending_;
+    Vector<String> cacheFetchFilesFailed_;
+
+private:
+    /// get the path to the file containing the MD5 in last import
+    String GetDotMD5FilePath();
+    /// Read the MD5 of the asset on last import
+    String ReadMD5File();
+    /// Write the MD5 of the asset to file
+    bool WriteMD5File();
+    /// Generate an MD5 hash from a deserializer
+    static String GenerateDeserializerMD5(Deserializer& deserializer);
+    /// Generate an MD5 hash from a file at path
+    String GenerateFileMD5(String& path);
+    /// Compares the md5 of the current .asset file with 
+    /// that corresponding to the provided stream
+    bool CheckDotAssetMD5(Deserializer& deserializer);
+
+    String md5_;
+    String dotAssetMd5_;
 };
 
 }

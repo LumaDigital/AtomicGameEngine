@@ -24,6 +24,7 @@
 
 #include <Atomic/Core/Object.h>
 #include <Atomic/Container/List.h>
+#include "AssetCacheManager.h"
 #include "Asset.h"
 
 using namespace Atomic;
@@ -44,6 +45,7 @@ public:
 
     Asset* GetAssetByGUID(const String& guid);
     Asset* GetAssetByPath(const String& path);
+    Asset* GetAssetByResourcePath(const String& path);
     Asset* GetAssetByCachePath(const String& cachePath);
 
     String GenerateAssetGUID();
@@ -61,6 +63,7 @@ public:
     bool CleanCache();
 
     /// Regenerates the asset cache, clean removes the Cache folder before generating
+	/// waitForImports blocks until all assets have been fully imported
     bool GenerateCache(bool clean = true);
 
     void DeleteAsset(Asset* asset);
@@ -80,19 +83,33 @@ public:
 
     String GetDotAssetFilename(const String& path);
 
+    const SharedPtr<AssetCacheManager>& GetCacheManager() { return cacheManager_;  }
+
 private:
 
-    void HandleProjectLoaded(StringHash eventType, VariantMap& eventData);
+    void Update(float timeStep);
+
+    void HandleProjectBaseLoaded(StringHash eventType, VariantMap& eventData);
     void HandleProjectUnloaded(StringHash eventType, VariantMap& eventData);
     void HandleFileChanged(StringHash eventType, VariantMap& eventData);
     void HandleResourceLoadFailed(StringHash eventType, VariantMap& eventData);
+    void HandleBeginFrame(StringHash eventType, VariantMap& eventData);
 
     void AddAsset(SharedPtr<Asset>& asset, bool newAsset = false);
 
     void PruneOrphanedDotAssetFiles();
+    // LUMA BEGIN
+    void ClearDeletedCacheFiles(Vector<String> assetGuids);
+    // LUMA END
+
+    void ReadAssetCacheConfig();
 
     void ReadImportConfig();
     void Import(const String& path);
+
+    void GetAllAssetPaths(Vector<String>& assetPaths);
+
+    void CompleteProjectAssetsLoad();
 
     bool ImportDirtyAssets();
     void PreloadAssets();
@@ -111,14 +128,19 @@ private:
     /// Hash value of times, so we don't spam import errors
     HashMap<StringHash, unsigned> assetImportErrorTimes_;
 
+    unsigned assetScanDepth_;
+
     Vector<String> usedGUID_;
 
-    unsigned assetScanDepth_;
-    // Whether any asset was imported during scan
-    bool assetScanImport_;
+    // Whether the asset cache map needs updatig
+    bool assetCacheMapDirty_;
+    
+    bool doingProjectLoad_;
+    bool doingImport_;
 
     bool cacheEnabled_;
 
+    SharedPtr<AssetCacheManager> cacheManager_;
 };
 
 }

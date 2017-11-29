@@ -40,8 +40,6 @@ public:
 
 protected:
 
-    bool Import();
-
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
 

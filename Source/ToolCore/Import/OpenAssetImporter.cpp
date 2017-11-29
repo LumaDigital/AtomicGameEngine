@@ -220,7 +220,7 @@ bool OpenAssetImporter::ExportModel(const String& outName, const String &animNam
 
     OutModel model;
     model.rootNode_ = rootNode_;
-    model.outName_ = outName + ".mdl";
+    model.outName_ = GetModelFileName(outName);
 
     CollectMeshes(scene_, model, model.rootNode_);
     if (!CollectBones(model, animationOnly))
@@ -972,14 +972,15 @@ bool OpenAssetImporter::BuildAndSaveAnimations(OutModel* model, const String &an
 
         if (animName.Empty())
             animName = "Anim" + String(i + 1);
+
         if (model)
-            animOutName = GetPath(model->outName_) + GetFileName(model->outName_) + "_" + SanitateAssetName(animName) + ".ani";
+            animOutName = GetAnimationFileName( model->outName_, SanitateAssetName(animName));
         else
-            animOutName = outPath_ + SanitateAssetName(animName) + ".ani";
+            animOutName = GetAnimationFileName( outPath_, SanitateAssetName(animName));
 
         if (animNameOverride.Length())
         {
-            animOutName = GetPath(model->outName_) + GetFileName(model->outName_) + "_" + animNameOverride + ".ani";
+            animOutName = GetAnimationFileName( model->outName_, animNameOverride );
         }
 
         float ticksPerSecond = (float)anim->mTicksPerSecond;
@@ -1408,6 +1409,27 @@ void OpenAssetImporter::DumpNodes(aiNode* rootNode, unsigned level)
 
     for (unsigned i = 0; i < rootNode->mNumChildren; ++i)
         DumpNodes(rootNode->mChildren[i], level + 1);
+}
+
+String OpenAssetImporter::GetModelFileName(const String& name)
+{ 
+    return name + ".mdl"; 
+}
+
+String OpenAssetImporter::GetAnimationFileName(const String& baseName, const String& animName)
+{
+    String path = GetPath(baseName);
+    String fileName = GetFileName(baseName);
+
+    if (fileName.Empty())
+    {
+
+        return path + animName + ".ani";
+    }
+    else
+    {
+        return path + fileName + "_" + animName + ".ani";
+    }
 }
 
 }

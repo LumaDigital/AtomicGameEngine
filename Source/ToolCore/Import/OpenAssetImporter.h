@@ -70,6 +70,10 @@ public:
 
     const Vector<AnimationInfo>& GetAnimationInfos() { return animationInfos_; }
 
+    // utlity functions to ensure that asset cache server uses the same file naming conventions as this importer, internally.
+    static String GetModelFileName(const String& name);
+    static String GetAnimationFileName(const String& baseName, const String& animName);
+
 private:
 
     void ApplyScale();

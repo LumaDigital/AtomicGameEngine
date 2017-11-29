@@ -41,6 +41,7 @@
 #include "../Resource/ResourceCache.h"
 #include "../Resource/ResourceEvents.h"
 #include "../Scene/Scene.h"
+#include "../ToolCore/Assets/AssetEvents.h"
 
 #include "../DebugNew.h"
 
@@ -391,13 +392,20 @@ void AnimatedModel::SetModel(Model* model, bool createBones)
 
     // Unsubscribe from the reload event of previous model (if any), then subscribe to the new
     if (model_)
+    {
         UnsubscribeFromEvent(model_, E_RELOADFINISHED);
-
+        // LUMA BEGIN
+        UnsubscribeFromEvent(ToolCore::E_RESOURCEREMOVED);
+        // LUMA END
+    }
     model_ = model;
 
     if (model)
     {
         SubscribeToEvent(model, E_RELOADFINISHED, ATOMIC_HANDLER(AnimatedModel, HandleModelReloadFinished));
+        // LUMA BEGIN
+        SubscribeToEvent(ToolCore::E_RESOURCEREMOVED, ATOMIC_HANDLER(AnimatedModel, HandleResourceRemoved));
+        // LUMA END
 
         // Copy the subgeometry & LOD level structure
         SetNumGeometries(model->GetNumGeometries());
@@ -1541,5 +1549,22 @@ Node* AnimatedModel::GetSkeletonBoneNode(const String & boneName)
 }
 
 // ATOMIC END
+
+// LUMA BEGIN
+
+void AnimatedModel::HandleResourceRemoved(StringHash eventType, VariantMap & eventData)
+{
+    String name = model_->GetName();
+
+    if (name.Contains(eventData[ToolCore::ResourceRemoved::P_GUID].GetString()))
+    {
+        SetModel(nullptr);
+    }
+
+    ResourceCache* cache = GetSubsystem<ResourceCache>();
+    cache->ReleaseAllResources(true);
+}
+
+// LUMA END
 
 }

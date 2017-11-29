@@ -33,7 +33,7 @@ namespace ToolCore
 
 ParticleEffectImporter::ParticleEffectImporter(Context* context, Asset *asset) : AssetImporter(context, asset)
 {
-
+    requiresCacheFile_ = false;
 }
 
 ParticleEffectImporter::~ParticleEffectImporter()
@@ -44,11 +44,6 @@ ParticleEffectImporter::~ParticleEffectImporter()
 void ParticleEffectImporter::SetDefaults()
 {
     AssetImporter::SetDefaults();
-}
-
-bool ParticleEffectImporter::Import()
-{
-    return true;
 }
 
 bool ParticleEffectImporter::LoadSettingsInternal(JSONValue& jsonRoot)

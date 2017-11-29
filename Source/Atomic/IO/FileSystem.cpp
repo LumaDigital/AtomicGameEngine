@@ -603,6 +603,37 @@ unsigned FileSystem::GetLastModifiedTime(const String& fileName) const
 #endif
 }
 
+// LUMA BEGIN
+
+FileInfo FileSystem::GetFileInfo(const String& fileName) const
+{
+    FileInfo fileInfo;
+    fileInfo.fullPath_ = fileName;
+    fileInfo.exists_ = false;
+    fileInfo.size_ = 0;
+    fileInfo.lastModified_ = 0;
+
+    if (fileName.Empty() || !CheckAccess(fileName))
+        return fileInfo;
+
+#ifdef WIN32
+    struct _stat st;
+    if (!_stat(fileName.CString(), &st))
+#else
+    struct stat st;
+    if (!stat(fileName.CString(), &st))
+#endif
+    {
+        fileInfo.exists_ = true;
+        fileInfo.size_ = st.st_size;
+        fileInfo.lastModified_ = (unsigned long) st.st_mtime;
+    }
+
+    return fileInfo;
+}
+
+// LUMA END
+
 bool FileSystem::FileExists(const String& fileName) const
 {
     if (!CheckAccess(GetPath(fileName)))
@@ -1368,5 +1399,20 @@ SharedPtr<FileNameIterator> FileSystem::ScanDir(const String& pathName, const St
 }
 
 // ATOMIC END
+
+// LUMA BEGIN
+
+bool CompareFileInfoByLastModifiedDescending(const FileInfo& lhs, const FileInfo& rhs)
+{
+    return lhs.lastModified_ > rhs.lastModified_;
+}
+
+bool CompareFileInfoByLastModifiedAscending(const FileInfo& lhs, const FileInfo& rhs)
+{
+    return lhs.lastModified_ < rhs.lastModified_;
+}
+
+// LUMA END
+
 
 }

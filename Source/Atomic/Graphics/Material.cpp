@@ -42,6 +42,8 @@
 #include "../Scene/Scene.h"
 #include "../Scene/SceneEvents.h"
 #include "../Scene/ValueAnimation.h"
+#include "../ToolCore/Assets/AssetEvents.h"
+
 
 #include "../DebugNew.h"
 
@@ -217,6 +219,10 @@ Material::Material(Context* context) :
     batchedParameterUpdate_(false)
 {
     ResetToDefaults();
+    // LUMA BEGIN
+    SubscribeToEvent(ToolCore::E_RESOURCEREMOVED, ATOMIC_HANDLER(Material, HandleResourceRemoved));
+    // LUMA END
+
 }
 
 Material::~Material()
@@ -1414,5 +1420,22 @@ const char** Material::GetTextureUnitNames()
 }
 // ATOMIC END
 
+// LUMA BEGIN
+void Material::HandleResourceRemoved(StringHash eventType, VariantMap & eventData)
+{
+    for (auto it = textures_.Begin(); it != textures_.End(); it++)
+    {
+        const String name = it->second_->GetName();
+
+        if (name.Contains(eventData[ToolCore::ResourceRemoved::P_NAME].ToString()))
+        {
+            SetTexture(it->first_, nullptr);
+        }
+    }
+
+    ResourceCache* cache = GetSubsystem<ResourceCache>();
+    cache->ReleaseAllResources(true);
+}
+// LUMA END
 
 }

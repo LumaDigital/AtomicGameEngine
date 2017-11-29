@@ -77,7 +77,7 @@ public:
     virtual void SetDefaults();
 
     double GetScale() { return scale_; }
-    void SetScale(double scale) {scale_ = scale; }
+    void SetScale(double scale);
 
     bool GetImportAnimations() { return importAnimations_; }
     void SetImportAnimations(bool importAnimations) { importAnimations_ = importAnimations; }
@@ -98,8 +98,6 @@ public:
 
 protected:
 
-    bool Import();
-
     bool ImportModel();
     bool ImportAnimations();
     bool ImportAnimation(const String &filename, const String& name, float startTime=-1.0f, float endTime=-1.0f);
@@ -108,6 +106,11 @@ protected:
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
 
     void GetAssetCacheMap(HashMap<String, String>& assetMap);
+
+    void GetRequiredCacheFiles(Vector<String>& files) override;
+    bool GenerateCacheFiles() override;
+
+    String GetDefaultAnimationName() { return "RootAnim"; }
 
     double scale_;
     bool importAnimations_;

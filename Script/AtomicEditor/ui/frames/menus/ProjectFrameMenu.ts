@@ -100,7 +100,7 @@ class ProjectFrameMenus extends Atomic.ScriptObject {
             }
 
             if (refid == "force_reimport") {
-                asset.setDirty(true);
+                asset.setDirty();
                 ToolCore.assetDatabase.scan();
                 return true;
             }

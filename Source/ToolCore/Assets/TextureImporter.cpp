@@ -57,14 +57,34 @@ void TextureImporter::SetDefaults()
 
 }
 
-bool TextureImporter::Import()
+void TextureImporter::GetRequiredCacheFiles(Vector<String>& files)
 {
+    ResourceCache* resourceCache = GetSubsystem<ResourceCache>();
+    SharedPtr<Image> image = resourceCache->GetTempResource<Image>(asset_->GetPath());
+
+    if (compressTextures_ &&
+        image->CanSaveDDS())
+    {
+        String fileName = asset_->GetGUID() + ".dds";
+        files.Push(fileName);
+    }
+
+    files.Push(asset_->GetGUID());
+    files.Push(asset_->GetGUID() + "_thumbnail.png");
+}
+
+
+bool TextureImporter::GenerateCacheFiles()
+{
+    if (!AssetImporter::GenerateCacheFiles())
+        return false;
+
     AssetDatabase* db = GetSubsystem<AssetDatabase>();
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     String cachePath = db->GetCachePath();
 
     FileSystem* fileSystem = GetSubsystem<FileSystem>();
-    String compressedPath = cachePath + "DDS/" + asset_->GetRelativePath() + ".dds";
+    String compressedPath = cachePath + asset_->GetGUID() + ".dds";
     if (fileSystem->FileExists(compressedPath))
         fileSystem->Delete(compressedPath);
 
@@ -74,10 +94,8 @@ bool TextureImporter::Import()
         return false;
 
     if (compressTextures_ &&
-        !image->IsCompressed())
+        image->CanSaveDDS())
     {
-        fileSystem->CreateDirs(cachePath, "DDS/" + Atomic::GetPath(asset_->GetRelativePath()));
-
         float resizefactor;
         float width = image->GetWidth();
         float height = image->GetHeight();

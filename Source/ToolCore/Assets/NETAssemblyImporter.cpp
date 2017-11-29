@@ -121,8 +121,17 @@ namespace ToolCore
         return true;
     }
 
-    bool NETAssemblyImporter::Import()
+    void NETAssemblyImporter::GetRequiredCacheFiles(Vector<String>& files)
     {
+        files.Push(asset_->GetCachePath());
+    }
+
+
+    bool NETAssemblyImporter::GenerateCacheFiles()
+    {
+        if (!AssetImporter::GenerateCacheFiles())
+            return false;
+
         AtomicNETService* service = GetSubsystem<AtomicNETService>();
 
         if (!service)
