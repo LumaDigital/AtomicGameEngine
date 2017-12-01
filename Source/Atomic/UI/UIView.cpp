@@ -121,7 +121,7 @@ void UIView::BecomeFocused()
 }
 
 void UIView::ResignFocus()
-{        
+{
     if (ui_.Null() || ui_->GetFocusedView() != this)
     {
         return;
@@ -234,7 +234,7 @@ void UIView::Render(VertexBuffer* buffer, const PODVector<UIBatch>& batches, uns
     {
         // ATOMIC ISSUE: https://github.com/AtomicGameEngine/AtomicGameEngine/issues/1581
         // this needs to be fixed, scissors can't be disabled
-        // and there is a flip to D3D in SetScissorTest        
+        // and there is a flip to D3D in SetScissorTest
         scissorEnabled = false;
         offset.y_ = -offset.y_;
         scale.y_  = -scale.y_;
@@ -356,6 +356,9 @@ void UIView::UpdateUIBatches()
 {
     batches_.Clear();
     vertexData_.Clear();
+
+    if (!widget_)
+        return;
 
     tb::TBRect rect = widget_->GetRect();
     IntRect currentScissor = IntRect(0, 0, rect.w, rect.h);
