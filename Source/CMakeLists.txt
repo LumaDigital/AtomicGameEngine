@@ -11,10 +11,10 @@ option(ATOMIC_IK "Enable inverse kinematics subsystem" OFF)
 option(ATOMIC_PROFILING "Enable profiler" ${ATOMIC_RELEASE_OFF})
 
 if (WIN32)
-    option (ATOMIC_D3D9 "Use DirectX 9" OFF)
+    option (ATOMIC_D3D11 "Use DirectX 11" OFF)
     option (ATOMIC_OPENGL "Use OpenGL" OFF)
-    if (NOT ATOMIC_D3D9 AND NOT ATOMIC_OPENGL)
-        set (ATOMIC_D3D11 ON)
+    if (NOT ATOMIC_D3D11 AND NOT ATOMIC_OPENGL)
+        set (ATOMIC_D3D9 ON)
     endif ()
 endif ()
 

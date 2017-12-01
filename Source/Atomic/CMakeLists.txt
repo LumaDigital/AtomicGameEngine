@@ -32,7 +32,7 @@ elseif (ATOMIC_DATABASE_ODBC)
 endif ()
 
 if (WIN32)
-    if (ATOMIC_D3D9) # DirectX 9
+    if (ATOMIC_D3D9) # DirectX 11
         file (GLOB GRAPHICS_IMPL_SOURCE Graphics/Direct3D9/*.cpp Graphics/Direct3D9/*.h)
     elseif (ATOMIC_OPENGL) # OpenGL
         file (GLOB GRAPHICS_IMPL_SOURCE Graphics/OpenGL/*.cpp Graphics/OpenGL/*.h)
