@@ -187,7 +187,7 @@ static void ToRapidjsonValue(rapidjson::Value& rapidjsonValue, const JSONValue& 
             {
                 rapidjson::Value value;
                 ToRapidjsonValue(value, jsonArray[i], allocator);
-                rapidjsonValue.PushBack(value, allocator);                
+                rapidjsonValue.PushBack(value, allocator);
             }
         }
         break;
@@ -244,13 +244,36 @@ bool JSONFile::FromString(const String & source)
 
 // ATOMIC BEGIN
 
+// Corresponds to codes in RAPIDJSON_NAMESPACE.ParseErrorCode
+static const RAPIDJSON_ERROR_CHARTYPE* parseErrorCodeMessages[] =
+{
+    "No error",
+    "The document is empty",
+    "The document root must not follow by other values",
+    "Invalid value",
+    "Missing a name for object member",
+    "Missing a colon after a name of object member",
+    "Missing a comma or '}' after an object member"
+    "Missing a comma or ']' after an array element",
+    "Incorrect hex digit after \\u escape in string",
+    "The surrogate pair in string is invalid",
+    "Invalid escape character in string",
+    "Missing a closing quotation mark in string",
+    "Invalid encoding in string",
+    "Number too big to be stored in double",
+    "Miss fraction part in number",
+    "Miss exponent in number",
+    "Parsing was terminated",
+    "Unspecific syntax error"
+};
+
 bool JSONFile::ParseJSON(const String& json, JSONValue& value, bool reportError)
 {
     rapidjson::Document document;
     if (document.Parse<0>(json.CString()).HasParseError())
     {
         if (reportError)
-            ATOMIC_LOGERRORF("Could not parse JSON data from string with error: %s", document.GetParseError());
+            ATOMIC_LOGERRORF("Could not parse JSON data from string with error: %s", parseErrorCodeMessages[document.GetParseError()]);
 
         return false;
     }
