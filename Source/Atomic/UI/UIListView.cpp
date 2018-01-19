@@ -922,8 +922,6 @@ bool UIListView::OnEvent(const tb::TBWidgetEvent &ev)
                         pivot_ = source_->GetItem(pivotIndex_);
                     }
 
-                    SetValueFirstSelected();
-
                     if (i > pivotIndex_)
                     {
                         for (int j = pivotIndex_; j < i; j++)
@@ -946,6 +944,7 @@ bool UIListView::OnEvent(const tb::TBWidgetEvent &ev)
                     }
 
                     SelectItem(item, true);
+                    SetValueFirstSelected();
                     UpdateItemVisibility();
                 }
                 else if (multi)
