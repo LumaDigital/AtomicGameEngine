@@ -43,7 +43,7 @@ class AnimationImportInfo : public Object
 
 public:    
 
-    AnimationImportInfo(Context* context) : Object(context), startTime_(-1.0f), endTime_(-1.0f), applyRootTransform_(false)
+    AnimationImportInfo(Context* context) : Object(context), startTime_(-1.0f), endTime_(-1.0f), applyRootMotion_(false), rootMotionBoneName_(String::EMPTY)
     {
 
     }
@@ -57,8 +57,10 @@ public:
     void SetEndTime(float time) { endTime_ = time; }
 
     // LUMA BEGIN
-    bool GetApplyRootTransform() const { return applyRootTransform_; }
-    void SetApplyRootTransform(bool apply) { applyRootTransform_ = apply; }
+    bool GetApplyRootMotion() const { return applyRootMotion_; }
+    void SetApplyRootMotion(bool apply) { applyRootMotion_ = apply; }
+    void SetRootMotionBoneName(const String& boneName) { rootMotionBoneName_ = boneName; }
+    const String& GetRootMotionBoneName() const { return rootMotionBoneName_; }
     // LUMA END
 
 private:
@@ -68,7 +70,8 @@ private:
     float endTime_;
 
     // LUMA BEGIN
-    bool applyRootTransform_;
+    bool applyRootMotion_;
+    String rootMotionBoneName_;
     // LUMA END
 };
 
@@ -109,7 +112,7 @@ protected:
 
     bool ImportModel();
     bool ImportAnimations();
-    bool ImportAnimation(const String &filename, const String& name, float startTime=-1.0f, float endTime=-1.0f, bool applyRootTransform=false);
+    bool ImportAnimation(const String &filename, const String& name, float startTime=-1.0f, float endTime=-1.0f, bool applyRootMotion=false, const String& rootMotionBoneName=String::EMPTY);
 
     virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
     virtual bool SaveSettingsInternal(JSONValue& jsonRoot);

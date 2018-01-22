@@ -194,10 +194,16 @@ public:
     // LUMA BEGIN
 
     /// Set apply root motion.
-    void SetApplyRootTransform(bool apply);
+    void SetApplyRootMotion(bool apply);
 
     /// Return animation name.
-    bool GetApplyRootTransform() const { return applyRootTransform_; }
+    bool GetApplyRootMotion() const { return applyRootMotion_; }
+
+    /// Set the root motion bone name
+    void SetRootMotionBoneName(const String& boneName);
+
+    /// Get the root motion bone name
+    String GetRootMotionBoneName() const { return rootMotionBoneName_; }
 
     // LUMA END
 
@@ -217,7 +223,10 @@ private:
     // LUMA BEGIN
 
     /// Whether to apply the root transform.
-    bool applyRootTransform_;
+    bool applyRootMotion_;
+
+    /// Root motion bone name for that animation
+    String rootMotionBoneName_;
 
     // LUMA END
 };

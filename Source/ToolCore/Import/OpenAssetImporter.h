@@ -75,8 +75,8 @@ public:
     static String GetAnimationFileName(const String& baseName, const String& animName);
 
     // LUMA BEGIN
-    void SetApplyRootTransform(bool apply) { applyRootTransform_ = apply; }
-
+    void SetApplyRootMotion(bool apply) { applyRootMotion_ = apply; }
+    void SetRootMotionBoneName(String boneName) { rootMotionBoneName_ = boneName; }
     // LUMA END
 
 private:
@@ -164,7 +164,8 @@ private:
 
     //LUMA BEGIN
 
-    float applyRootTransform_;
+    float applyRootMotion_;
+    String rootMotionBoneName_;
 
     //LUMA END
 

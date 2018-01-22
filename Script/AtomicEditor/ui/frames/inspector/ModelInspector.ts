@@ -55,9 +55,9 @@ class ModelInspector extends InspectorWidget {
           var startEdit = this.startEdits[i];
           var endEdit = this.endEdits[i];
 
-		  //LUMA BEGIN
-		  var applyRootTransformEdit = this.applyRootTransformEdits[i];
-		  //LUMA END
+          //LUMA BEGIN
+          var applyRootMotionEdit = this.applyRootMotionEdits[i];
+          //LUMA END
 
           info.name = nameEdit.text;
 
@@ -71,15 +71,16 @@ class ModelInspector extends InspectorWidget {
           info.startTime = _startTime;
           info.endTime = _endTime;
 
-		  // LUMA BEGIN
-          info.setApplyRootTransform(applyRootTransformEdit.checkBox.value ? true : false);
-		  // LUMA END
+          // LUMA BEGIN
+          info.setApplyRootMotion(applyRootMotionEdit.checkBox.value ? true : false);
+          info.setRootMotionBoneName(this.rootMotionBoneNameEdit.text);
+          // LUMA END
 
         }
 
-		// LUMA BEGIN
-		this.importer.clearCacheFiles();
-		// LUMA END
+        // LUMA BEGIN
+        this.importer.clearCacheFiles();
+        // LUMA END
 
         this.asset.save();
         this.asset.beginImport();
@@ -145,6 +146,7 @@ class ModelInspector extends InspectorWidget {
         animationLayout.addChild(animLayout);
 
         this.createAnimationEntries();
+
         // Animation preview button
         rootLayout.addChild(this.createPreviewAnimationButton(this.asset));
         // apply button
@@ -165,9 +167,9 @@ class ModelInspector extends InspectorWidget {
         this.startEdits = [];
         this.endEdits = [];
 
-		//LUMA BEGIN
-        this.applyRootTransformEdits = [];
-		//LUMA END
+        //LUMA BEGIN
+        this.applyRootMotionEdits = [];
+        //LUMA END
 
         for (var i = 0; i < count; i++) {
 
@@ -185,18 +187,20 @@ class ModelInspector extends InspectorWidget {
             var endEdit = InspectorUtils.createAttrEditField("End", layout);
             endEdit.text = animInfo.endTime.toString();
 
-			// LUMA BEGIN
-            var applyRootTransformEdit = InspectorUtils.createAttrCheckBox("Apply Root Tranform", layout);
-            applyRootTransformEdit.checkBox.value = animInfo.getApplyRootTransform() ? 1 : 0;
-			// LUMA END
+            // LUMA BEGIN
+            var applyRootMotionEdit = InspectorUtils.createAttrCheckBox("Apply Root Motion", layout);
+            applyRootMotionEdit.checkBox.value = animInfo.getApplyRootMotion() ? 1 : 0;
+            this.rootMotionBoneNameEdit = this.createAttrEditField("Bone Name", layout);
+            this.rootMotionBoneNameEdit.text = animInfo.rootMotionBoneName;
+            // LUMA END
 
             this.nameEdits.push(nameEdit);
             this.startEdits.push(startEdit);
             this.endEdits.push(endEdit);
 
-			//LUMA BEGIN
-            this.applyRootTransformEdits.push(applyRootTransformEdit);
-			//LUMA END
+            //LUMA BEGIN
+            this.applyRootMotionEdits.push(applyRootMotionEdit);
+            //LUMA END
 
             InspectorUtils.createSeparator(layout);
 
@@ -229,9 +233,10 @@ class ModelInspector extends InspectorWidget {
     startEdits: Atomic.UIEditField[];
     endEdits: Atomic.UIEditField[];
 
-	// LUMA BEGIN
-    applyRootTransformEdits: { textField: Atomic.UITextField, checkBox: Atomic.UICheckBox }[];
-	// LUMA END
+    // LUMA BEGIN
+    applyRootMotionEdits: { textField: Atomic.UITextField, checkBox: Atomic.UICheckBox }[];
+    rootMotionBoneNameEdit: Atomic.UIEditField;
+    // LUMA END
 
     asset: ToolCore.Asset;
     importer: ToolCore.ModelImporter;

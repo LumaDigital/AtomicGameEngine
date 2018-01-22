@@ -63,7 +63,7 @@ AnimationState::AnimationState(AnimatedModel* model, Animation* animation) :
     ResetRootMotionOffset();
     Bone* rootBone = model_->GetSkeleton().GetRootBone();
     WeakPtr<Node> rootBoneNode = rootBone->node_;
-    transformRoot_ = WeakPtr<Node>(rootBoneNode->GetChild("IHP_Master_01:EXP_J_Origin", true));
+    transformRoot_ = WeakPtr<Node>(rootBoneNode->GetChild(animation_->GetRootMotionBoneName(), true));
 
     // LUMA END
 }
@@ -493,7 +493,7 @@ void AnimationState::ApplyToModel()
             continue;
 
         // LUMA BEGIN
-        if (animation_->GetApplyRootTransform() && transformRoot_ != NULL && stateTrack.node_ == transformRoot_)
+        if (animation_->GetApplyRootMotion() && transformRoot_ != NULL && stateTrack.node_ == transformRoot_)
         {
             ApplyRootMotion(stateTrack, finalWeight);
         }

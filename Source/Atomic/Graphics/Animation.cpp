@@ -109,7 +109,8 @@ void AnimationTrack::GetKeyFrameIndex(float time, unsigned& index) const
 Animation::Animation(Context* context) :
     ResourceWithMetadata(context),
     length_(0.f),
-    applyRootTransform_(false)
+    applyRootMotion_(false),
+    rootMotionBoneName_(String::EMPTY)
 {
 }
 
@@ -168,7 +169,8 @@ bool Animation::BeginLoad(Deserializer& source)
 
     // LUMA BEGIN
 
-    applyRootTransform_ = source.ReadBool();
+    applyRootMotion_ = source.ReadBool();
+    rootMotionBoneName_ = source.ReadString();
 
     // LUMA END
 
@@ -262,7 +264,8 @@ bool Animation::Save(Serializer& dest) const
 
     // LUMA BEGIN
 
-    dest.WriteBool(applyRootTransform_);
+    dest.WriteBool(applyRootMotion_);
+    dest.WriteString(rootMotionBoneName_);
 
     // LUMA END
 
@@ -394,7 +397,8 @@ SharedPtr<Animation> Animation::Clone(const String& cloneName) const
     ret->SetMemoryUse(GetMemoryUse());
 
     // LUMA BEGIN
-    ret->SetApplyRootTransform(GetApplyRootTransform());
+    ret->SetApplyRootMotion(GetApplyRootMotion());
+    ret->SetRootMotionBoneName(GetRootMotionBoneName());
     // LUMA END
 
     return ret;
@@ -469,9 +473,14 @@ Vector3 Animation::GetKeyFramePositionAtIndex(const String & name, unsigned keyI
 
 // LUMA BEGIN
 
-void Animation::SetApplyRootTransform(bool apply)
+void Animation::SetApplyRootMotion(bool apply)
 {
-    applyRootTransform_ = apply;
+    applyRootMotion_ = apply;
+}
+
+void Animation::SetRootMotionBoneName(const String& boneName)
+{
+    rootMotionBoneName_ = boneName;
 }
 
 // LUMA END

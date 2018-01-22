@@ -1020,7 +1020,8 @@ bool OpenAssetImporter::BuildAndSaveAnimations(OutModel* model, const String &an
         outAnim->SetLength(duration * tickConversion);
 
         //LUMA BEGIN
-        outAnim->SetApplyRootTransform(applyRootTransform_);
+        outAnim->SetApplyRootMotion(applyRootMotion_);
+        outAnim->SetRootMotionBoneName(rootMotionBoneName_);
         //LUMA END
 
         //PrintLine("Writing animation " + animName + " length " + String(outAnim->GetLength()));

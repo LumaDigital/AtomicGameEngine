@@ -112,7 +112,7 @@ bool ModelImporter::ImportModel()
     importer->SetImportMaterials(importMat);
 }*/
 
-bool ModelImporter::ImportAnimation(const String& filename, const String& name, float startTime, float endTime, bool applyRootTransform)
+bool ModelImporter::ImportAnimation(const String& filename, const String& name, float startTime, float endTime, bool applyRootMotion, const String& rootMotionBoneName)
 {
     SharedPtr<OpenAssetImporter> importer(new OpenAssetImporter(context_));
 
@@ -123,7 +123,8 @@ bool ModelImporter::ImportAnimation(const String& filename, const String& name, 
     importer->SetStartTime(startTime);
     importer->SetEndTime(endTime);
     // LUMA BEGIN
-    importer->SetApplyRootTransform(applyRootTransform);
+    importer->SetApplyRootMotion(applyRootMotion);
+    importer->SetRootMotionBoneName(rootMotionBoneName);
     // LUMA END
 
 
@@ -142,8 +143,6 @@ bool ModelImporter::ImportAnimation(const String& filename, const String& name, 
             SplitPath(info.cacheFilename_, pathName, fileName, extension);
 
             ResourceCache* cache = GetSubsystem<ResourceCache>();
-
-            AnimatedModel* animatedModel = importNode_->GetComponent<AnimatedModel>();
             AnimationController* controller = importNode_->GetComponent<AnimationController>();
             if (!controller)
             {
@@ -155,7 +154,8 @@ bool ModelImporter::ImportAnimation(const String& filename, const String& name, 
             if (animation)
             {
                 //LUMA BEGIN
-                animation->SetApplyRootTransform(applyRootTransform);
+                animation->SetApplyRootMotion(applyRootMotion);
+                animation->SetRootMotionBoneName(rootMotionBoneName);
                 //LUMA END
 
                 controller->AddAnimationResource(animation);
@@ -183,7 +183,7 @@ bool ModelImporter::ImportAnimations()
     for (unsigned i = 0; i < animationInfo_.Size(); i++)
     {
         const SharedPtr<AnimationImportInfo>& info = animationInfo_[i];
-        if (!ImportAnimation(asset_->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime(), info->GetApplyRootTransform()))
+        if (!ImportAnimation(asset_->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime(), info->GetApplyRootMotion(), info->GetRootMotionBoneName()))
             return false;
     }
 
@@ -226,7 +226,7 @@ bool ModelImporter::ImportAnimations()
                     for (unsigned i = 0; i < importer->animationInfo_.Size(); i++)
                     {
                         const SharedPtr<AnimationImportInfo>& info = importer->animationInfo_[i];
-                        if (!ImportAnimation(asset->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime(), info->GetApplyRootTransform()))
+                        if (!ImportAnimation(asset->GetPath(), info->GetName(), info->GetStartTime(), info->GetEndTime(), info->GetApplyRootMotion(), info->GetRootMotionBoneName()))
                             return false;
                     }
                 }
@@ -514,7 +514,10 @@ bool ModelImporter::LoadSettingsInternal(JSONValue& jsonRoot)
             info->SetStartTime(anim.Get("startTime").GetFloat());
             info->SetEndTime(anim.Get("endTime").GetFloat());
             // LUMA BEGIN
-            info->SetApplyRootTransform(anim.Get("applyRootTransform").GetBool());
+            // TODO: At the time of changing RootTransform to RootMotion we could'nt afford
+            // changing the actual json value just yet. Rename RootTransform to RootMotion
+            info->SetApplyRootMotion(anim.Get("applyRootTransform").GetBool());
+            info->SetRootMotionBoneName(anim.Get("rootMotionBoneName").GetString());
             // LUMA END
 
             animationInfo_.Push(info);
@@ -545,7 +548,10 @@ bool ModelImporter::SaveSettingsInternal(JSONValue& jsonRoot)
         jinfo.Set("startTime", info->GetStartTime());
         jinfo.Set("endTime", info->GetEndTime());
         // LUMA BEGIN
-        jinfo.Set("applyRootTransform", info->GetApplyRootTransform());
+        // TODO: At the time of changing RootTransform to RootMotion we could'nt afford
+        // changing the actual json value just yet. Rename RootTransform to RootMotion
+        jinfo.Set("applyRootTransform", info->GetApplyRootMotion());
+        jinfo.Set("rootMotionBoneName", info->GetRootMotionBoneName());
         // LUMA END
         animInfo.Push(jinfo);
     }
