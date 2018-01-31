@@ -87,6 +87,8 @@ void UIView::SetFocus()
         ui_->GetFocusedView()->ResignFocus();
     }
 
+    BecomeFocused();
+
     UIWidget::SetFocus();
 
     ui_->SetFocusedView(this);
@@ -147,14 +149,26 @@ void UIView::ResignFocus()
 
 void UIView::Remove()
 {
-    ResignFocus();
-
     if (ui_.NotNull())
     {
         ui_->RemoveUIView(this);
     }
 
+    ResignFocus();
+
     UIWidget::Remove();
+}
+
+void UIView::Die()
+{
+    if (ui_.NotNull())
+    {
+        ui_->RemoveUIView(this);
+    }
+
+    ResignFocus();
+
+    UIWidget::Die();
 }
 
 bool UIView::SetRenderToTexture(bool value, const int width, const int height)

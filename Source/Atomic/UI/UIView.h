@@ -57,6 +57,9 @@ public:
     /// Remove the UIView from the UI subsystem, readding removed views is not advised
     void Remove();
 
+    /// Removes the UIView from the UI subsystem and deletes the widget after current animations are complete
+    void Die();
+
     /// Focuses the UIView for input events
     virtual void SetFocus();
     /// Gets whether this UIView is focused

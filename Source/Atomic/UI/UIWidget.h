@@ -242,7 +242,7 @@ class ATOMIC_API UIWidget : public Object, public tb::TBWidgetDelegate
     UI_WIDGET_STATE GetStateRaw();
 
     void Invalidate();
-    void Die();
+    virtual void Die();
 
     void SetDragObject(UIDragObject* object) { dragObject_ = object; }
     UIDragObject* GetDragObject() { return dragObject_; }
