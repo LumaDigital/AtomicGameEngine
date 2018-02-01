@@ -4,6 +4,9 @@ definitions
 		font: name: Vera, size: 11
 TBLayout: distribution: gravity, axis: y, id: projectframe
 	lp: min-width: 220
+	TBWidget: gravity: all
+		TBLayout: distribution: gravity, id: foldercontainer, gravity: all
+		lp: height: 150
 	TBLayout: distribution: gravity
 		TBButton
 			@include definitions>menubutton
@@ -18,9 +21,8 @@ TBLayout: distribution: gravity, axis: y, id: projectframe
 			@include definitions>menubutton
 			text X
 			id cancel search
-	TBWidget: gravity: all
-		TBLayout: distribution: gravity, id: foldercontainer, gravity: all
 	TBScrollContainer: scroll-mode: auto, id: contentcontainerscroll, gravity: all
 		TBLayout: id: contentcontainer, axis: y, position: left
+		lp: height: 150
 	
 

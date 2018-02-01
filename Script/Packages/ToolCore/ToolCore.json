@@ -21,6 +21,7 @@
 		],
 		"AssetDatabase" : [
 			"getFolderAssets(folder:string):ToolCore.Asset[];",
+			"getAllAssets():ToolCore.Asset[];",
 			"getAssetsByImporterType(importerType:string, resourceType:string):ToolCore.Asset[];"
 		]
 	}

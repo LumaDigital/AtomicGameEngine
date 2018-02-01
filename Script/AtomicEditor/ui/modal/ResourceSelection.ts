@@ -51,6 +51,8 @@ class ResourceSelection extends ModalWindow {
         this.setSize(800, 600);
         this.center();
 
+        // Focusing to search edit as soon as the window is opened
+        this.searchEdit.setFocus();
         this.searchEdit.subscribeToEvent(this.searchEdit, Atomic.UIWidgetEvent((data) => this.handleWidgetEvent(data)));
 
     }
@@ -102,11 +104,12 @@ class ResourceSelection extends ModalWindow {
 
             } else {
 
-                if (!search || this.searchEdit.text == "")
+                if (!search || this.searchEdit.text == "") {
                     this.folderList.addRootItem(asset.relativePath, "", asset.guid);
-                else if (search) {
-                    if (this.uiSearchBar.searchPopulate(this.searchEdit.text, asset.relativePath))
+                } else if (search) {
+                    if (this.uiSearchBar.searchPopulate(this.searchEdit.text, asset.relativePath)){
                         this.folderList.addRootItem(asset.relativePath, "", asset.guid);
+                    }
                 }
             }
         }
@@ -122,12 +125,12 @@ class ResourceSelection extends ModalWindow {
             }
         }
 
-        if (ev.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_KEY_UP) {
+        if (ev.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_CHANGED) {
 
             //Activates the search as the user types
-            if (ev.target == this.searchEdit)
+            if (ev.handler == this.searchEdit) {
                 this.populate(this.importerType, this.resourceType, true);
-
+            }
         }
 
         if (ev.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_CLICK) {

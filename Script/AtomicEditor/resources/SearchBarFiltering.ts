@@ -23,39 +23,9 @@
 export class UISearchBar {
     searchPopulate(searchText: string, compareText: string): boolean {
 
-        var equal = false;
-
         searchText = searchText.toUpperCase();
         compareText = compareText.toUpperCase();
 
-        for (var i = 0; i < compareText.length; i++) {
-
-            if (compareText[i] == searchText[0]) {
-                var j = 0;
-                var k = i;
-
-                while (k < compareText.length && j < searchText.length) {
-
-                    if (compareText[k] == searchText[j]) {
-                        equal = true;
-                    } else {
-                        equal = false;
-                        break;
-                    }
-                    j++;
-                    k++;
-                }
-
-                if (j != searchText.length) {
-                    equal = false;
-                }
-
-                if (equal) {
-                    break;
-                }
-            }
-        }
-
-        return equal;
+        return compareText.indexOf(searchText) != -1;
     }
 }

@@ -42,8 +42,6 @@
 #include "AssetCacheManagerLocal.h"
 #include "AssetCacheManagerNetwork.h"
 
-
-
 namespace ToolCore
 {
 
@@ -538,6 +536,21 @@ void AssetDatabase::GetFolderAssets(String folder, PODVector<Asset*>& assets) co
         itr++;
     }
 
+}
+
+void AssetDatabase::GetAllAssets(PODVector<Asset*>& assets) const
+{
+    if (project_.Null())
+        return;
+
+    List<SharedPtr<Asset>>::ConstIterator itr = assets_.Begin();
+
+    while (itr != assets_.End())
+    {
+        assets.Push(*itr);
+
+        itr++;
+    }
 }
 
 void AssetDatabase::GetAssetsByImporterType(StringHash type, const String &resourceType, PODVector<Asset*>& assets) const

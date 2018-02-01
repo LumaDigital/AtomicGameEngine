@@ -100,6 +100,30 @@ static int AssetDatabase_GetFolderAssets(duk_context* ctx)
     return 1;
 }
 
+static int AssetDatabase_GetAllAssets(duk_context* ctx)
+{
+    JSVM* vm = JSVM::GetJSVM(ctx);
+    ToolSystem* ts = vm->GetSubsystem<ToolSystem>();
+    AssetDatabase* db = vm->GetSubsystem<AssetDatabase>();
+    Project* project = ts->GetProject();
+
+    duk_push_array(ctx);
+
+    if (!project)
+        return 1;
+
+    PODVector<Asset*> assets;
+    db->GetAllAssets(assets);
+
+    for (unsigned i = 0; i < assets.Size(); i++)
+    {
+        js_push_class_object_instance(ctx, assets[i], 0);
+        duk_put_prop_index(ctx, -2, i);
+    }
+
+    return 1;
+}
+
 static int AssetDatabase_GetAssetsByImporterType(duk_context* ctx)
 {
     JSVM* vm = JSVM::GetJSVM(ctx);
@@ -189,6 +213,8 @@ void jsapi_init_toolcore(JSVM* vm)
     js_class_get_prototype(ctx, "ToolCore", "AssetDatabase");
     duk_push_c_function(ctx, AssetDatabase_GetFolderAssets, 1);
     duk_put_prop_string(ctx, -2, "getFolderAssets");
+    duk_push_c_function(ctx, AssetDatabase_GetAllAssets, 0);
+    duk_put_prop_string(ctx, -2, "getAllAssets");
     duk_push_c_function(ctx, AssetDatabase_GetAssetsByImporterType, 2);
     duk_put_prop_string(ctx, -2, "getAssetsByImporterType");
     duk_pop(ctx);

@@ -75,6 +75,9 @@ public:
 
     void GetFolderAssets(String folder, PODVector<Asset*>& assets) const;
 
+    // Getting concatenated assets list
+    void GetAllAssets(PODVector<Asset*>& assets) const;
+
     String GetResourceImporterName(const String& resourceTypeName);
 
     void GetAssetsByImporterType(StringHash type, const String& resourceType, PODVector<Asset*>& assets) const;

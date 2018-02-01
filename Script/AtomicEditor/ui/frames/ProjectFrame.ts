@@ -42,6 +42,7 @@ class ProjectFrame extends ScriptWidget {
     uiSearchBar: SearchBarFiltering.UISearchBar = new SearchBarFiltering.UISearchBar();
     search: boolean = false;
     searchEdit: Atomic.UIEditField;
+    typeTimer: number = 0;
 
     constructor(parent: Atomic.UIWidget) {
 
@@ -199,17 +200,27 @@ class ProjectFrame extends ScriptWidget {
 
         if (!ToolCore.toolSystem.project) return;
 
-        if (data.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_KEY_UP) {
+        // Activates search while user is typing in search widget
+        if (data.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_CHANGED) {
 
-            // Activates search while user is typing in search widget
-            if (data.target == this.searchEdit) {
+            if (data.handler == this.searchEdit) {
 
-                if (data.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_KEY_UP) {
-                    this.search = true;
-                    this.refreshContent(this.currentFolder);
-                }
+                this.search = true;
+
+                // Slow or fast typers tend to backspace quickly so there is no need for a full second delay
+                var timeout;
+                if (data.key == Atomic.KEY_BACKSPACE)
+                    timeout = 500;
+                else
+                    timeout = 750;
+
+                // refreshContent function fires after the user has stopped typing for short while 
+                // prevents search lag for each char typed
+                clearTimeout(this.typeTimer);
+                this.typeTimer = setTimeout(() => this.refreshContent(this.currentFolder), timeout);
             }
         }
+
 
         if (data.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_RIGHT_POINTER_UP) {
 
@@ -486,21 +497,17 @@ class ProjectFrame extends ScriptWidget {
         this.folderList.scrollToSelectedItem();
     }
 
-    // Searches folders within folders recursively
-    searchProjectFolder(folderPath: string, container: Atomic.UILayout, searchText: string, db: ToolCore.AssetDatabase) {
+    // Compares search text with all asset.name strings then adds them to the container
+    searchProject(container: Atomic.UILayout, searchText: string, db: ToolCore.AssetDatabase) {
 
-        if (folderPath == "")
-            return;
+        var assetList = db.getAllAssets();
 
-        var assets = db.getFolderAssets(folderPath);
+        for (var i = 0; i < assetList.length; i++)
+        {
+            var childAsset = assetList[i];
 
-        for (var i in assets) {
-
-            var childAsset = assets[i];
-
-            if (childAsset.isFolder()) {
-                this.searchProjectFolder(childAsset.path, container, searchText, db);
-            } else if (this.uiSearchBar.searchPopulate(searchText, childAsset.name + childAsset.extension)) {
+            if (this.uiSearchBar.searchPopulate(searchText, childAsset.name))
+            {
                 container.addChild(this.createButtonLayout(childAsset));
             }
         }
@@ -517,7 +524,6 @@ class ProjectFrame extends ScriptWidget {
         this.currentFolder = folder;
 
         var db = ToolCore.getAssetDatabase();
-
         var container: Atomic.UILayout = <Atomic.UILayout>this.getWidget("contentcontainer");
         container.deleteAllChildren();
 
@@ -534,7 +540,7 @@ class ProjectFrame extends ScriptWidget {
                     this.containerScrollToHeightCounter++;
                 }
             } else if (this.search) {
-                this.searchProjectFolder(this.resourceFolder.path, container, this.searchEdit.text, db);
+                this.searchProject(container, this.searchEdit.text, db);
             }
         }
 

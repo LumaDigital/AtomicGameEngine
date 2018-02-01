@@ -39,6 +39,7 @@ class HierarchyFrame extends Atomic.UIWidget {
     searchEdit: Atomic.UIEditField;
     selectedNode: Atomic.Node;
     canReparent: boolean;
+    typeTimer: number = 0;
 
     constructor(parent: Atomic.UIWidget) {
 
@@ -304,10 +305,10 @@ class HierarchyFrame extends Atomic.UIWidget {
             var childAsset = asset.getChildAtIndex(i);
 
             if (this.uiSearchBar.searchPopulate(searchText, childAsset.name)) {
-                this.recursiveAddNode(parentID, childAsset);
+                this.hierList.addChildItem(parentID, childAsset.name, "", childAsset.id.toString());
             }
 
-            if (childAsset.getNumChildren(false) > 0) {
+            if (childAsset.getNumChildren(false) > 0){
                 this.searchHierarchyFolder(childAsset, parentID, searchText);
             }
 
@@ -422,13 +423,17 @@ class HierarchyFrame extends Atomic.UIWidget {
 
         if (!this.scene) return;
 
-        if (data.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_KEY_UP) {
+        if (data.handler == this.searchEdit) {
 
             // activates search while user is typing in search widget
-            if (data.target == this.searchEdit) {
+            if (data.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_CHANGED) {
 
                 this.search = true;
-                this.populate();
+
+                // populate function fires after the user has stopped typing for while 
+                // prevents search lag for each char typed
+                clearTimeout(this.typeTimer);
+                this.typeTimer = setTimeout(() => this.populate(), 750);
 
                 if (this.searchEdit.text == "" && this.selectedNode) {
                         this.hierList.selectItemByID(this.selectedNode.id.toString(), true);    //maintains selected item after search is cancelled
@@ -436,7 +441,7 @@ class HierarchyFrame extends Atomic.UIWidget {
             }
 
             // node deletion
-            if (data.key == Atomic.KEY_DELETE || data.key == Atomic.KEY_BACKSPACE) {
+            if (data.key == Atomic.KEY_DELETE) {
                 this.sceneEditor.selection.delete();
             }
 
