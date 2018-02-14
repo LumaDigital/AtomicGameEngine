@@ -43,6 +43,9 @@ class InspectorFrame extends ScriptWidget {
 
     selectionInspector: SelectionInspector;
 
+    isSelectedNodeEnabled: boolean;
+    selectedNode: Atomic.Node;
+
     constructor() {
 
         super();
@@ -57,6 +60,7 @@ class InspectorFrame extends ScriptWidget {
         this.subscribeToEvent(Editor.ProjectUnloadedNotificationEvent((data) => this.handleProjectUnloaded(data)));
 
         this.subscribeToEvent(Editor.EditorActiveSceneEditorChangeEvent((data) => this.handleActiveSceneEditorChanged(data)));
+        this.subscribeToEvent(this, Atomic.UIWidgetEvent((data) => this.handleWidgetEvent(data)));
 
     }
 
@@ -111,9 +115,26 @@ class InspectorFrame extends ScriptWidget {
 
     }
 
+    handleWidgetEvent(ev: Atomic.UIWidgetEvent): boolean {
+
+        if (ev.type == Atomic.UI_EVENT_TYPE.UI_EVENT_TYPE_CLICK) {
+            if (this.selectedNode.isEnabled() != this.isSelectedNodeEnabled) {
+
+                this.selectedNode.setDeepEnabled(this.selectedNode.isEnabled());
+                this.isSelectedNodeEnabled = this.selectedNode.isEnabled();
+
+            }
+            return true;
+        }
+        return false;
+    }
+
     handleSceneNodeSelected(ev: Editor.SceneNodeSelectedEvent) {
 
         var selection = this.sceneEditor.selection;
+        this.selectedNode = ev.node;
+        this.isSelectedNodeEnabled = ev.node.isEnabled();
+
 
         if (this.selectionInspector) {
 
@@ -140,7 +161,6 @@ class InspectorFrame extends ScriptWidget {
         }
 
     }
-
 
     handleProjectUnloaded(data) {
 

@@ -363,7 +363,18 @@ class HierarchyFrame extends Atomic.UIWidget {
             if (this.sceneEditor.selection.getSelectedNodeCount() < 2) {
 
                 var dragNode = <Atomic.Node>ev.dragObject.object;
-                this.sceneEditor.reparentNode(dragNode, dropNode);
+
+                // Only reparent when dragged over a different node
+                if (dragNode != dropNode) {
+
+                    dragNode.resetDeepEnabled();
+
+                    // For when the new parent node is disabled
+                    if (!dropNode.isEnabled())
+                        dragNode.setDeepEnabled(false);
+
+                    this.sceneEditor.reparentNode(dragNode, dropNode);
+                }
 
             } else {
 
@@ -377,8 +388,20 @@ class HierarchyFrame extends Atomic.UIWidget {
                     var tempNode = tempSelectedList[j];
                     var typeName = tempNode.typeName;
 
-                    if (typeName == "Node")
-                        this.sceneEditor.reparentNode(tempNode, dropNode);
+                    if (typeName == "Node") {
+
+                        // Only reparent when dragged over a different node
+                        if (tempNode != dropNode) {
+
+                            tempNode.resetDeepEnabled();
+
+                            // For when the new parent node is disabled
+                            if (!dropNode.isEnabled())
+                                tempNode.setDeepEnabled(false);
+
+                            this.sceneEditor.reparentNode(tempNode, dropNode);
+                        }
+                    }
                 }
             }
 
