@@ -6,7 +6,7 @@ TBLayout: distribution: gravity, axis: y, id: projectframe
 	lp: min-width: 220
 	TBWidget: gravity: all
 		TBLayout: distribution: gravity, id: foldercontainer, gravity: all
-		lp: height: 150
+		lp: height: 255
 	TBLayout: distribution: gravity
 		TBButton
 			@include definitions>menubutton
@@ -23,6 +23,6 @@ TBLayout: distribution: gravity, axis: y, id: projectframe
 			id cancel search
 	TBScrollContainer: scroll-mode: auto, id: contentcontainerscroll, gravity: all
 		TBLayout: id: contentcontainer, axis: y, position: left
-		lp: height: 150
+		lp: height: 165
 	
 
