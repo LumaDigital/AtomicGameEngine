@@ -205,6 +205,9 @@ public:
     /// Get the root motion bone name
     String GetRootMotionBoneName() const { return rootMotionBoneName_; }
 
+    /// Return rotation of an animation track's keyframe at index
+    Quaternion GetKeyFrameRotationAtIndex(const String& name, unsigned keyIndex);
+
     // LUMA END
 
 

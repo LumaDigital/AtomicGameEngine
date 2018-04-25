@@ -483,5 +483,25 @@ void Animation::SetRootMotionBoneName(const String& boneName)
     rootMotionBoneName_ = boneName;
 }
 
+Quaternion Animation::GetKeyFrameRotationAtIndex(const String& name, unsigned keyIndex)
+{
+    for (HashMap<StringHash, AnimationTrack>::ConstIterator i = tracks_.Begin(); i != tracks_.End(); ++i)
+    {
+        const AnimationTrack& track = i->second_;
+
+        if (track.name_ == name)
+        {
+            if (keyIndex >= track.keyFrames_.Size())
+            {
+                keyIndex = track.keyFrames_.Size() - 1;
+            }
+
+            const AnimationKeyFrame& key = track.keyFrames_.At(keyIndex);
+            return key.rotation_;
+        }
+    }
+    return Quaternion();
+}
+
 // LUMA END
 }
