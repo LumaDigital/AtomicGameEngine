@@ -816,6 +816,12 @@ void Engine::Update()
     // Logic post-update event
     SendEvent(E_POSTUPDATE, eventData);
 
+// LUMA BEGIN
+    // Pre-render update event.
+    // For logic that needs all engine updates (eg animation) to be completed
+    SendEvent(E_PRERENDERUPDATE, eventData);
+// LUMA END
+
     // Rendering update event
     SendEvent(E_RENDERUPDATE, eventData);
 

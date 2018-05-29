@@ -46,6 +46,15 @@ ATOMIC_EVENT(E_POSTUPDATE, PostUpdate)
     ATOMIC_PARAM(P_TIMESTEP, TimeStep);            // float
 }
 
+// LUMA BEGIN
+/// Pre-render update event.
+/// For logic that needs all engine updates (eg animation) to be completed
+ATOMIC_EVENT(E_PRERENDERUPDATE, PreRenderUpdate)
+{
+    ATOMIC_PARAM(P_TIMESTEP, TimeStep);            // float
+}
+// LUMA END
+
 /// Render update event.
 ATOMIC_EVENT(E_RENDERUPDATE, RenderUpdate)
 {
