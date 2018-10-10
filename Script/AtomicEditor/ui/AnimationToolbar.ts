@@ -87,7 +87,7 @@ class AnimationToolbar extends Atomic.UIWidget {
 
         //Set default values
         this.animationSpeed.setText("1");
-        this.blendSpeed.setText("0");
+        this.blendSpeed.setText("1");
 
         properties.addChild(this.animationPropertiesContainer);
 
@@ -217,11 +217,14 @@ class AnimationToolbar extends Atomic.UIWidget {
 
     openAnimationSelectionBox(animationWidget: Atomic.UIEditField, animationSlot: Atomic.Animation) {
 
+        var animController = this.animationController;
+
         EditorUI.getModelOps().showResourceSelection("Select Animation", "ModelImporter", "Animation", function (resource: Atomic.Animation, args: any) {
             var animation = resource;
             if (animation) {
                 animationSlot = animation;
                 animationWidget.text = animation.getAnimationName();
+                animController.addAnimationResource(animation);
             }
         });
     }
