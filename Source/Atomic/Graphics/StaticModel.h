@@ -90,6 +90,9 @@ public:
     /// Return material by geometry index.
     virtual Material* GetMaterial(unsigned index = 0) const;
 
+    /// Return number of materials
+    virtual unsigned GetNumMaterials() const { return batches_.Size(); }
+
     /// Return occlusion LOD level.
     unsigned GetOcclusionLodLevel() const { return occlusionLodLevel_; }
 
